@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaikyuuDLE</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* --- ANIMATIONS --- */
+        @keyframes flip-in {
+          0% { transform: rotateX(-90deg) skewX(-6deg); opacity: 0; }
+          100% { transform: rotateX(0) skewX(-6deg); opacity: 1; }
+        }
+        .animate-flip-in {
+          animation: flip-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          transform-style: preserve-3d;
+          backface-visibility: hidden;
+        }
+        
+        @keyframes pop-in {
+          0% { transform: scale(0.5); opacity: 0; }
+          70% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+          animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes slide-up-fade {
+          0% { transform: translateY(20px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up-fade {
+          animation: slide-up-fade 0.4s ease-out forwards;
+        }
+
+        @keyframes bounce-short {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-short {
+           animation: bounce-short 0.4s ease-in-out 2;
+        }
+
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .perspective-1000 { perspective: 1000px; }
+        
+        /* Design Skewed (Incliné) */
+        .skew-container { transform: skewX(-6deg); }
+        .skew-child-reverse { transform: skewX(6deg); }
+        
+        /* Style spécifique pour la modale (inclinaison plus légère) */
+        .skew-modal { transform: skewX(-2deg); }
+        .skew-modal-reverse { transform: skewX(2deg); }
+
+        /* Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f97316; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-[#121212] text-white font-sans selection:bg-orange-500 selection:text-white overflow-x-hidden min-h-screen flex flex-col">
+
+    <!-- FOND -->
+    <div class="fixed inset-0 z-0 opacity-5 pointer-events-none" 
+         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;">
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-black border-b-4 border-orange-500 p-4 sticky top-0 z-50 shadow-xl">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 skew-container hover:scale-105 transition-transform cursor-default select-none ml-4">
+                <div class="bg-orange-500 px-3 py-1 text-black font-black text-xl tracking-tighter uppercase shadow-md">
+                    Haikyuu
+                </div>
+                <h1 class="text-3xl font-black italic tracking-tighter text-white">
+                    DLE <span class="text-orange-500 text-lg not-italic ml-1">v.Ball</span>
+                </h1>
+            </div>
+            <!-- Bouton Info -->
+            <button onclick="toggleModal(true)" class="text-white hover:text-orange-500 transition transform hover:scale-110 hover:rotate-12 p-2 mr-2">
+                <i data-lucide="info" class="w-8 h-8"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="relative z-10 max-w-6xl mx-auto p-4 flex flex-col items-center w-full flex-grow">
+
+        <!-- ÉCRAN DE VICTOIRE -->
+        <div id="victory-screen" class="hidden w-full max-w-2xl skew-container bg-gradient-to-r from-green-900 to-slate-900 border-l-8 border-white p-8 rounded-sm mb-10 text-center animate-pop-in shadow-2xl relative overflow-hidden group mt-8">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 text-white/10 animate-pulse pointer-events-none">
+                 <i data-lucide="trophy" class="w-[150px] h-[150px]"></i>
+            </div>
+            
+            <div class="flex flex-col items-center justify-center skew-child-reverse mb-4">
+                <div id="victory-avatar-container" class="mb-4 rounded border-4 border-white shadow-xl overflow-hidden bg-slate-800 animate-bounce-short w-24 h-32">
+                    <!-- Image injectée ici -->
+                </div>
+                <h2 class="text-5xl font-black italic uppercase tracking-tighter text-white drop-shadow-lg mb-2 animate-slide-up-fade">Victoire !</h2>
+                <p class="text-xl text-green-100 font-bold animate-slide-up-fade" style="animation-delay: 100ms">Personnage : <span id="victory-name" class="text-white uppercase text-2xl ml-2"></span></p>
+            </div>
+            
+            <div class="mt-6 flex flex-col items-center gap-4 skew-child-reverse animate-slide-up-fade" style="animation-delay: 200ms">
+                <button onclick="startNewGame()" class="bg-white text-green-900 font-black uppercase py-3 px-10 rounded shadow-lg hover:scale-110 hover:rotate-1 hover:shadow-xl hover:bg-green-50 transition-all duration-300 flex items-center gap-2 border-b-4 border-green-800 active:border-b-0 active:translate-y-1">
+                     <i data-lucide="refresh-cw" class="w-5 h-5"></i> Rejouer
+                </button>
+            </div>
+        </div>
+
+        <!-- ZONE DE RECHERCHE -->
+        <div id="search-section" class="relative w-full max-w-xl mb-12 mt-8 z-40 group transition-all duration-500">
+            <div class="relative skew-container transition-transform duration-300 hover:scale-[1.02]">
+                <input
+                    id="search-input"
+                    type="text"
+                    class="w-full bg-gray-900/90 backdrop-blur border-4 border-gray-700 text-white text-xl font-bold uppercase py-4 pl-16 pr-4 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 transition-all duration-300 placeholder:text-gray-600 placeholder:normal-case shadow-lg"
+                    placeholder="Entrez un joueur..."
+                    autocomplete="off"
+                />
+                <div class="absolute left-0 top-0 bottom-0 w-14 bg-orange-500 flex items-center justify-center text-black border-r-4 border-gray-700 transition-colors duration-300 group-hover:bg-orange-400">
+                    <i data-lucide="search" class="w-7 h-7"></i>
+                </div>
+            </div>
+
+            <!-- SUGGESTIONS (Dropdown) -->
+            <div id="suggestions-box" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border-2 border-gray-700 shadow-2xl max-h-80 overflow-y-auto z-50 custom-scrollbar hidden animate-slide-up-fade rounded-sm">
+                <!-- Les suggestions seront injectées ici -->
+            </div>
+        </div>
+
+        <!-- TABLEAU DES RÉSULTATS -->
+        <div id="guesses-container" class="w-full overflow-x-auto pb-8 px-4 custom-scrollbar hidden">
+            <!-- En-têtes -->
+            <div class="min-w-max mb-4 flex gap-3 pl-20 md:pl-28">
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Sexe</div>
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Équipe</div>
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Poste</div>
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Année</div>
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Taille</div>
+                <div class="w-20 md:w-24 text-center text-gray-500 font-black text-[10px] md:text-xs uppercase tracking-widest">Numéro</div>
+            </div>
+            <!-- Liste des essais -->
+            <div id="guesses-list" class="flex flex-col-reverse gap-3">
+                <!-- Les lignes s'ajoutent ici -->
+            </div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state" class="text-center mt-12 opacity-40 animate-pulse">
+            <i data-lucide="award" class="w-24 h-24 mx-auto mb-4 text-gray-600 hover:text-orange-500 transition-colors duration-500 hover:rotate-12 transform cursor-pointer"></i>
+            <p class="font-black uppercase text-2xl text-gray-600 tracking-widest">En attente du service...</p>
+        </div>
+
+    </main>
+
+    <!-- MODAL AIDE (STYLE RETROUVÉ MAIS ALIGNÉ) -->
+    <div id="help-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in hidden">
+        <div class="bg-black border-4 border-orange-500 max-w-lg w-full p-8 shadow-2xl relative skew-modal animate-pop-in">
+            <!-- Bouton Fermer -->
+            <button onclick="toggleModal(false)" class="absolute -top-5 -right-5 bg-white text-black p-2 border-4 border-black hover:bg-orange-500 hover:text-white transition shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:scale-110 duration-300 z-50 skew-modal-reverse">
+                 <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <!-- Contenu contre-incliné pour rester droit -->
+            <div class="skew-modal-reverse">
+                <h2 class="text-3xl font-black italic uppercase mb-6 text-white border-b-4 border-orange-500 pb-2 inline-block">
+                    Règles du Jeu
+                </h2>
+                
+                <div class="space-y-4 text-gray-300 font-bold">
+                    <p class="uppercase tracking-wide text-white text-lg">Trouve le joueur mystère.</p>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-center gap-4 bg-gray-900 p-4 border-l-4 border-green-500">
+                            <div class="w-10 h-10 bg-green-600 flex items-center justify-center font-black text-white text-xs shadow-lg skew-container">OK</div>
+                            <span class="uppercase text-sm">Correspondance Parfaite</span>
+                        </div>
+                        <div class="flex items-center gap-4 bg-gray-900 p-4 border-l-4 border-red-600">
+                            <div class="w-10 h-10 bg-red-600 flex items-center justify-center font-black text-white text-xs shadow-lg skew-container">NO</div>
+                            <span class="uppercase text-sm">Incorrect</span>
+                        </div>
+                        <div class="flex items-center gap-4 bg-gray-900 p-4 border-l-4 border-red-600">
+                            <div class="w-10 h-10 bg-red-600 flex items-center justify-center font-black text-white text-xs shadow-lg skew-container"><i data-lucide="arrow-up" class="w-5 h-5 skew-child-reverse"></i></div>
+                            <span class="uppercase text-sm">C'est Plus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button 
+                    onclick="toggleModal(false)"
+                    class="w-full mt-8 bg-orange-500 hover:bg-orange-400 text-black font-black text-xl uppercase py-4 border-b-8 border-orange-700 active:border-b-0 active:translate-y-2 transition-all tracking-widest"
+                >
+                    Entrer sur le terrain
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DONNÉES ---
+        const CHARACTERS = [
+          // --- KARASUNO ---
+          { id: 1, name: "Shoyo Hinata", gender: "M", team: "Karasuno", position: "Central", year: 1, height: 164, number: 10, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/55/Shoyo_Hinata.png/revision/latest/scale-to-width-down/150?cb=20200310172635" },
+          { id: 2, name: "Tobio Kageyama", gender: "M", team: "Karasuno", position: "Passeur", year: 1, height: 181, number: 9, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/3/3d/Tobio_Kageyama.png/revision/latest/scale-to-width-down/150?cb=20200310172729" },
+          { id: 3, name: "Daichi Sawamura", gender: "M", team: "Karasuno", position: "Réceptionneur", year: 3, height: 176, number: 1, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/0/07/Daichi.png/revision/latest?cb=20200424080002" },
+          { id: 4, name: "Koshi Sugawara", gender: "M", team: "Karasuno", position: "Passeur", year: 3, height: 174, number: 2, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/d/d4/Sugawara_1.png/revision/latest?cb=20200424080020" },
+          { id: 5, name: "Asahi Azumane", gender: "M", team: "Karasuno", position: "Pointu", year: 3, height: 186, number: 3, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/a/a0/Asahi_2.png/revision/latest?cb=20200424080121" },
+          { id: 6, name: "Yu Nishinoya", gender: "M", team: "Karasuno", position: "Libero", year: 2, height: 160, number: 4, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/4/46/Nishinoya_s4-e11-1.png/revision/latest?cb=20200908065003" },
+          { id: 7, name: "Ryunosuke Tanaka", gender: "M", team: "Karasuno", position: "Réceptionneur", year: 2, height: 178, number: 5, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/2/21/Tanaka_1.png/revision/latest?cb=20200424075622" },
+          { id: 8, name: "Kei Tsukishima", gender: "M", team: "Karasuno", position: "Central", year: 1, height: 190, number: 11, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/f/fa/Tsukishima_1.png/revision/latest?cb=20200424075711" },
+          { id: 29, name: "Tadashi Yamaguchi", gender: "M", team: "Karasuno", position: "Central", year: 1, height: 180, number: 12, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/1/19/Yamaguchi_1.png/revision/latest?cb=20200424075941" },
+          { id: 30, name: "Chikara Ennoshita", gender: "M", team: "Karasuno", position: "Réceptionneur", year: 2, height: 176, number: 6, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/0/04/Ennoshita_1.png/revision/latest?cb=20200424075529" },
+          { id: 31, name: "Hisashi Kinoshita", gender: "M", team: "Karasuno", position: "Réceptionneur", year: 2, height: 175, number: 7, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/51/Hisashi_Kinoshita2.png/revision/latest/scale-to-width-down/150?cb=20200310190930" },
+          { id: 32, name: "Kazuhito Narita", gender: "M", team: "Karasuno", position: "Central", year: 2, height: 180, number: 8, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/3/3b/Kazuhito_Narita.png/revision/latest/scale-to-width-down/150?cb=20200310194910" },
+          { id: 56, name: "Yui Michimiya", gender: "F", team: "Karasuno", position: "Réceptionneur", year: 3, height: 159, number: 1, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/b/ba/Yui_calling_Daichi.PNG.png/revision/latest/scale-to-width-down/250?cb=20200210120756&path-prefix=fr" },
+          // --- AOBA JOHSAI ---
+          { id: 9, name: "Toru Oikawa", gender: "M", team: "Aoba Johsai", position: "Passeur", year: 3, height: 184, number: 1, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/9/98/Ddb3f2ae51fa0437ff202d6b1041b5c8.jpg/revision/latest/scale-to-width-down/151?cb=20180424163942" },
+          { id: 10, name: "Hajime Iwaizumi", gender: "M", team: "Aoba Johsai", position: "Réceptionneur", year: 3, height: 179, number: 4, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/e/e1/Iwaizumi_2.png/revision/latest?cb=20200430140409" },
+          { id: 33, name: "Issei Matsukawa", gender: "M", team: "Aoba Johsai", position: "Central", year: 3, height: 187, number: 2, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/1/1a/CroppedIssei.png/revision/latest/scale-to-width-down/150?cb=20160119212040" },
+          { id: 34, name: "Takahiro Hanamaki", gender: "M", team: "Aoba Johsai", position: "Réceptionneur", year: 3, height: 184, number: 3, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/2/27/Hanamaki_2.png/revision/latest?cb=20200510060308" },
+          { id: 35, name: "Shigeru Yahaba", gender: "M", team: "Aoba Johsai", position: "Passeur", year: 2, height: 181, number: 6, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/d/d8/Yahaba_Season_2.png/revision/latest/scale-to-width-down/150?cb=20210319133701" },
+          { id: 36, name: "Shinji Watari", gender: "M", team: "Aoba Johsai", position: "Libero", year: 2, height: 171, number: 7, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/c/cb/CroppedWatari.png/revision/latest/scale-to-width-down/150?cb=20160119212112" },
+          { id: 37, name: "Yutaro Kindaichi", gender: "M", team: "Aoba Johsai", position: "Central", year: 1, height: 189, number: 12, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/a/ac/Kindaichi.png/revision/latest?cb=20200423101113" },
+          { id: 38, name: "Akira Kunimi", gender: "M", team: "Aoba Johsai", position: "Pointu", year: 1, height: 183, number: 13, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/b/b2/Kunimi_2.png/revision/latest?cb=20200430140707" },
+          { id: 39, name: "Kentaro Kyotani", gender: "M", team: "Aoba Johsai", position: "Pointu", year: 2, height: 178, number: 16, color: "from-teal-400 to-teal-600", schoolColor: "text-teal-400", image: "https://static.wikia.nocookie.net/haikyuu/images/a/a0/Kyotani_Season2.png/revision/latest/scale-to-width-down/165?cb=20210319133823" },
+          // --- NEKOMA ---
+          { id: 11, name: "Tetsuro Kuroo", gender: "M", team: "Nekoma", position: "Central", year: 3, height: 188, number: 1, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/2/2b/Kuroo_1.png/revision/latest?cb=20200426113814" },
+          { id: 40, name: "Nobuyuki Kai", gender: "M", team: "Nekoma", position: "Réceptionneur", year: 3, height: 176, number: 2, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/3/30/Kai2020..png/revision/latest/scale-to-width-down/150?cb=20200316210557" },
+          { id: 14, name: "Morisuke Yaku", gender: "M", team: "Nekoma", position: "Libero", year: 3, height: 165, number: 3, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/b/b7/Yaku_OVA.png/revision/latest?cb=20200422165446" },
+          { id: 41, name: "Taketora Yamamoto", gender: "M", team: "Nekoma", position: "Pointu", year: 2, height: 176, number: 4, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/6/64/Yamamoto2020sc.png/revision/latest/scale-to-width-down/150?cb=20200316211126" },
+          { id: 12, name: "Kenma Kozume", gender: "M", team: "Nekoma", position: "Passeur", year: 2, height: 169, number: 5, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/8/85/Kenma2020.png/revision/latest/scale-to-width-down/150?cb=20200316210637" },
+          { id: 42, name: "Shouhei Fukunaga", gender: "M", team: "Nekoma", position: "Réceptionneur", year: 2, height: 178, number: 6, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/5/5b/Fukunagak.png/revision/latest/scale-to-width-down/150?cb=20200312191141" },
+          { id: 43, name: "So Inuoka", gender: "M", team: "Nekoma", position: "Central", year: 1, height: 185, number: 7, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/c/c6/So2020.png/revision/latest/scale-to-width-down/150?cb=20200316204544" },
+          { id: 57, name: "Tamahiko Teshiro", gender: "M", team: "Nekoma", position: "Passeur", year: 1, height: 172, number: 9, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/0/05/Teshiro_1.png/revision/latest?cb=20200426113922" },
+          { id: 13, name: "Lev Haiba", gender: "M", team: "Nekoma", position: "Central", year: 1, height: 194, number: 11, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/a/a3/Lev_OVA.png/revision/latest?cb=20200425182107" },
+          { id: 44, name: "Yuuki Shibayama", gender: "M", team: "Nekoma", position: "Libero", year: 1, height: 162, number: 12, color: "from-red-600 to-red-800", schoolColor: "text-red-600", image: "https://static.wikia.nocookie.net/haikyuu/images/e/e3/Shibayama.png/revision/latest?cb=20200426113758" },
+          // --- DATE TECH ---
+          { id: 45, name: "Kaname Moniwa", gender: "M", team: "Date Tech", position: "Passeur", year: 3, height: 176, number: 2, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/2/29/Kaname_Moniwa.png/revision/latest/scale-to-width-down/150?cb=20200310165414" },
+          { id: 46, name: "Yasushi Kamasaki", gender: "M", team: "Date Tech", position: "Central", year: 3, height: 186, number: 1, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/a/a4/Yasushi_Kamasaki.png/revision/latest/scale-to-width-down/150?cb=20200310165454" },
+          { id: 47, name: "Takehito Sasaya", gender: "M", team: "Date Tech", position: "Réceptionneur", year: 3, height: 174, number: 3, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/c/c4/Takehito_Sasaya.png/revision/latest/scale-to-width-down/150?cb=20200310164745" },
+          { id: 16, name: "Kenji Futakuchi", gender: "M", team: "Date Tech", position: "Réceptionneur", year: 2, height: 184, number: 2, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/8/81/Futakuchi.png/revision/latest?cb=20200424080203" },
+          { id: 15, name: "Takanobu Aone", gender: "M", team: "Date Tech", position: "Central", year: 2, height: 191, number: 7, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/c/ca/Aone_1.png/revision/latest?cb=20200424080244" },
+          { id: 48, name: "Yutaka Obara", gender: "M", team: "Date Tech", position: "Réceptionneur", year: 2, height: 186, number: 12, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/8/88/Obara_1.png/revision/latest?cb=20210630051215" },
+          { id: 49, name: "Kosuke Sakunami", gender: "M", team: "Date Tech", position: "Libero", year: 1, height: 164, number: 13, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/7/74/Sakunami_2.png/revision/latest?cb=20200430140753" },
+          { id: 58, name: "Kanji Koganegawa", gender: "M", team: "Date Tech", position: "Passeur", year: 1, height: 191, number: 7, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/3/3b/Koganegawa_2.png/revision/latest?cb=20200424080346" },
+          { id: 59, name: "Taro Onagawa", gender: "M", team: "Date Tech", position: "Réceptionneur", year: 2, height: 176, number: 8, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/58/Taro_Onagawa.png/revision/latest/scale-to-width-down/150?cb=20200310201958" },
+          { id: 60, name: "Jingo Fukiage", gender: "M", team: "Date Tech", position: "Central", year: 1, height: 186, number: 11, color: "from-emerald-600 to-emerald-800", schoolColor: "text-emerald-500", image: "https://static.wikia.nocookie.net/haikyuu/images/3/30/CroppedJingo.png/revision/latest/scale-to-width-down/150?cb=20160223045732" },
+          // --- FUKURODANI ---
+          { id: 17, name: "Kotaro Bokuto", gender: "M", team: "Fukurodani", position: "Réceptionneur", year: 3, height: 185, number: 4, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/5b/Bokutokotaro.jpg/revision/latest/scale-to-width-down/150?cb=20200725201413" },
+          { id: 18, name: "Keiji Akaashi", gender: "M", team: "Fukurodani", position: "Passeur", year: 2, height: 182, number: 5, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/8/80/Akaashi_3.png/revision/latest?cb=20200425182141" },
+          { id: 61, name: "Tatsuki Washio", gender: "M", team: "Fukurodani", position: "Central", year: 3, height: 188, number: 2, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/a/a9/Washioanime.png/revision/latest/scale-to-width-down/150?cb=20200406003055" },
+          { id: 62, name: "Yamato Sarukui", gender: "M", team: "Fukurodani", position: "Réceptionneur", year: 3, height: 181, number: 3, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/53/Sarukui_3.png/revision/latest?cb=20200425182358" },
+          { id: 63, name: "Akinori Konoha", gender: "M", team: "Fukurodani", position: "Réceptionneur", year: 3, height: 178, number: 7, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/9/91/Konoha.png/revision/latest?cb=20200425182319" },
+          { id: 64, name: "Shuichi Anahori", gender: "M", team: "Fukurodani", position: "Passeur", year: 1, height: 177, number: 10, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "" },
+          { id: 65, name: "Haruki Komi", gender: "M", team: "Fukurodani", position: "Libero", year: 3, height: 166, number: 11, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/2/29/Komi_1.png/revision/latest?cb=20200425182420" },
+          { id: 66, name: "Wataru Onaga", gender: "M", team: "Fukurodani", position: "Central", year: 1, height: 191, number: 12, color: "from-yellow-500 to-yellow-600", schoolColor: "text-yellow-500", image: "https://static.wikia.nocookie.net/haikyuu/images/1/1c/Onaga_s2-e4-1.png/revision/latest?cb=20240129163727" },
+          // --- SHIRATORIZAWA ---
+          { id: 19, name: "Wakatoshi Ushijima", gender: "M", team: "Shiratorizawa", position: "Pointu", year: 3, height: 189, number: 1, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/c/cc/Ushijima.png/revision/latest?cb=20200430140454" },
+          { id: 67, name: "Reon Ohira", gender: "M", team: "Shiratorizawa", position: "Réceptionneur", year: 3, height: 182, number: 4, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/e/ee/CroppedReon.png/revision/latest/scale-to-width-down/150?cb=20160131003456" },
+          { id: 50, name: "Eita Semi", gender: "M", team: "Shiratorizawa", position: "Passeur", year: 3, height: 179, number: 3, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/4/4f/Semi1.jpeg/revision/latest/scale-to-width-down/150?cb=20170113211938" },
+          { id: 20, name: "Satori Tendo", gender: "M", team: "Shiratorizawa", position: "Central", year: 3, height: 187, number: 5, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/2/27/Tendo.png/revision/latest?cb=20200430140509" },
+          { id: 21, name: "Tsutomu Goshiki", gender: "M", team: "Shiratorizawa", position: "Réceptionneur", year: 1, height: 181, number: 8, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/b/b9/Goshiki_s4-e2-3.png/revision/latest?cb=20210110083004" },
+          { id: 51, name: "Kenjiro Shirabu", gender: "M", team: "Shiratorizawa", position: "Passeur", year: 2, height: 174, number: 10, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/7/74/Shirabu_s4-e5-1.png/revision/latest?cb=20210111165114" },
+          { id: 68, name: "Taichi Kawanishi", gender: "M", team: "Shiratorizawa", position: "Central", year: 2, height: 188, number: 12, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/2/20/Kawanishi1.jpg/revision/latest/scale-to-width-down/150?cb=20170506162449" },
+          { id: 69, name: "Hayato Yamagata", gender: "M", team: "Shiratorizawa", position: "Libero", year: 3, height: 174, number: 14, color: "from-purple-600 to-purple-800", schoolColor: "text-purple-600", image: "https://static.wikia.nocookie.net/haikyuu/images/6/65/Yamagata.png/revision/latest?cb=20200430140555" },
+          // --- INARIZAKI ---
+          { id: 70, name: "Shinsuke Kita", gender: "M", team: "Inarizaki", position: "Réceptionneur", year: 3, height: 175, number: 1, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/f/fd/Kitapng.png/revision/latest/scale-to-width-down/150?cb=20200405235728" },
+          { id: 71, name: "Ren Omimi", gender: "M", team: "Inarizaki", position: "Central", year: 3, height: 191, number: 2, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/1/14/Ren_Omimi.png/revision/latest?cb=20200715110249" },
+          { id: 72, name: "Aran Ojiro", gender: "M", team: "Inarizaki", position: "Réceptionneur", year: 3, height: 184, number: 4, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/d/dd/Arananime.png/revision/latest/scale-to-width-down/150?cb=20200405235758" },
+          { id: 73, name: "Hitoshi Ginjima", gender: "M", team: "Inarizaki", position: "Réceptionneur", year: 2, height: 180, number: 5, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/9/90/Hitoshi_Gigima.png/revision/latest/scale-to-width-down/150?cb=20210624014510" },
+          { id: 22, name: "Atsumu Miya", gender: "M", team: "Inarizaki", position: "Passeur", year: 2, height: 183, number: 7, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/6/6f/Atsumu_Miya.png/revision/latest/scale-to-width-down/150?cb=20200309233250" },
+          { id: 24, name: "Rintaro Suna", gender: "M", team: "Inarizaki", position: "Central", year: 2, height: 185, number: 10, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/7/79/Suna.png/revision/latest?cb=20200421180408" },
+          { id: 23, name: "Osamu Miya", gender: "M", team: "Inarizaki", position: "Pointu", year: 2, height: 183, number: 11, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/c/cc/Osamuanime.png/revision/latest/scale-to-width-down/150?cb=20200405235855" },
+          { id: 74, name: "Michinari Akagi", gender: "M", team: "Inarizaki", position: "Libero", year: 3, height: 174, number: 15, color: "from-gray-800 to-black", schoolColor: "text-gray-400", image: "https://static.wikia.nocookie.net/haikyuu/images/f/fe/Akagi_1.png/revision/latest?cb=20200425182506" },
+          // --- JOHZENJI ---
+          { id: 52, name: "Yuji Terushima", gender: "M", team: "Johzenji", position: "Réceptionneur", year: 2, height: 177, number: 4, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/9/9a/Terushima_Y%C5%ABji-3.png/revision/latest/scale-to-width-down/150?cb=20160203043424" },
+          { id: 53, name: "Yusho Sagae", gender: "M", team: "Johzenji", position: "Réceptionneur", year: 2, height: 177, number: 1, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "" },
+          { id: 75, name: "Kazuma Bobata", gender: "M", team: "Johzenji", position: "Central", year: 2, height: 185, number: 2, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/4/41/CroppedKazuma.png/revision/latest/scale-to-width-down/150?cb=20160203043504" },
+          { id: 76, name: "Takeharu Futamata", gender: "M", team: "Johzenji", position: "Passeur", year: 2, height: 178, number: 3, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/6/66/CroppedTakeharu.png/revision/latest/scale-to-width-down/150?cb=20160203043518" },
+          { id: 77, name: "Katsumichi Higashiyama", gender: "M", team: "Johzenji", position: "Réceptionneur", year: 2, height: 175, number: 5, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/9/90/CroppedKatsumichi.png/revision/latest/scale-to-width-down/150?cb=20160203043530" },
+          { id: 78, name: "Rintaro Numajiri", gender: "M", team: "Johzenji", position: "Passeur", year: 2, height: 176, number: 7, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/7/7a/CroppedRintaro.png/revision/latest/scale-to-width-down/150?cb=20160203043541" },
+          { id: 79, name: "Nobuyoshi Izaka", gender: "M", team: "Johzenji", position: "Central", year: 2, height: 186, number: 9, color: "from-yellow-400 to-orange-400", schoolColor: "text-yellow-400", image: "https://static.wikia.nocookie.net/haikyuu/images/e/e2/CroppedNobuyoshi.png/revision/latest/scale-to-width-down/150?cb=20160203043627" },
+          // --- TOKONAMI ---
+          { id: 54, name: "Akimiya Noboru", gender: "M", team: "Tokonami", position: "Réceptionneur", year: 3, height: 170, number: 1, color: "from-blue-700 to-blue-900", schoolColor: "text-blue-600", image: "" },
+          { id: 80, name: "Hayato Ikejiri", gender: "M", team: "Tokonami", position: "Réceptionneur", year: 3, height: 177, number: 4, color: "from-blue-700 to-blue-900", schoolColor: "text-blue-600", image: "" },
+          // --- WAKUTANI MINAMI ---
+          { id: 81, name: "Takeru Nakashima", gender: "M", team: "Wakutani Minami", position: "Réceptionneur", year: 3, height: 173, number: 1, color: "from-pink-500 to-rose-600", schoolColor: "text-pink-500", image: "" },
+          { id: 82, name: "Shunki Kawatabi", gender: "M", team: "Wakutani Minami", position: "Réceptionneur", year: 3, height: 174, number: 2, color: "from-pink-500 to-rose-600", schoolColor: "text-pink-500", image: "" },
+          { id: 83, name: "Kazumasa Hanayama", gender: "M", team: "Wakutani Minami", position: "Passeur", year: 3, height: 176, number: 5, color: "from-pink-500 to-rose-600", schoolColor: "text-pink-500", image: "" },
+          // --- NOHEBI ---
+          { id: 84, name: "Suguru Daisho", gender: "M", team: "Nohebi", position: "Réceptionneur", year: 3, height: 178, number: 1, color: "from-green-700 to-green-900", schoolColor: "text-green-700", image: "https://static.wikia.nocookie.net/haikyuu/images/7/7f/Daisho_s4_character_design.jpg" },
+          { id: 85, name: "Kazuma Numai", gender: "M", team: "Nohebi", position: "Pointu", year: 3, height: 178, number: 4, color: "from-green-700 to-green-900", schoolColor: "text-green-700", image: "https://static.wikia.nocookie.net/haikyuu/images/d/df/Numai%21%21.png/revision/latest/scale-to-width-down/150?cb=20200312002246" },
+          { id: 86, name: "Naoyasu Kuguri", gender: "M", team: "Nohebi", position: "Réceptionneur", year: 1, height: 180, number: 12, color: "from-green-700 to-green-900", schoolColor: "text-green-700", image: "https://static.wikia.nocookie.net/haikyuu/images/7/72/Kuguri..png/revision/latest/scale-to-width-down/150?cb=20200312003209" },
+          { id: 87, name: "Koji Hiroo", gender: "M", team: "Nohebi", position: "Central", year: 3, height: 185, number: 5, color: "from-green-700 to-green-900", schoolColor: "text-green-700", image: "https://static.wikia.nocookie.net/haikyuu/images/2/21/Hiroo.png/revision/latest/scale-to-width-down/150?cb=20200312002328" },
+          // --- ITACHIYAMA ---
+          { id: 26, name: "Kiyoomi Sakusa", gender: "M", team: "Itachiyama", position: "Réceptionneur", year: 2, height: 189, number: 10, color: "from-lime-500 to-lime-700", schoolColor: "text-lime-500", image: "https://static.wikia.nocookie.net/haikyuu/images/8/80/Sakusa_s4_character_design.jpg" },
+          { id: 88, name: "Motoya Komori", gender: "M", team: "Itachiyama", position: "Libero", year: 2, height: 180, number: 13, color: "from-lime-500 to-lime-700", schoolColor: "text-lime-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/59/Komori_s4_character_design.jpg" },
+          { id: 89, name: "Tsukasa Iizuna", gender: "M", team: "Itachiyama", position: "Passeur", year: 3, height: 181, number: 1, color: "from-lime-500 to-lime-700", schoolColor: "text-lime-500", image: "" },
+          // --- KAMOMEDAI ---
+          { id: 25, name: "Korai Hoshiumi", gender: "M", team: "Kamomedai", position: "Réceptionneur", year: 2, height: 169, number: 5, color: "from-sky-400 to-sky-600", schoolColor: "text-sky-500", image: "https://static.wikia.nocookie.net/haikyuu/images/1/1e/Hoshiumi_s4_character_design.jpg" },
+          { id: 90, name: "Sachiro Hirugami", gender: "M", team: "Kamomedai", position: "Central", year: 2, height: 190, number: 6, color: "from-sky-400 to-sky-600", schoolColor: "text-sky-500", image: "https://static.wikia.nocookie.net/haikyuu/images/4/45/Hirugami_s4_character_design.jpg" },
+          { id: 91, name: "Gao Hakuba", gender: "M", team: "Kamomedai", position: "Pointu", year: 2, height: 203, number: 10, color: "from-sky-400 to-sky-600", schoolColor: "text-sky-500", image: "https://static.wikia.nocookie.net/haikyuu/images/d/d4/Hakuba_s4_character_design.jpg" },
+          // --- SARUKAWA ---
+          { id: 92, name: "Itaru Shiramine", gender: "M", team: "Sarukawa", position: "Passeur", year: 3, height: 181, number: 1, color: "from-cyan-600 to-cyan-800", schoolColor: "text-cyan-600", image: "" },
+          { id: 93, name: "Soji Yamashiro", gender: "M", team: "Sarukawa", position: "Libero", year: 3, height: 177, number: 12, color: "from-cyan-600 to-cyan-800", schoolColor: "text-cyan-600", image: "" },
+          // --- TSUBAKIHARA ---
+          { id: 96, name: "Kazuki Maruyama", gender: "M", team: "Tsubakihara", position: "Réceptionneur", year: 3, height: 177, number: 1, color: "from-red-700 to-red-900", schoolColor: "text-red-700", image: "" },
+          { id: 94, name: "Sakae Echigo", gender: "M", team: "Tsubakihara", position: "Passeur", year: 3, height: 183, number: 2, color: "from-red-700 to-red-900", schoolColor: "text-red-700", image: "" },
+          { id: 95, name: "Motoki Teradomari", gender: "M", team: "Tsubakihara", position: "Pointu", year: 3, height: 190, number: 4, color: "from-red-700 to-red-900", schoolColor: "text-red-700", image: "" },
+          { id: 97, name: "Yoshitomo Atema", gender: "M", team: "Tsubakihara", position: "Libero", year: 2, height: 170, number: 11, color: "from-red-700 to-red-900", schoolColor: "text-red-700", image: "" },
+          { id: 98, name: "Aoi Himekawa", gender: "M", team: "Tsubakihara", position: "Réceptionneur", year: 1, height: 173, number: 14, color: "from-red-700 to-red-900", schoolColor: "text-red-700", image: "https://static.wikia.nocookie.net/haikyuu/images/4/4c/Himekawa_s4_character_design.jpg" },
+          // --- MANAGERS (KARASUNO) ---
+          { id: 27, name: "Kiyoko Shimizu", gender: "F", team: "Karasuno", position: "Manager", year: 3, height: 166, number: 0, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/c/c3/Kiyoko_s4_character_design.jpg" },
+          { id: 28, name: "Hitoka Yachi", gender: "F", team: "Karasuno", position: "Manager", year: 1, height: 149, number: 0, color: "from-orange-500 to-orange-700", schoolColor: "text-orange-500", image: "https://static.wikia.nocookie.net/haikyuu/images/5/56/Yachi_s4_character_design.jpg" },
+        ];
+
+        // --- ETAT GLOBAL ---
+        let targetCharacter = null;
+        let guesses = [];
+
+        // --- DOM ELEMENTS ---
+        const searchInput = document.getElementById('search-input');
+        const suggestionsBox = document.getElementById('suggestions-box');
+        const guessesContainer = document.getElementById('guesses-container');
+        const guessesList = document.getElementById('guesses-list');
+        const emptyState = document.getElementById('empty-state');
+        const victoryScreen = document.getElementById('victory-screen');
+        const searchSection = document.getElementById('search-section');
+        const victoryAvatarContainer = document.getElementById('victory-avatar-container');
+        const victoryName = document.getElementById('victory-name');
+        const helpModal = document.getElementById('help-modal');
+
+        // --- LOGIQUE ---
+
+        function startNewGame() {
+            targetCharacter = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+            guesses = [];
+            
+            // Reset UI
+            searchInput.value = "";
+            suggestionsBox.innerHTML = "";
+            suggestionsBox.classList.add('hidden');
+            guessesList.innerHTML = ""; // Vide la liste sans détruire le conteneur
+            guessesContainer.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            victoryScreen.classList.add('hidden');
+            searchSection.classList.remove('hidden');
+            
+            console.log("Nouveau jeu lancé. Cible:", targetCharacter.name);
+        }
+
+        // Gestion de la recherche (Input)
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            if (!val) {
+                suggestionsBox.classList.add('hidden');
+                return;
+            }
+
+            const suggestions = CHARACTERS.filter(c => 
+                c.name.toLowerCase().includes(val) && 
+                !guesses.find(g => g.id === c.id)
+            );
+
+            if (suggestions.length > 0) {
+                suggestionsBox.innerHTML = suggestions.map((char, index) => `
+                    <button 
+                        class="w-full text-left px-4 py-3 hover:bg-orange-600 hover:text-white transition-colors duration-200 flex items-center gap-4 border-b border-gray-800 group/item"
+                        onclick="handleGuess(${char.id})"
+                        style="animation: slide-up-fade 0.3s ease-out forwards; animation-delay: ${index * 30}ms; opacity: 0;"
+                    >
+                        ${getAvatarHTML(char)}
+                        <div class="flex flex-col">
+                            <span class="font-black uppercase text-lg tracking-tight group-hover/item:translate-x-1 transition-transform">${char.name}</span>
+                            <span class="text-xs font-bold uppercase opacity-70 group-hover/item:text-white ${char.schoolColor}">${char.team}</span>
+                        </div>
+                    </button>
+                `).join('');
+                suggestionsBox.classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                suggestionsBox.innerHTML = `<div class="p-4 text-center text-gray-500 font-bold uppercase animate-pulse">Aucun joueur trouvé</div>`;
+                suggestionsBox.classList.remove('hidden');
+            }
+        });
+
+        // Clic en dehors pour fermer
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('search-section').contains(e.target)) {
+                suggestionsBox.classList.add('hidden');
+            }
+        });
+
+        // Gestion du choix (Guess)
+        window.handleGuess = function(charId) {
+            const char = CHARACTERS.find(c => c.id === charId);
+            if (!char) return;
+
+            guesses.unshift(char); // Ajoute au début du tableau logique
+            
+            // Mise à jour UI
+            searchInput.value = "";
+            suggestionsBox.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            guessesContainer.classList.remove('hidden');
+
+            // Ajout de la ligne (SANS RECHARGER TOUT LE TABLEAU)
+            const rowHTML = createGuessRow(char);
+            guessesList.insertAdjacentHTML('afterbegin', rowHTML);
+            lucide.createIcons();
+
+            // Vérification victoire
+            if (char.id === targetCharacter.id) {
+                showVictory();
+            }
+        };
+
+        function showVictory() {
+            // Cache la recherche avec une animation de sortie
+            searchSection.style.opacity = '0';
+            setTimeout(() => {
+                searchSection.classList.add('hidden');
+                searchSection.style.opacity = '1';
+                
+                // Prépare l'écran de victoire
+                // On utilise big=true pour l'écran de victoire (grand rectangle incliné)
+                victoryAvatarContainer.innerHTML = getAvatarHTML(targetCharacter, true); 
+                victoryName.textContent = targetCharacter.name;
+                
+                victoryScreen.classList.remove('hidden');
+                lucide.createIcons();
+            }, 500);
+        }
+
+        // Helpers HTML
+        function getAvatarHTML(char, big = false) {
+            // STYLE CARTE HAIKYUU (Rectangulaire incliné)
+            // Si big=true (Ecran victoire) ou big=true (Dans les lignes de résultat) -> Rectangle incliné
+            // Si big=false (Suggestions recherche) -> Rond
+            
+            let content = '';
+            
+            // Classes de base
+            let containerClasses = `relative overflow-hidden border-2 border-white/20 shadow-lg flex items-center justify-center bg-gradient-to-br ${char.color}`;
+            let imgClasses = "object-cover";
+            
+            if (big) {
+                // STYLE CARTE (Row & Victory)
+                containerClasses += " w-20 h-24 md:w-24 md:h-28 skew-container animate-pop-in"; // Dimensions rectangle
+                imgClasses += " w-full h-full skew-child-reverse scale-110"; // Contre-inclinaison image
+            } else {
+                // STYLE ROND (Recherche)
+                containerClasses += " w-14 h-14 rounded-full";
+                imgClasses += " w-full h-full rounded-full";
+            }
+            
+            // Image avec fallback
+            if (char.image) {
+                content = `<img src="${char.image}" class="${imgClasses}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">`;
+                // Fallback caché
+                content += `
+                    <div class="hidden w-full h-full flex-col items-center justify-center ${big ? 'skew-child-reverse' : ''} text-center p-1" style="display:none">
+                        <span class="${big ? 'text-4xl' : 'text-lg'} font-black text-white/90 drop-shadow-md">${char.name.charAt(0)}</span>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div class="flex flex-col items-center justify-center ${big ? 'skew-child-reverse' : ''} text-center w-full h-full p-1">
+                        <span class="${big ? 'text-4xl' : 'text-lg'} font-black text-white/90 drop-shadow-md">${char.name.charAt(0)}</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="${containerClasses}">
+                    ${content}
+                    ${(!char.image) ? `<div class="absolute -bottom-4 -right-4 opacity-20 text-white"><i data-lucide="zap" class="${big ? 'w-[60px] h-[60px]' : 'w-0 h-0'}"></i></div>` : ''}
+                </div>
+            `;
+        }
+
+        function createGuessRow(guess) {
+            return `
+                <div class="flex gap-3 mb-3 min-w-max px-2 animate-slide-up-fade">
+                    ${getAvatarHTML(guess, true)} <!-- On passe true pour avoir le style carte -->
+                    ${createCell("Sexe", guess.gender, 'gender', 100)}
+                    ${createCell("Équipe", guess.team, 'team', 200)}
+                    ${createCell("Poste", guess.position, 'position', 300)}
+                    ${createCell("Année", guess.year, 'year', 400, true)}
+                    ${createCell("Taille", guess.height, 'height', 500, true)}
+                    ${createCell("Numéro", "#" + guess.number, 'number', 600, true)}
+                </div>
+            `;
+        }
+
+        function createCell(label, value, key, delay, isNumeric = false) {
+            let status = 'incorrect';
+            let content = value;
+            let bgClass = 'bg-red-600 border-red-400'; // Default Incorrect
+
+            if (isNumeric) {
+                // Comparaison numérique
+                let guessVal = key === 'number' ? parseInt(value.replace('#','')) : value;
+                let targetVal = key === 'number' ? targetCharacter.number : targetCharacter[key];
+                
+                if (guessVal === targetVal) {
+                    status = 'correct';
+                    bgClass = 'bg-green-600 border-green-400';
+                } else if (guessVal < targetVal) {
+                    status = 'higher';
+                    content = `<div class="flex flex-col items-center leading-none"><span>${value}</span><i data-lucide="arrow-up" class="w-5 h-5 text-white/80 animate-pulse mt-1"></i></div>`;
+                } else {
+                    status = 'lower';
+                    content = `<div class="flex flex-col items-center leading-none"><span>${value}</span><i data-lucide="arrow-down" class="w-5 h-5 text-white/80 animate-pulse mt-1"></i></div>`;
+                }
+            } else {
+                // Comparaison texte
+                if (value === targetCharacter[key]) {
+                    status = 'correct';
+                    bgClass = 'bg-green-600 border-green-400';
+                }
+            }
+
+            return `
+                <div 
+                    class="relative flex flex-col items-center justify-center w-20 h-24 md:w-24 md:h-28 skew-container transition-all duration-700 group animate-flip-in"
+                    style="animation-delay: ${delay}ms; animation-fill-mode: backwards;"
+                >
+                    <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] uppercase font-black tracking-widest px-2 py-0.5 z-10 border border-white/20 skew-child-reverse shadow-md">
+                        ${label}
+                    </div>
+                    <div class="w-full h-full flex items-center justify-center border-2 ${bgClass} shadow-lg relative overflow-hidden hover:brightness-110 transition-all">
+                        <div class="absolute top-0 left-0 w-full h-1/3 bg-white/10 skew-y-12 transform -translate-y-full group-hover:translate-y-full transition-transform duration-1000"></div>
+                        <div class="text-center font-bold text-sm md:text-base leading-tight uppercase skew-child-reverse break-words w-full px-1 text-white">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MODAL ---
+        window.toggleModal = function(show) {
+            const modal = document.getElementById('help-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex'); // Important pour centrer
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            lucide.createIcons();
+        };
+
+        // Initialisation
+        startNewGame();
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>

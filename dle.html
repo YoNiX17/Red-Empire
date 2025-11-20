@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | DLE Universe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        haikyuu: { 400: '#fb923c', 500: '#f97316', 600: '#ea580c' }, // Orange
+                        wakfu: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2' }   // Cyan
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: { 'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
+        
+        .glass-panel { background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 51, 51, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); }
+        
+        /* Card Interactions */
+        .game-card { 
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative; 
+            overflow: hidden;
+        }
+        .game-card:hover { transform: translateY(-10px) scale(1.02); }
+        
+        /* Haikyuu Specifics */
+        .card-haikyuu:hover { border-color: #f97316; box-shadow: 0 0 40px rgba(249, 115, 22, 0.3); }
+        .card-haikyuu .card-bg { background: radial-gradient(circle at top right, rgba(234, 88, 12, 0.2), transparent 70%); }
+        
+        /* Wakfu Specifics */
+        .card-wakfu:hover { border-color: #22d3ee; box-shadow: 0 0 40px rgba(34, 211, 238, 0.3); }
+        .card-wakfu .card-bg { background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.2), transparent 70%); }
+
+        /* Locked Card */
+        .card-locked { border-style: dashed; opacity: 0.6; cursor: not-allowed; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-empire-600 selection:text-white flex flex-col min-h-screen">
+
+    <!-- Backgrounds -->
+    <canvas id="canvas-container"></canvas>
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_20%,black_100%)] pointer-events-none z-[-1]"></div>
+    <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_bottom,transparent_50%,black_50%)] bg-[length:100%_4px]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-empire-900/30 bg-black/80 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-crown text-empire-600 text-2xl group-hover:animate-pulse"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="games.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-arrow-left mr-2"></i>RETOUR AU HUB</a>
+                <span class="text-sm font-mono font-bold text-white text-glow border-b-2 border-empire-600 pb-1">DLE UNIVERSE</span>
+            </div>
+            <!-- Mobile Menu Btn -->
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden text-white"><i class="fa-solid fa-bars text-2xl"></i></button>
+        </div>
+         <div id="mobile-menu" class="hidden absolute top-16 left-0 w-full bg-black border-b border-empire-900 p-4 md:hidden">
+            <a href="games.html" class="block py-2 text-gray-400 hover:text-white">RETOUR AU HUB</a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-12 text-center relative z-10 px-4">
+        <div data-aos="fade-down" class="inline-block mb-4 px-3 py-1 border border-white/10 rounded-full bg-white/5 backdrop-blur-sm">
+            <span class="text-xs font-mono font-bold tracking-[0.2em] text-gray-300 uppercase">DAILY CHALLENGES</span>
+        </div>
+        <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-[0_0_15px_rgba(255,51,51,0.5)]">
+            CHOISIS TON <span class="text-transparent bg-clip-text bg-gradient-to-r from-empire-500 via-white to-empire-500">UNIVERS</span>
+        </h1>
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto">Devinez le personnage du jour. Une tentative quotidienne.</p>
+    </section>
+
+    <!-- SELECTION GRID -->
+    <section class="flex-grow max-w-7xl mx-auto px-6 lg:px-8 pb-24 w-full relative z-10 flex flex-col justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            
+            <!-- CARD 1: HAIKYUUDLE -->
+            <a href="#" onclick="openGameModal('Haikyuudle')" class="block h-full group">
+                <div class="game-card card-haikyuu glass-panel rounded-2xl h-full border border-white/10 relative" data-aos="fade-up" data-aos-delay="0">
+                    <!-- Background Gradient -->
+                    <div class="card-bg absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div class="p-8 flex flex-col items-center text-center h-full relative z-10">
+                        <div class="w-24 h-24 rounded-full bg-black border-2 border-white/10 group-hover:border-haikyuu-500 flex items-center justify-center mb-6 shadow-xl group-hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] transition-all duration-500 group-hover:scale-110">
+                            <i class="fa-solid fa-volleyball text-4xl text-gray-500 group-hover:text-haikyuu-400 transition-colors"></i>
+                        </div>
+                        
+                        <h2 class="font-display text-2xl font-bold text-white mb-2 group-hover:text-haikyuu-400 transition-colors">HAIKYUUDLE</h2>
+                        <div class="h-0.5 w-8 bg-gray-700 group-hover:bg-haikyuu-500 mb-4 transition-all duration-500"></div>
+                        
+                        <p class="text-gray-400 text-sm group-hover:text-gray-200 transition-colors mb-6 flex-grow">
+                            Le petit géant ? Le roi du terrain ? Retrouvez le joueur caché.
+                        </p>
+                        
+                        <span class="text-xs font-mono font-bold text-gray-500 group-hover:text-haikyuu-400 uppercase tracking-widest border border-gray-800 group-hover:border-haikyuu-500 px-4 py-2 rounded transition-all">
+                            JOUER
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- CARD 2: WAKFUDLE -->
+            <a href="#" onclick="openGameModal('Wakfudle')" class="block h-full group">
+                <div class="game-card card-wakfu glass-panel rounded-2xl h-full border border-white/10 relative" data-aos="fade-up" data-aos-delay="150">
+                    <!-- Background Gradient -->
+                    <div class="card-bg absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div class="p-8 flex flex-col items-center text-center h-full relative z-10">
+                        <div class="w-24 h-24 rounded-full bg-black border-2 border-white/10 group-hover:border-wakfu-500 flex items-center justify-center mb-6 shadow-xl group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all duration-500 group-hover:scale-110">
+                            <i class="fa-solid fa-dragon text-4xl text-gray-500 group-hover:text-wakfu-400 transition-colors"></i>
+                        </div>
+                        
+                        <h2 class="font-display text-2xl font-bold text-white mb-2 group-hover:text-wakfu-400 transition-colors">WAKFUDLE</h2>
+                        <div class="h-0.5 w-8 bg-gray-700 group-hover:bg-wakfu-500 mb-4 transition-all duration-500"></div>
+                        
+                        <p class="text-gray-400 text-sm group-hover:text-gray-200 transition-colors mb-6 flex-grow">
+                            Yugo, Tristepin ou Nox ? Identifiez le personnage du Krosmoz.
+                        </p>
+                        
+                        <span class="text-xs font-mono font-bold text-gray-500 group-hover:text-wakfu-400 uppercase tracking-widest border border-gray-800 group-hover:border-wakfu-500 px-4 py-2 rounded transition-all">
+                            JOUER
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- CARD 3: COMING SOON -->
+            <div class="game-card card-locked glass-panel rounded-2xl h-full border border-white/5 relative" data-aos="fade-up" data-aos-delay="300">
+                <div class="p-8 flex flex-col items-center text-center h-full relative z-10">
+                    <div class="w-24 h-24 rounded-full bg-black/50 border border-white/5 flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-plus text-4xl text-gray-700"></i>
+                    </div>
+                    
+                    <h2 class="font-display text-2xl font-bold text-gray-600 mb-2">BIENTÔT</h2>
+                    <div class="h-0.5 w-8 bg-gray-800 mb-4"></div>
+                    
+                    <p class="text-gray-600 text-sm mb-6 flex-grow">
+                        De nouveaux univers arrivent prochainement.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-empire-900/50 bg-black py-8 mt-auto relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            © 2024 Red Empire Systems.
+        </div>
+    </footer>
+
+    <!-- MODAL (Placeholder for Logic) -->
+    <div id="gameModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closeGameModal()"></div>
+        <div class="glass-panel border border-white/20 p-8 rounded-xl max-w-md w-full relative z-10 text-center animate-pulse-fast">
+            <i class="fa-solid fa-gamepad text-5xl text-white mb-4"></i>
+            <h3 class="text-2xl font-display font-bold text-white mb-2">Jeu en approche</h3>
+            <p class="text-gray-400 mb-6">Le module <span id="modalGameTitle" class="text-empire-500 font-bold"></span> sera activé dans la prochaine mise à jour.</p>
+            <button onclick="closeGameModal()" class="px-6 py-2 bg-white text-black font-bold rounded hover:bg-gray-200">OK</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        // Particles (Reuse standard Red Empire particle system)
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        class Particle {
+            constructor(x, y, dx, dy, size, color) {
+                this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size; this.color = color;
+            }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+                if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+                this.x += this.dx; this.y += this.dy; this.draw();
+            }
+        }
+        function init() {
+            particlesArray = [];
+            for(let i=0; i<100; i++) {
+                let size = Math.random() * 2;
+                let x = Math.random() * innerWidth; let y = Math.random() * innerHeight;
+                let dx = (Math.random() - 0.5) * 0.5; let dy = (Math.random() - 0.5) * 0.5;
+                particlesArray.push(new Particle(x, y, dx, dy, size, '#cc0000'));
+            }
+        }
+        function animate() { requestAnimationFrame(animate); ctx.clearRect(0,0,innerWidth, innerHeight); particlesArray.forEach(p => p.update()); }
+        window.addEventListener('resize', ()=>{ canvas.width=innerWidth; canvas.height=innerHeight; init(); });
+        init(); animate();
+
+        // Modal Logic
+        function openGameModal(game) {
+            document.getElementById('modalGameTitle').innerText = game;
+            document.getElementById('gameModal').classList.remove('hidden');
+        }
+        function closeGameModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
