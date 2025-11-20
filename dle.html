@@ -101,7 +101,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             
             <!-- CARD 1: HAIKYUUDLE -->
-            <a href="#" onclick="openGameModal('Haikyuudle')" class="block h-full group">
+            <!-- MODIFICATION ICI: Lien direct vers haikyuudle.html -->
+            <a href="haikyuudle.html" class="block h-full group">
                 <div class="game-card card-haikyuu glass-panel rounded-2xl h-full border border-white/10 relative" data-aos="fade-up" data-aos-delay="0">
                     <!-- Background Gradient -->
                     <div class="card-bg absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -126,7 +127,8 @@
             </a>
 
             <!-- CARD 2: WAKFUDLE -->
-            <a href="#" onclick="openGameModal('Wakfudle')" class="block h-full group">
+            <!-- MODIFICATION ICI: Lien direct vers wakfudle.html -->
+            <a href="wakfudle.html" class="block h-full group">
                 <div class="game-card card-wakfu glass-panel rounded-2xl h-full border border-white/10 relative" data-aos="fade-up" data-aos-delay="150">
                     <!-- Background Gradient -->
                     <div class="card-bg absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -176,17 +178,6 @@
         </div>
     </footer>
 
-    <!-- MODAL (Placeholder for Logic) -->
-    <div id="gameModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm" onclick="closeGameModal()"></div>
-        <div class="glass-panel border border-white/20 p-8 rounded-xl max-w-md w-full relative z-10 text-center animate-pulse-fast">
-            <i class="fa-solid fa-gamepad text-5xl text-white mb-4"></i>
-            <h3 class="text-2xl font-display font-bold text-white mb-2">Jeu en approche</h3>
-            <p class="text-gray-400 mb-6">Le module <span id="modalGameTitle" class="text-empire-500 font-bold"></span> sera activé dans la prochaine mise à jour.</p>
-            <button onclick="closeGameModal()" class="px-6 py-2 bg-white text-black font-bold rounded hover:bg-gray-200">OK</button>
-        </div>
-    </div>
-
     <!-- SCRIPTS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
@@ -220,15 +211,6 @@
         function animate() { requestAnimationFrame(animate); ctx.clearRect(0,0,innerWidth, innerHeight); particlesArray.forEach(p => p.update()); }
         window.addEventListener('resize', ()=>{ canvas.width=innerWidth; canvas.height=innerHeight; init(); });
         init(); animate();
-
-        // Modal Logic
-        function openGameModal(game) {
-            document.getElementById('modalGameTitle').innerText = game;
-            document.getElementById('gameModal').classList.remove('hidden');
-        }
-        function closeGameModal() {
-            document.getElementById('gameModal').classList.add('hidden');
-        }
     </script>
 </body>
 </html>
