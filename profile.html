@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil | Red Empire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' } },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Orbitron', 'sans-serif'], mono: ['Rajdhani', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; }
+        .glass-panel { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 51, 51, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); }
+    </style>
+</head>
+<body class="antialiased selection:bg-empire-600 selection:text-white min-h-screen flex flex-col">
+
+    <nav class="fixed w-full z-50 border-b border-empire-900/30 bg-black/80 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3">
+                <i class="fa-solid fa-arrow-left text-white hover:text-empire-500 transition-colors text-xl"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RETOUR</span>
+            </a>
+            <div class="text-empire-500 font-mono font-bold tracking-widest">ESPACE MEMBRE</div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center pt-24 pb-12 px-4 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-empire-900/20 via-black to-black">
+        
+        <div class="glass-panel w-full max-w-2xl rounded-2xl p-8 md:p-12 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-empire-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <h1 class="font-display text-3xl md:text-4xl font-bold text-white mb-2">IDENTITÉ DU CITOYEN</h1>
+            <p class="text-gray-500 font-mono text-sm uppercase tracking-widest mb-10">Mise à jour des données biométriques</p>
+
+            <div class="flex flex-col md:flex-row gap-8">
+                
+                <!-- Colonne Gauche : Avatar -->
+                <div class="flex flex-col items-center gap-4">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('file-input').click()">
+                        <img id="current-avatar" src="https://ui-avatars.com/api/?name=User&background=333&color=fff" class="w-32 h-32 rounded-2xl border-4 border-empire-600 object-cover shadow-[0_0_30px_rgba(220,38,38,0.3)] group-hover:opacity-50 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-camera text-3xl text-white"></i>
+                        </div>
+                        <!-- Input fichier caché -->
+                        <input type="file" id="file-input" accept="image/*" class="hidden" onchange="window.handleImageUpload(this)">
+                    </div>
+                    <span class="text-xs text-gray-500 font-mono uppercase">ID: <span id="user-uid">Chargement...</span></span>
+                    <p class="text-[10px] text-empire-500 text-center max-w-[150px]">Cliquez sur l'image pour changer (Max 500ko)</p>
+                </div>
+
+                <!-- Colonne Droite : Formulaire -->
+                <div class="flex-1 space-y-6">
+                    
+                    <!-- Pseudo -->
+                    <div>
+                        <label class="block text-xs font-mono text-empire-500 uppercase font-bold mb-2">Nom de code (Pseudo)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="input-username" class="w-full bg-black/50 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-white focus:border-empire-500 focus:ring-1 focus:ring-empire-500 outline-none transition-all" placeholder="Votre pseudo...">
+                        </div>
+                    </div>
+
+                    <!-- URL Avatar (Optionnel si on upload) -->
+                    <div>
+                        <label class="block text-xs font-mono text-empire-500 uppercase font-bold mb-2">Ou lien de l'Avatar (URL)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="input-avatar-url" class="w-full bg-black/50 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-gray-300 focus:border-empire-500 focus:ring-1 focus:ring-empire-500 outline-none transition-all text-sm font-mono" placeholder="https://..." oninput="document.getElementById('current-avatar').src = this.value || 'https://ui-avatars.com/api/?name=User'">
+                        </div>
+                    </div>
+
+                    <!-- Sécurité -->
+                    <div class="border-t border-white/10 pt-4 mt-6">
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-lock text-empire-500"></i> Sécurité</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-mono text-gray-400 uppercase mb-2">Nouveau mot de passe</label>
+                            <input type="password" id="input-password" class="w-full bg-black/50 border border-white/10 rounded-lg py-3 px-4 text-white focus:border-empire-500 outline-none transition-all" placeholder="Laisser vide si inchangé">
+                            <p class="text-[10px] text-gray-500 mt-1 italic">* Ne fonctionne pas avec la connexion Google</p>
+                        </div>
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="pt-4 flex gap-4">
+                        <button onclick="window.saveProfile()" class="flex-1 py-3 bg-empire-600 hover:bg-empire-500 text-white font-bold font-display uppercase tracking-wider rounded-lg shadow-[0_0_20px_rgba(220,0,0,0.4)] transition-all transform hover:-translate-y-1">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i> Sauvegarder
+                        </button>
+                        <button onclick="window.logout()" class="px-6 py-3 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded-lg transition-all font-bold" title="Déconnexion">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
