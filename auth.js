@@ -19,6 +19,18 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const provider = new GoogleAuthProvider();
 
+// --- UTILITAIRE D'ERREUR ---
+function handleFirebaseError(e) {
+    console.error(e);
+    if (e.code === 'PERMISSION_DENIED' || e.message.includes('PERMISSION_DENIED')) {
+        alert("⛔ ACCÈS REFUSÉ PAR LA BASE DE DONNÉES\n\nVous n'avez pas la permission d'écrire.\n\nSOLUTION :\n1. Allez sur console.firebase.google.com\n2. Realtime Database > Règles\n3. Copiez les règles fournies par Gemini.");
+    } else if (e.code === 'auth/requires-recent-login') {
+        alert("⚠️ Sécurité : Pour changer le mot de passe, vous devez vous reconnecter. Déconnectez-vous et réessayez.");
+    } else {
+        alert("Erreur : " + e.message);
+    }
+}
+
 // --- CONNEXION ---
 window.login = async () => {
     try {
@@ -37,7 +49,7 @@ window.login = async () => {
                 stats: { wakfudle: { wins: 0 }, haikyuudle: { wins: 0 } }
             });
         }
-    } catch (error) { alert(error.message); }
+    } catch (error) { handleFirebaseError(error); }
 };
 
 window.logout = async () => {
@@ -45,21 +57,20 @@ window.logout = async () => {
     window.location.href = "index.html";
 };
 
-// --- GESTION IMAGE DEPUIS PC (NOUVEAU) ---
+// --- UPLOAD IMAGE ---
 window.handleImageUpload = (input) => {
     const file = input.files[0];
     if (!file) return;
 
-    // Sécurité : Limite de taille (500ko) pour ne pas saturer la Realtime DB
+    // Limite 500ko pour la Realtime DB (important)
     if (file.size > 500 * 1024) {
-        alert("⚠️ Image trop volumineuse !\nLa taille maximum est de 500ko.\nEssayez de compresser l'image ou d'utiliser un lien URL.");
-        input.value = ""; // Reset
+        alert("⚠️ Image trop volumineuse (Max 500ko).\n\nAstuce : Faites une capture d'écran de votre image, elle sera plus légère.");
+        input.value = "";
         return;
     }
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        // On met l'image convertie en Base64 dans l'aperçu et dans le champ URL caché
         const base64String = e.target.result;
         document.getElementById('current-avatar').src = base64String;
         document.getElementById('input-avatar-url').value = base64String;
@@ -77,40 +88,31 @@ window.saveProfile = async () => {
     const newPassword = document.getElementById('input-password').value;
 
     try {
-        // 1. Mise à jour des infos dans la DB
+        // 1. Mise à jour DB
         const updates = {};
-        updates[`users/${user.uid}/username`] = newName;
-        updates[`users/${user.uid}/avatar`] = newAvatar;
+        if (newName) updates[`users/${user.uid}/username`] = newName;
+        if (newAvatar) updates[`users/${user.uid}/avatar`] = newAvatar;
+        
         await update(ref(db), updates);
 
-        // 2. Mise à jour du mot de passe (Seulement si rempli)
+        // 2. Mise à jour Mot de passe
         if (newPassword && newPassword.length > 0) {
-            // Vérification si c'est un compte Google
             if (user.providerData[0].providerId === 'google.com') {
-                alert("⚠️ Impossible de changer le mot de passe.\n\nVous êtes connecté via Google. Votre mot de passe est géré par Google directement.");
+                alert("⚠️ Note : Le mot de passe Google ne peut pas être modifié ici.");
             } else {
                 await updatePassword(user, newPassword);
                 alert("✅ Profil et mot de passe mis à jour !");
             }
         } else {
-            alert("✅ Profil mis à jour !");
+            alert("✅ Profil sauvegardé avec succès !");
         }
 
-        // Rafraichissement visuel
         updateUI(user);
         
-    } catch (e) {
-        console.error(e);
-        // Gestion des erreurs spécifiques (ex: mot de passe trop court)
-        if(e.code === 'auth/requires-recent-login') {
-            alert("Pour changer le mot de passe, vous devez vous reconnecter récemment. Déconnectez-vous et réessayez.");
-        } else {
-            alert("Erreur : " + e.message);
-        }
-    }
+    } catch (e) { handleFirebaseError(e); }
 };
 
-// --- CHARGER LES DONNÉES ---
+// --- CHARGEMENT DONNÉES ---
 async function loadProfileFormData(user) {
     const inputName = document.getElementById('input-username');
     const inputAvatar = document.getElementById('input-avatar-url');
@@ -123,8 +125,10 @@ async function loadProfileFormData(user) {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 inputName.value = data.username || user.displayName;
-                // Si l'avatar est très long (Base64), on le met quand même dans la value
-                inputAvatar.value = data.avatar || user.photoURL;
+                // On ne remplit l'input URL que si c'est une URL courte, pas un gros Base64
+                if (data.avatar && data.avatar.startsWith('http')) {
+                    inputAvatar.value = data.avatar;
+                }
                 if(imgPreview) imgPreview.src = data.avatar || user.photoURL;
                 if(uidDisplay) uidDisplay.innerText = user.uid.substring(0, 8) + "...";
             }
@@ -132,7 +136,7 @@ async function loadProfileFormData(user) {
     }
 }
 
-// --- GESTION JEUX ---
+// --- JEUX ---
 window.saveGameWin = async (gameName, attempts) => {
     const user = auth.currentUser;
     if (!user) return;
@@ -151,10 +155,10 @@ window.saveGameWin = async (gameName, attempts) => {
     } catch (e) { console.error(e); }
 };
 
-// --- UI UPDATE GLOBAL ---
+// --- UI UPDATE ---
 async function updateUI(user) {
     const loginBtn = document.getElementById('btn-login');
-    const userProfile = document.getElementById('user-profile'); // Le lien vers profile.html
+    const userProfile = document.getElementById('user-profile');
     const displayName = document.getElementById('display-name');
     const profilePic = document.getElementById('profile-pic');
 
@@ -175,7 +179,6 @@ async function updateUI(user) {
         } catch(e) { console.error(e); }
 
         loadProfileFormData(user);
-        
     } else {
         if(loginBtn) loginBtn.classList.remove('hidden');
         if(userProfile) userProfile.classList.add('hidden');
