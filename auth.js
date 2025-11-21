@@ -1,16 +1,12 @@
-// Import des fonctions Firebase (Version CDN pour fonctionner sans installation)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// ============================================================
-// 🔴 VOTRE CONFIGURATION (C'est ici que j'ai mis vos infos)
-// ============================================================
+// CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
   authDomain: "red-empire-103d7.firebaseapp.com",
-  // L'URL de votre base de données (Europe West 1)
-  databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app", 
+  databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "red-empire-103d7",
   storageBucket: "red-empire-103d7.firebasestorage.app",
   messagingSenderId: "1002924043244",
@@ -18,143 +14,176 @@ const firebaseConfig = {
   measurementId: "G-DPG3ZZ68G4"
 };
 
-// Initialisation de Firebase avec votre config
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getDatabase(app); // Connexion à la Realtime Database
+const db = getDatabase(app);
 const provider = new GoogleAuthProvider();
 
-// ============================================================
-// 🛠️ SYSTÈME DE GESTION UTILISATEUR
-// ============================================================
-
-// 1. Fonction de Connexion (Google)
+// --- CONNEXION ---
 window.login = async () => {
     try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
-        console.log("✅ Connecté :", user.displayName);
         
-        // Vérifier si l'utilisateur existe déjà dans la base de données
         const dbRef = ref(db);
-        const userSnapshot = await get(child(dbRef, `users/${user.uid}`));
+        const snapshot = await get(child(dbRef, `users/${user.uid}`));
         
-        if (!userSnapshot.exists()) {
-            // Si c'est sa première fois, on crée son profil
-            console.log("🆕 Nouvel utilisateur ! Création du profil...");
+        if (!snapshot.exists()) {
             await set(ref(db, 'users/' + user.uid), {
                 username: user.displayName,
+                avatar: user.photoURL,
                 email: user.email,
                 joinedAt: new Date().toISOString(),
-                stats: {
-                    wakfudle: { wins: 0, streak: 0 },
-                    haikyuudle: { wins: 0, streak: 0 }
-                }
+                stats: { wakfudle: { wins: 0 }, haikyuudle: { wins: 0 } }
             });
         }
-        updateUI(user);
-    } catch (error) {
-        console.error("❌ Erreur connexion:", error);
-        alert("Erreur lors de la connexion : " + error.message);
-    }
+    } catch (error) { alert(error.message); }
 };
 
-// 2. Fonction de Déconnexion
 window.logout = async () => {
-    try {
-        await signOut(auth);
-        console.log("👋 Déconnecté");
-        window.location.reload();
-    } catch (error) {
-        console.error("Erreur déconnexion:", error);
-    }
+    await signOut(auth);
+    window.location.href = "index.html";
 };
 
-// 3. Sauvegarder une victoire (Compatible Realtime Database)
-window.saveGameWin = async (gameName, attempts) => {
-    const user = auth.currentUser;
-    if (!user) {
-        console.warn("⚠️ Pas de sauvegarde : Utilisateur non connecté.");
+// --- GESTION IMAGE DEPUIS PC (NOUVEAU) ---
+window.handleImageUpload = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Sécurité : Limite de taille (500ko) pour ne pas saturer la Realtime DB
+    if (file.size > 500 * 1024) {
+        alert("⚠️ Image trop volumineuse !\nLa taille maximum est de 500ko.\nEssayez de compresser l'image ou d'utiliser un lien URL.");
+        input.value = ""; // Reset
         return;
     }
 
-    const today = new Date().toISOString().split('T')[0]; // Date format YYYY-MM-DD
-    const userStatsPath = `users/${user.uid}/stats/${gameName}`;
-
-    try {
-        console.log(`💾 Sauvegarde en cours pour ${gameName}...`);
-        
-        // 1. Lire les stats actuelles
-        const snapshot = await get(child(ref(db), userStatsPath));
-        let currentStats = snapshot.val() || { wins: 0, streak: 0 };
-
-        // 2. Préparer les mises à jour
-        const updates = {};
-        updates[userStatsPath + '/wins'] = (currentStats.wins || 0) + 1;
-        updates[userStatsPath + '/streak'] = (currentStats.streak || 0) + 1;
-        updates[userStatsPath + '/lastPlayed'] = today;
-        
-        // 3. Ajouter une entrée dans l'historique
-        const newHistoryKey = push(child(ref(db), userStatsPath + '/history')).key;
-        updates[userStatsPath + '/history/' + newHistoryKey] = {
-            date: today,
-            attempts: attempts
-        };
-
-        // 4. Envoyer à la base de données
-        await update(ref(db), updates);
-        console.log(`✅ Victoire ${gameName} sauvegardée avec succès !`);
-        
-    } catch (e) {
-        console.error("❌ Erreur sauvegarde:", e);
-    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // On met l'image convertie en Base64 dans l'aperçu et dans le champ URL caché
+        const base64String = e.target.result;
+        document.getElementById('current-avatar').src = base64String;
+        document.getElementById('input-avatar-url').value = base64String;
+    };
+    reader.readAsDataURL(file);
 };
 
-// 4. Charger les stats du joueur
-window.loadUserStats = async () => {
+// --- SAUVEGARDE DU PROFIL ---
+window.saveProfile = async () => {
     const user = auth.currentUser;
-    if (!user) return null;
-    
+    if (!user) return;
+
+    const newName = document.getElementById('input-username').value;
+    const newAvatar = document.getElementById('input-avatar-url').value;
+    const newPassword = document.getElementById('input-password').value;
+
     try {
-        const snapshot = await get(child(ref(db), `users/${user.uid}/stats`));
-        if (snapshot.exists()) {
-            return snapshot.val();
+        // 1. Mise à jour des infos dans la DB
+        const updates = {};
+        updates[`users/${user.uid}/username`] = newName;
+        updates[`users/${user.uid}/avatar`] = newAvatar;
+        await update(ref(db), updates);
+
+        // 2. Mise à jour du mot de passe (Seulement si rempli)
+        if (newPassword && newPassword.length > 0) {
+            // Vérification si c'est un compte Google
+            if (user.providerData[0].providerId === 'google.com') {
+                alert("⚠️ Impossible de changer le mot de passe.\n\nVous êtes connecté via Google. Votre mot de passe est géré par Google directement.");
+            } else {
+                await updatePassword(user, newPassword);
+                alert("✅ Profil et mot de passe mis à jour !");
+            }
+        } else {
+            alert("✅ Profil mis à jour !");
         }
+
+        // Rafraichissement visuel
+        updateUI(user);
+        
     } catch (e) {
-        console.error("Erreur lecture stats:", e);
+        console.error(e);
+        // Gestion des erreurs spécifiques (ex: mot de passe trop court)
+        if(e.code === 'auth/requires-recent-login') {
+            alert("Pour changer le mot de passe, vous devez vous reconnecter récemment. Déconnectez-vous et réessayez.");
+        } else {
+            alert("Erreur : " + e.message);
+        }
     }
-    return null;
 };
 
-// ============================================================
-// 🎨 GESTION DE L'INTERFACE (Afficher/Cacher les boutons)
-// ============================================================
-function updateUI(user) {
-    // On récupère les éléments HTML
-    const loginBtn = document.getElementById('login-btn');
-    const userProfile = document.getElementById('user-profile');
-    const userNameDisplay = document.getElementById('user-name-display');
-    const userAvatar = document.getElementById('user-avatar');
+// --- CHARGER LES DONNÉES ---
+async function loadProfileFormData(user) {
+    const inputName = document.getElementById('input-username');
+    const inputAvatar = document.getElementById('input-avatar-url');
+    const imgPreview = document.getElementById('current-avatar');
+    const uidDisplay = document.getElementById('user-uid');
 
-    if (user) {
-        // --- MODE CONNECTÉ ---
-        if(loginBtn) loginBtn.classList.add('hidden'); // Cacher le bouton login
-        if(userProfile) {
-            userProfile.classList.remove('hidden'); // Afficher le profil
-            if(userNameDisplay) userNameDisplay.innerText = user.displayName;
-            if(userAvatar) userAvatar.src = user.photoURL;
-        }
-    } else {
-        // --- MODE VISITEUR ---
-        if(loginBtn) loginBtn.classList.remove('hidden'); // Afficher le bouton login
-        if(userProfile) userProfile.classList.add('hidden'); // Cacher le profil
+    if (inputName && inputAvatar) {
+        try {
+            const snapshot = await get(child(ref(db), `users/${user.uid}`));
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                inputName.value = data.username || user.displayName;
+                // Si l'avatar est très long (Base64), on le met quand même dans la value
+                inputAvatar.value = data.avatar || user.photoURL;
+                if(imgPreview) imgPreview.src = data.avatar || user.photoURL;
+                if(uidDisplay) uidDisplay.innerText = user.uid.substring(0, 8) + "...";
+            }
+        } catch (e) { console.error(e); }
     }
 }
 
-// Écouter si l'utilisateur est déjà connecté quand la page charge
-onAuthStateChanged(auth, (user) => {
-    updateUI(user);
-    if(user) {
-        console.log(`👤 Session active : ${user.email}`);
+// --- GESTION JEUX ---
+window.saveGameWin = async (gameName, attempts) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const today = new Date().toISOString().split('T')[0];
+    const path = `users/${user.uid}/stats/${gameName}`;
+    try {
+        const snap = await get(child(ref(db), path));
+        let stats = snap.val() || { wins: 0, streak: 0 };
+        const updates = {};
+        updates[path + '/wins'] = (stats.wins || 0) + 1;
+        updates[path + '/streak'] = (stats.streak || 0) + 1;
+        updates[path + '/lastPlayed'] = today;
+        const newKey = push(child(ref(db), path + '/history')).key;
+        updates[path + '/history/' + newKey] = { date: today, attempts: attempts };
+        await update(ref(db), updates);
+    } catch (e) { console.error(e); }
+};
+
+// --- UI UPDATE GLOBAL ---
+async function updateUI(user) {
+    const loginBtn = document.getElementById('btn-login');
+    const userProfile = document.getElementById('user-profile'); // Le lien vers profile.html
+    const displayName = document.getElementById('display-name');
+    const profilePic = document.getElementById('profile-pic');
+
+    if (user) {
+        if(loginBtn) loginBtn.classList.add('hidden');
+        if(userProfile) userProfile.classList.remove('hidden');
+        
+        try {
+            const snapshot = await get(child(ref(db), `users/${user.uid}`));
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if(displayName) displayName.innerText = data.username;
+                if(profilePic) profilePic.src = data.avatar;
+            } else {
+                if(displayName) displayName.innerText = user.displayName;
+                if(profilePic) profilePic.src = user.photoURL;
+            }
+        } catch(e) { console.error(e); }
+
+        loadProfileFormData(user);
+        
+    } else {
+        if(loginBtn) loginBtn.classList.remove('hidden');
+        if(userProfile) userProfile.classList.add('hidden');
+        
+        if (window.location.pathname.includes('profile.html')) {
+            window.location.href = 'index.html';
+        }
     }
-});
+}
+
+onAuthStateChanged(auth, (user) => updateUI(user));
