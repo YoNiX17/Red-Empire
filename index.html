@@ -299,9 +299,11 @@
             </div>
             <!-- Avatar Preview -->
             <div class="flex justify-center mb-6">
-                <div class="relative group cursor-pointer">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('file-input').click()">
                     <img id="modal-avatar" src="" class="w-24 h-24 rounded-xl border-2 border-empire-600 object-cover">
-                    <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"><i class="fa-solid fa-pen text-white"></i></div>
+                    <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"><i class="fa-solid fa-camera text-white"></i></div>
+                    <!-- Input caché pour l'upload -->
+                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="window.handleImageUpload(this)">
                 </div>
             </div>
             <!-- Formulaire -->
@@ -312,7 +314,13 @@
                 </div>
                 <div>
                     <label class="block text-xs font-mono text-gray-400 uppercase mb-1">URL de l'Avatar</label>
-                    <input type="text" id="input-avatar-url" placeholder="https://..." class="w-full bg-black/50 border border-white/10 rounded p-3 text-gray-300 focus:border-empire-500 outline-none text-sm font-mono">
+                    <input type="text" id="input-avatar-url" placeholder="https://..." class="w-full bg-black/50 border border-white/10 rounded p-3 text-gray-300 focus:border-empire-500 outline-none text-sm font-mono" oninput="document.getElementById('modal-avatar').src = this.value">
+                </div>
+                <!-- Section Sécurité -->
+                <div class="border-t border-white/10 pt-2 mt-2">
+                    <label class="block text-xs font-mono text-gray-400 uppercase mb-1">Nouveau mot de passe</label>
+                    <input type="password" id="input-password" class="w-full bg-black/50 border border-white/10 rounded p-3 text-white focus:border-empire-500 outline-none" placeholder="Laisser vide si inchangé">
+                    <p class="text-[10px] text-gray-500 mt-1 italic">* Non disponible avec connexion Google</p>
                 </div>
             </div>
             <!-- Actions -->
