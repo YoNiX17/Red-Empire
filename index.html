@@ -6,9 +6,7 @@
     <title>Red Empire | Portail Discord</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-    <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <script>
@@ -16,141 +14,49 @@
             theme: {
                 extend: {
                     colors: {
-                        empire: {
-                            500: '#ff3333', // Plus vif
-                            600: '#e60000',
-                            700: '#cc0000',
-                            800: '#990000',
-                            900: '#4d0000',
-                            black: '#030303',
-                            void: '#000000',
-                        }
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         display: ['Orbitron', 'sans-serif'],
                         mono: ['Rajdhani', 'sans-serif'],
                     },
-                    backgroundImage: {
-                        'vignette': 'radial-gradient(circle, transparent 50%, black 120%)',
-                    },
+                    backgroundImage: { 'vignette': 'radial-gradient(circle, transparent 50%, black 120%)' },
                     animation: {
-                        'float': 'float 6s ease-in-out infinite',
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'scanline': 'scanline 8s linear infinite',
                     },
                     keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        },
-                        scanline: {
-                            '0%': { transform: 'translateY(-100%)' },
-                            '100%': { transform: 'translateY(100%)' }
-                        }
+                        scanline: { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(100%)' } }
                     }
                 }
             }
         }
     </script>
     <style>
-        body {
-            background-color: #030303;
-            color: #e5e5e5;
-            overflow-x: hidden;
-        }
-
-        /* Canvas Background */
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.6;
-        }
-
-        /* Scroll Progress Bar */
-        #progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #990000, #ff3333);
-            z-index: 100;
-            width: 0%;
-            transition: width 0.1s;
-            box-shadow: 0 0 10px #ff3333;
-        }
-
-        .glass-panel {
-            background: rgba(15, 15, 15, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 51, 51, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        }
-
-        /* Holographic Card Effect */
-        .holo-card {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s ease;
-        }
-        .holo-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 51, 51, 0.1), transparent);
-            transition: 0.5s;
-            z-index: 1;
-        }
-        .holo-card:hover::before {
-            left: 100%;
-        }
-        .holo-card:hover {
-            border-color: rgba(255, 51, 51, 0.5);
-            box-shadow: 0 0 30px rgba(220, 0, 0, 0.2);
-            transform: translateY(-5px);
-        }
-
-        /* Glitch Title */
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
+        #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #990000, #ff3333); z-index: 100; width: 0%; transition: width 0.1s; box-shadow: 0 0 10px #ff3333; }
+        .glass-panel { background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 51, 51, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); }
+        .holo-card { position: relative; overflow: hidden; transition: all 0.4s ease; }
+        .holo-card:hover { border-color: rgba(255, 51, 51, 0.5); box-shadow: 0 0 30px rgba(220, 0, 0, 0.2); transform: translateY(-5px); }
         .glitch-wrapper { position: relative; }
         .glitch { position: relative; color: white; z-index: 10; mix-blend-mode: lighten; }
-        .glitch::before, .glitch::after {
-            content: attr(data-text); position: absolute; top: 0; width: 100%; height: 100%; background: #030303;
-        }
+        .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; width: 100%; height: 100%; background: #030303; }
         .glitch::before { left: 2px; text-shadow: -2px 0 #ff0000; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); animation: glitch-anim-2 4s infinite linear alternate-reverse; }
         .glitch::after { left: -2px; text-shadow: -2px 0 #00ffff; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); animation: glitch-anim 3s infinite linear alternate-reverse; }
-        
         @keyframes glitch-anim { 0% { clip-path: inset(10% 0 80% 0); } 20% { clip-path: inset(80% 0 10% 0); } 40% { clip-path: inset(40% 0 50% 0); } 60% { clip-path: inset(20% 0 60% 0); } 80% { clip-path: inset(70% 0 20% 0); } 100% { clip-path: inset(30% 0 40% 0); } }
         @keyframes glitch-anim-2 { 0% { clip-path: inset(80% 0 10% 0); } 20% { clip-path: inset(10% 0 80% 0); } 40% { clip-path: inset(50% 0 30% 0); } 60% { clip-path: inset(30% 0 50% 0); } 80% { clip-path: inset(20% 0 70% 0); } 100% { clip-path: inset(60% 0 20% 0); } }
-
-        /* Magnetic Button */
-        .magnetic-btn {
-            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #030303; }
         ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #ff3333; }
     </style>
 </head>
 <body class="antialiased selection:bg-empire-600 selection:text-white">
 
-    <!-- Dynamic Progress Bar -->
     <div id="progress-bar"></div>
-
-    <!-- Canvas Background -->
     <canvas id="canvas-container"></canvas>
     <div class="fixed inset-0 bg-vignette pointer-events-none z-[-1]"></div>
-    
-    <!-- Scanline Overlay -->
     <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_bottom,transparent_50%,black_50%)] bg-[length:100%_4px]"></div>
 
     <!-- NAVIGATION -->
@@ -167,87 +73,77 @@
                 </div>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-10 bg-black/40 backdrop-blur-md px-8 py-3 rounded-full border border-white/5">
-                    <a href="#home" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:shadow-[0_0_15px_rgba(255,51,51,0.6)] transition-all">ACCUEIL</a>
-                    <a href="#about" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:shadow-[0_0_15px_rgba(255,51,51,0.6)] transition-all">L'EMPIRE</a>
-                    <a href="games.html" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:shadow-[0_0_15px_rgba(255,51,51,0.6)] transition-all">MINI-JEUX</a>
-                    <a href="#" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:shadow-[0_0_15px_rgba(255,51,51,0.6)] transition-all">MEMBRES</a>
-                    <a href="#staff" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:shadow-[0_0_15px_rgba(255,51,51,0.6)] transition-all">LE STAFF</a>
+                <div class="hidden md:flex items-center space-x-8 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/5">
+                    <a href="#home" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white hover:text-shadow-glow transition-all">ACCUEIL</a>
+                    <a href="#about" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white transition-all">L'EMPIRE</a>
+                    <a href="games.html" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white transition-all">MINI-JEUX</a>
+                    <a href="#" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white transition-all">MEMBRES</a>
+                    <a href="#staff" class="text-sm font-mono font-bold tracking-wide text-gray-300 hover:text-white transition-all">LE STAFF</a>
                     
-                    <a href="https://discord.gg/CjJbDfcd" target="_blank" class="magnetic-btn relative px-6 py-2 group overflow-hidden rounded bg-empire-700 text-white font-bold text-sm tracking-wider transition-all hover:bg-empire-600 hover:shadow-[0_0_30px_rgba(255,0,0,0.4)]">
-                        <span class="relative flex items-center gap-2 z-10">
-                            <i class="fa-brands fa-discord"></i> REJOINDRE
-                        </span>
-                    </a>
+                    <!-- SÉPARATEUR -->
+                    <div class="h-6 w-px bg-white/10 mx-2"></div>
+
+                    <!-- 🔴 ZONE DE CONNEXION -->
+                    <div id="auth-section" class="flex items-center">
+                        
+                        <!-- BOUTON DE CONNEXION (Visible si déconnecté) -->
+                        <button id="btn-login" onclick="window.login()" class="group relative flex items-center gap-3 px-5 py-2 bg-empire-900/50 hover:bg-empire-800 border border-empire-600/50 rounded-lg transition-all overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-empire-500/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                            <i class="fa-brands fa-google text-white"></i>
+                            <span class="font-mono font-bold text-xs text-white uppercase tracking-widest">Connexion</span>
+                        </button>
+
+                        <!-- MENU PROFIL (Visible si connecté) -->
+                        <div id="user-profile" class="hidden flex items-center gap-4 cursor-pointer group" onclick="window.openProfileModal()">
+                            <div class="text-right hidden lg:block">
+                                <div id="display-name" class="font-display font-bold text-white text-sm leading-none group-hover:text-empire-500 transition-colors">Joueur</div>
+                                <div class="text-[10px] font-mono text-gray-500 uppercase tracking-wider">Membre</div>
+                            </div>
+                            <div class="relative">
+                                <img id="profile-pic" src="" class="w-10 h-10 rounded-lg border-2 border-gray-700 group-hover:border-empire-500 transition-colors object-cover">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <!-- Mobile Button -->
-                <div class="flex md:hidden z-50">
-                    <button onclick="toggleMobileMenu()" class="text-white hover:text-empire-500 transition-colors p-2">
-                        <i class="fa-solid fa-bars-staggered text-2xl"></i>
-                    </button>
-                </div>
+                <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden text-white p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
             </div>
         </div>
 
         <!-- Mobile Menu Overlay -->
-        <div id="mobile-menu" class="fixed inset-0 z-40 bg-black/95 backdrop-blur-2xl transform translate-x-full transition-transform duration-500 flex flex-col justify-center items-center space-y-8 md:hidden border-l border-empire-900">
-            <a href="index.html" onclick="toggleMobileMenu()" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">ACCUEIL</a>
-            <a href="index.html#about" onclick="toggleMobileMenu()" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">L'EMPIRE</a>
-            <a href="games.html" onclick="toggleMobileMenu()" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">MINI-JEUX</a>
-            <a href="#" onclick="toggleMobileMenu()" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">MEMBRES</a>
-            <a href="#staff" onclick="toggleMobileMenu()" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">LE STAFF</a>
-            <a href="https://discord.gg/CjJbDfcd" class="px-10 py-4 bg-empire-600 rounded-lg text-white font-bold text-xl shadow-[0_0_20px_#cc0000]">REJOINDRE</a>
+        <div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-black/95 backdrop-blur-2xl flex flex-col justify-center items-center space-y-8 md:hidden border-l border-empire-900">
+            <button onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="absolute top-6 right-6 text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <a href="#home" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">ACCUEIL</a>
+            <a href="#about" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">L'EMPIRE</a>
+            <a href="games.html" class="text-3xl font-display font-bold text-white hover:text-empire-500 hover:scale-110 transition-transform">MINI-JEUX</a>
+            <button onclick="window.login()" class="px-10 py-4 bg-empire-600 rounded-lg text-white font-bold text-xl shadow-[0_0_20px_#cc0000]">CONNEXION</button>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
     <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-        <!-- Animated Glow Behind Text -->
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-empire-600/20 rounded-full blur-[150px] animate-pulse"></div>
-        
         <div class="relative z-10 text-center px-4 max-w-6xl mx-auto">
-            <div data-aos="fade-down" data-aos-duration="1200" class="flex justify-center mb-8">
-                <div class="px-4 py-1 border border-empire-500/30 rounded-full bg-empire-900/20 backdrop-blur-sm flex items-center gap-3 shadow-[0_0_20px_rgba(204,0,0,0.2)]">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <span class="text-xs font-mono font-bold tracking-[0.2em] text-gray-300 uppercase">Systèmes Opérationnels</span>
-                </div>
-            </div>
-            
             <h1 class="font-display text-6xl md:text-8xl lg:text-9xl font-black text-white mb-8 leading-tight glitch-wrapper tracking-tighter">
                 <span class="glitch" data-text="RED EMPIRE">RED EMPIRE</span>
             </h1>
-            
-            <p data-aos="fade-up" data-aos-delay="200" class="mt-2 max-w-2xl mx-auto text-lg md:text-2xl text-gray-400 font-light leading-relaxed mix-blend-screen">
-                L'élite ne se trouve pas. <br><span class="text-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">Elle se forge ici.</span>
+            <p class="mt-2 max-w-2xl mx-auto text-lg md:text-2xl text-gray-400 font-light leading-relaxed">
+                L'élite ne se trouve pas. <br><span class="text-white font-bold">Elle se forge ici.</span>
             </p>
-            
-            <div data-aos="fade-up" data-aos-delay="400" class="mt-12 flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <a href="https://discord.gg/CjJbDfcd" class="magnetic-btn relative px-10 py-5 bg-white text-black font-display font-bold tracking-wider hover:scale-105 transition-transform duration-300 clip-path-button overflow-hidden group">
-                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-white z-0"></span>
-                    <div class="absolute bottom-0 left-0 h-1 bg-empire-600 w-0 group-hover:w-full transition-all duration-300 z-20"></div>
-                    <span class="relative z-10 flex items-center gap-3">
-                        JOIN THE EMPIRE <i class="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform"></i>
-                    </span>
-                </a>
-                <a href="#about" class="group flex items-center gap-3 text-gray-400 hover:text-empire-500 font-mono tracking-wide transition-all uppercase text-sm font-bold">
-                    <span class="w-8 h-[1px] bg-gray-600 group-hover:w-12 group-hover:bg-empire-500 transition-all"></span>
-                    Découvrir
+            <div class="mt-12 flex justify-center gap-6">
+                <a href="games.html" class="px-10 py-4 bg-empire-700 hover:bg-empire-600 text-white font-display font-bold tracking-wider rounded transition-all shadow-[0_0_30px_rgba(204,0,0,0.4)]">
+                    JOUER MAINTENANT
                 </a>
             </div>
-        </div>
-
-        <!-- Scroll Indicator -->
-        <div class="absolute bottom-12 left-0 w-full flex justify-center">
-            <div class="w-[1px] h-24 bg-gradient-to-b from-transparent via-empire-600 to-transparent opacity-50"></div>
         </div>
     </section>
 
     <!-- FEATURES / ARCHITECTURE -->
     <section id="about" class="relative py-32 z-10">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            
-            <!-- Section Header -->
             <div class="mb-24 text-center" data-aos="fade-up">
                 <h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-4">INFRASTRUCTURE</h2>
                 <div class="w-24 h-1 bg-empire-600 mx-auto shadow-[0_0_15px_#ff3333]"></div>
@@ -255,7 +151,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 perspective-1000">
-                
                 <!-- Feature 1 -->
                 <div class="holo-card glass-panel p-8 rounded-2xl group cursor-default" data-aos="fade-up" data-aos-delay="0">
                     <div class="flex justify-between items-start mb-8">
@@ -265,9 +160,7 @@
                         <span class="font-mono text-xs text-gray-500 border border-gray-800 px-2 py-1 rounded">SYS.01</span>
                     </div>
                     <h3 class="font-display text-2xl font-bold text-white mb-4 group-hover:text-empire-400 transition-colors">Protection Absolue</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Un serveur sécurisé avec les meilleurs bots de modération et une équipe active 24/7 pour garantir une expérience sans toxicité.
-                    </p>
+                    <p class="text-gray-400 text-sm leading-relaxed">Un serveur sécurisé avec les meilleurs bots de modération et une équipe active 24/7.</p>
                 </div>
 
                 <!-- Feature 2 -->
@@ -279,9 +172,7 @@
                         <span class="font-mono text-xs text-gray-500 border border-gray-800 px-2 py-1 rounded">SYS.02</span>
                     </div>
                     <h3 class="font-display text-2xl font-bold text-white mb-4 group-hover:text-empire-400 transition-colors">Zone Arcade</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Des tournois hebdomadaires, des soirées films, des bots de jeux exclusifs et une économie virtuelle complète.
-                    </p>
+                    <p class="text-gray-400 text-sm leading-relaxed">Des tournois hebdomadaires, des soirées films et des bots de jeux exclusifs.</p>
                 </div>
 
                 <!-- Feature 3 -->
@@ -293,38 +184,27 @@
                         <span class="font-mono text-xs text-gray-500 border border-gray-800 px-2 py-1 rounded">SYS.03</span>
                     </div>
                     <h3 class="font-display text-2xl font-bold text-white mb-4 group-hover:text-empire-400 transition-colors">Grades Prestige</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Gravissez les échelons. Du simple soldat au commandeur, chaque grade débloque des permissions et des salons secrets.
-                    </p>
+                    <p class="text-gray-400 text-sm leading-relaxed">Gravissez les échelons. Chaque grade débloque des permissions et salons secrets.</p>
                 </div>
-
             </div>
 
             <!-- Stats Counter -->
             <div class="mt-32 glass-panel border-none bg-gradient-to-r from-black via-empire-900/20 to-black rounded-none border-y border-empire-900 p-12" data-aos="zoom-in">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-10 text-center">
                     <div class="counter-item">
-                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline">
-                            <span class="counter" data-target="542">0</span><span class="text-empire-500 text-2xl">+</span>
-                        </div>
+                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline"><span class="counter" data-target="542">0</span><span class="text-empire-500 text-2xl">+</span></div>
                         <div class="text-sm font-mono text-gray-400 uppercase tracking-[0.2em]">Membres</div>
                     </div>
                     <div class="counter-item">
-                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline">
-                            <span class="counter" data-target="24">0</span><span class="text-empire-500 text-2xl">/7</span>
-                        </div>
+                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline"><span class="counter" data-target="24">0</span><span class="text-empire-500 text-2xl">/7</span></div>
                         <div class="text-sm font-mono text-gray-400 uppercase tracking-[0.2em]">Activité</div>
                     </div>
                     <div class="counter-item">
-                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline">
-                            <span class="counter" data-target="89">0</span><span class="text-empire-500 text-2xl">%</span>
-                        </div>
+                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline"><span class="counter" data-target="89">0</span><span class="text-empire-500 text-2xl">%</span></div>
                         <div class="text-sm font-mono text-gray-400 uppercase tracking-[0.2em]">Taux de Victoire</div>
                     </div>
                      <div class="counter-item">
-                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline">
-                            <span>LVL</span><span class="counter ml-2" data-target="3">0</span>
-                        </div>
+                        <div class="text-5xl font-display font-black text-white mb-2 flex justify-center items-baseline"><span>LVL</span><span class="counter ml-2" data-target="3">0</span></div>
                         <div class="text-sm font-mono text-gray-400 uppercase tracking-[0.2em]">Boost Serveur</div>
                     </div>
                 </div>
@@ -341,283 +221,151 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                
                 <!-- Staff Card 1 -->
                 <div class="group relative" data-aos="fade-up" data-aos-delay="0">
                     <div class="absolute inset-0 bg-empire-600 blur opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-xl"></div>
                     <div class="relative glass-panel rounded-xl p-6 text-center overflow-hidden border border-white/5 group-hover:border-empire-500/50 transition-all">
                         <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-gray-700 to-black p-1 mb-4 relative">
-                             <!-- Placeholder Avatar -->
-                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                                <i class="fa-solid fa-user-astronaut text-4xl text-gray-400"></i>
-                            </div>
+                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden"><i class="fa-solid fa-user-astronaut text-4xl text-gray-400"></i></div>
                             <div class="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-black rounded-full"></div>
                         </div>
                         <h3 class="font-display text-xl font-bold text-white">EMPEREUR</h3>
                         <p class="text-empire-500 text-xs font-bold font-mono uppercase mb-4 tracking-wider">Fondateur</p>
-                        <div class="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                            <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-twitter"></i></a>
-                            <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-twitch"></i></a>
-                        </div>
                     </div>
                 </div>
-
                 <!-- Staff Card 2 -->
                 <div class="group relative" data-aos="fade-up" data-aos-delay="100">
                     <div class="absolute inset-0 bg-blue-600 blur opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-xl"></div>
                     <div class="relative glass-panel rounded-xl p-6 text-center overflow-hidden border border-white/5 group-hover:border-blue-500/50 transition-all">
                         <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-gray-700 to-black p-1 mb-4 relative">
-                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                                <i class="fa-solid fa-user-secret text-4xl text-gray-400"></i>
-                            </div>
+                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden"><i class="fa-solid fa-user-secret text-4xl text-gray-400"></i></div>
                         </div>
                         <h3 class="font-display text-xl font-bold text-white">GÉNÉRAL</h3>
                         <p class="text-blue-500 text-xs font-bold font-mono uppercase mb-4 tracking-wider">Admin</p>
-                        <div class="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                            <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-discord"></i></a>
-                        </div>
                     </div>
                 </div>
-
                  <!-- Staff Card 3 -->
                  <div class="group relative" data-aos="fade-up" data-aos-delay="200">
                     <div class="absolute inset-0 bg-purple-600 blur opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-xl"></div>
                     <div class="relative glass-panel rounded-xl p-6 text-center overflow-hidden border border-white/5 group-hover:border-purple-500/50 transition-all">
                         <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-gray-700 to-black p-1 mb-4 relative">
-                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                                <i class="fa-solid fa-user-ninja text-4xl text-gray-400"></i>
-                            </div>
+                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden"><i class="fa-solid fa-user-ninja text-4xl text-gray-400"></i></div>
                         </div>
                         <h3 class="font-display text-xl font-bold text-white">OFFICIER</h3>
                         <p class="text-purple-500 text-xs font-bold font-mono uppercase mb-4 tracking-wider">Modérateur</p>
-                        <div class="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                            <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-discord"></i></a>
-                        </div>
                     </div>
                 </div>
-
                 <!-- Staff Card 4 (Join) -->
                 <div class="group relative h-full" data-aos="fade-up" data-aos-delay="300">
                     <a href="https://discord.gg/CjJbDfcd" class="block h-full relative glass-panel rounded-xl p-6 text-center overflow-hidden border border-dashed border-gray-700 hover:border-empire-500 transition-all flex flex-col items-center justify-center hover:bg-empire-900/10 cursor-pointer">
-                        <div class="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-plus text-2xl text-gray-400 group-hover:text-white"></i>
-                        </div>
+                        <div class="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-plus text-2xl text-gray-400 group-hover:text-white"></i></div>
                         <h3 class="font-display text-lg font-bold text-gray-400 group-hover:text-white">RECRUTEMENT</h3>
                         <p class="text-gray-600 text-xs font-mono uppercase mt-1">Postuler maintenant</p>
                     </a>
                 </div>
-
             </div>
         </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="border-t border-empire-900/50 bg-black pt-20 pb-10 relative overflow-hidden z-10">
-        <!-- Footer Glow -->
         <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[80%] h-[300px] bg-empire-900/10 rounded-full blur-[100px] pointer-events-none"></div>
-
         <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center relative z-10">
             <div class="mb-8 md:mb-0 text-center md:text-left">
                 <div class="flex items-center justify-center md:justify-start gap-4 mb-4">
                     <i class="fa-solid fa-crown text-empire-600 text-3xl"></i>
                     <span class="font-display font-bold text-2xl text-white tracking-wider">RED EMPIRE</span>
                 </div>
-                <p class="text-gray-500 font-mono text-sm max-w-xs">
-                    Une communauté forgée dans le feu et la passion. <br> Rejoignez-nous.
-                </p>
+                <p class="text-gray-500 font-mono text-sm max-w-xs">Une communauté forgée dans le feu et la passion. <br> Rejoignez-nous.</p>
             </div>
-            
             <div class="flex space-x-8">
-                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1">
-                    <i class="fa-brands fa-discord text-lg"></i>
-                </a>
-                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1">
-                    <i class="fa-brands fa-x-twitter text-lg"></i>
-                </a>
-                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1">
-                    <i class="fa-brands fa-youtube text-lg"></i>
-                </a>
+                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1"><i class="fa-brands fa-discord text-lg"></i></a>
+                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1"><i class="fa-brands fa-x-twitter text-lg"></i></a>
+                <a href="#" class="w-10 h-10 rounded bg-gray-900 flex items-center justify-center text-gray-400 hover:text-white hover:bg-empire-600 transition-all transform hover:-translate-y-1"><i class="fa-brands fa-youtube text-lg"></i></a>
             </div>
         </div>
-        
         <div class="mt-16 text-center border-t border-white/5 pt-8">
-            <p class="text-gray-700 text-xs font-mono uppercase tracking-widest">
-                © 2024 Red Empire Systems. All Access Restricted.
-            </p>
+            <p class="text-gray-700 text-xs font-mono uppercase tracking-widest">© 2024 Red Empire Systems. All Access Restricted.</p>
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- 🔴 MODALE DE PROFIL (Cachée par défaut) -->
+    <div id="profile-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-empire-600/30 p-8 relative transform transition-all scale-100">
+            <button onclick="window.closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="text-center mb-8">
+                <h2 class="font-display text-2xl font-bold text-white">IDENTITÉ DU CITOYEN</h2>
+                <p class="text-empire-500 text-xs font-mono uppercase tracking-widest">Modification des données</p>
+            </div>
+            <!-- Avatar Preview -->
+            <div class="flex justify-center mb-6">
+                <div class="relative group cursor-pointer">
+                    <img id="modal-avatar" src="" class="w-24 h-24 rounded-xl border-2 border-empire-600 object-cover">
+                    <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"><i class="fa-solid fa-pen text-white"></i></div>
+                </div>
+            </div>
+            <!-- Formulaire -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 uppercase mb-1">Pseudo</label>
+                    <input type="text" id="input-username" class="w-full bg-black/50 border border-white/10 rounded p-3 text-white focus:border-empire-500 outline-none font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 uppercase mb-1">URL de l'Avatar</label>
+                    <input type="text" id="input-avatar-url" placeholder="https://..." class="w-full bg-black/50 border border-white/10 rounded p-3 text-gray-300 focus:border-empire-500 outline-none text-sm font-mono">
+                </div>
+            </div>
+            <!-- Actions -->
+            <div class="mt-8 flex gap-4">
+                <button onclick="window.saveProfile()" class="flex-1 py-3 bg-empire-600 hover:bg-empire-500 text-white font-bold rounded uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(220,0,0,0.4)]">SAUVEGARDER</button>
+                <button onclick="window.logout()" class="px-4 py-3 border border-red-900/50 text-red-500 hover:bg-red-900/20 rounded transition-all" title="Déconnexion"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        // --- 1. INIT & UI ---
-        AOS.init({ once: true, offset: 50, duration: 1000 });
-
-        // Menu Mobile
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('translate-x-full');
+        AOS.init();
+        // Animation Canvas (Particules)
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        class Particle {
+            constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.size = Math.random()*2; this.speedX = Math.random()*1 - 0.5; this.speedY = Math.random()*1 - 0.5; }
+            update() { this.x+=this.speedX; this.y+=this.speedY; if(this.size>0.2) this.size-=0.01; }
+            draw() { ctx.fillStyle = '#cc0000'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); }
         }
-
-        // Navbar Glass on Scroll + Progress Bar
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            
-            document.getElementById("progress-bar").style.width = scrolled + "%";
-
-            if (window.scrollY > 50) {
-                navbar.classList.add('bg-black/80', 'backdrop-blur-md', 'border-empire-900/30', 'py-3');
-                navbar.classList.remove('py-6', 'border-transparent');
-            } else {
-                navbar.classList.remove('bg-black/80', 'backdrop-blur-md', 'border-empire-900/30', 'py-3');
-                navbar.classList.add('py-6', 'border-transparent');
-            }
-        });
-
-        // --- 2. MAGNETIC BUTTON EFFECT ---
-        const magneticBtns = document.querySelectorAll('.magnetic-btn');
-        magneticBtns.forEach(btn => {
-            btn.addEventListener('mousemove', function(e) {
-                const pos = btn.getBoundingClientRect();
-                const x = e.clientX - pos.left - pos.width / 2;
-                const y = e.clientY - pos.top - pos.height / 2;
-                
-                btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px) scale(1.05)`;
-                btn.children[0].style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
-            });
-            
-            btn.addEventListener('mouseleave', function() {
-                btn.style.transform = 'translate(0px, 0px) scale(1)';
-                btn.children[0].style.transform = 'translate(0px, 0px)';
-            });
-        });
-
-        // --- 3. NUMBER COUNTER ANIMATION ---
+        function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); if(particles.length<100) particles.push(new Particle()); particles.forEach((p,i)=>{ p.update(); p.draw(); if(p.size<=0.2) particles.splice(i,1); }); requestAnimationFrame(animate); }
+        animate();
+        
+        // Number Counter Animation
         const counters = document.querySelectorAll('.counter');
         const speed = 200; 
-
         const animateCounters = () => {
             counters.forEach(counter => {
                 const updateCount = () => {
                     const target = +counter.getAttribute('data-target');
                     const count = +counter.innerText;
                     const inc = target / speed;
-
-                    if (count < target) {
-                        counter.innerText = Math.ceil(count + inc);
-                        setTimeout(updateCount, 20);
-                    } else {
-                        counter.innerText = target;
-                    }
+                    if (count < target) { counter.innerText = Math.ceil(count + inc); setTimeout(updateCount, 20); } else { counter.innerText = target; }
                 };
                 updateCount();
             });
         };
-
-        // Trigger counter when visible
         let counted = false;
         window.addEventListener('scroll', () => {
             const statsSection = document.querySelector('.counter-item');
             if(statsSection && !counted) {
                 const rect = statsSection.getBoundingClientRect();
-                if(rect.top < window.innerHeight) {
-                    animateCounters();
-                    counted = true;
-                }
+                if(rect.top < window.innerHeight) { animateCounters(); counted = true; }
             }
         });
-
-
-        // --- 4. PARTICLE CANVAS SYSTEM (The "Wow" factor) ---
-        const canvas = document.getElementById('canvas-container');
-        const ctx = canvas.getContext('2d');
-        let particlesArray;
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        class Particle {
-            constructor(x, y, directionX, directionY, size, color) {
-                this.x = x;
-                this.y = y;
-                this.directionX = directionX;
-                this.directionY = directionY;
-                this.size = size;
-                this.color = color;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-                ctx.fillStyle = '#cc0000'; // Red Particles
-                ctx.fill();
-            }
-            update() {
-                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
-                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
-                
-                this.x += this.directionX;
-                this.y += this.directionY;
-                this.draw();
-            }
-        }
-
-        function initParticles() {
-            particlesArray = [];
-            let numberOfParticles = (canvas.height * canvas.width) / 9000;
-            for (let i = 0; i < numberOfParticles; i++) {
-                let size = (Math.random() * 2) + 1;
-                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
-                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-                let directionX = (Math.random() * 1) - 0.5;
-                let directionY = (Math.random() * 1) - 0.5;
-                let color = '#cc0000';
-                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
-            }
-        }
-
-        function connectParticles() {
-            let opacityValue = 1;
-            for (let a = 0; a < particlesArray.length; a++) {
-                for (let b = a; b < particlesArray.length; b++) {
-                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
-                    + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
-                    if (distance < (canvas.width/7) * (canvas.height/7)) {
-                        opacityValue = 1 - (distance / 20000);
-                        ctx.strokeStyle = 'rgba(200, 0, 0,' + opacityValue * 0.2 + ')'; // Red connecting lines
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
-                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        function animateParticles() {
-            requestAnimationFrame(animateParticles);
-            ctx.clearRect(0, 0, innerWidth, innerHeight);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-            }
-            connectParticles();
-        }
-
-        // Handle resize
-        window.addEventListener('resize', () => {
-            canvas.width = innerWidth;
-            canvas.height = innerHeight;
-            initParticles();
-        });
-
-        // Start Particles
-        initParticles();
-        animateParticles();
-
     </script>
-</body>
 
+    <!-- LIEN VERS LE CERVEAU FIREBASE -->
+    <script type="module" src="auth.js"></script>
+
+</body>
 </html>
