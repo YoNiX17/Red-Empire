@@ -3,10 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 🛡️ ANTI-HOTLINK FIX : Indispensable pour voir les images Fandom/Wikia -->
-    <meta name="referrer" content="no-referrer">
-
     <title>Wakfudle | Red Empire</title>
     
     <!-- 1. Tailwind CSS -->
@@ -18,7 +14,7 @@
     <!-- Font Awesome (Pour le bouton retour) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- 3. IMPORT MAPS -->
+    <!-- 3. IMPORT MAPS : C'est la magie qui permet à tes 'import' de fonctionner -->
     <script type="importmap">
     {
         "imports": {
@@ -30,61 +26,24 @@
     </script>
 
     <style>
-        /* Masquer la scrollbar tout en gardant le scroll */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Polices */
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; }
-        
-        /* Animations personnalisées */
-        @keyframes popIn {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; } 
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        @keyframes slideDown {
-          0% { transform: translateY(-10px); opacity: 0; }
-          100% { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 200%; }
-        }
-        @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(30px) scale(0.9); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes flipIn {
-          0% { transform: rotateY(-90deg); opacity: 0; }
-          100% { transform: rotateY(0); opacity: 1; }
-        }
-
-        .perspective-500 { perspective: 500px; }
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
     </style>
 </head>
-<body class="bg-[#F0F4F8] text-slate-800 overflow-x-hidden min-h-screen flex flex-col">
+<body>
 
-    <!-- BOUTON RETOUR -->
+    <div id="root"></div>
+
     <a href="dle.html" class="fixed top-4 left-4 z-[100] bg-gray-900 text-white px-4 py-2 rounded-full font-bold shadow-lg border border-white/20 hover:bg-cyan-600 transition-colors flex items-center gap-2 text-sm font-sans no-underline">
         <i class="fa-solid fa-arrow-left"></i> RETOUR
     </a>
 
-    <div id="root" class="w-full flex-grow"></div>
-
-    <!-- LOGIQUE REACT -->
+    <!-- TON CODE REACT COMMENCE ICI -->
+    <!-- Note: type="text/babel" et data-type="module" sont essentiels -->
     <script type="text/babel" data-type="module">
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot } from 'react-dom/client'; // J'ai ajouté ça pour le rendu final
 import { Search, RefreshCw, Trophy, HelpCircle, X, ChevronRight, Info, Sparkles, Image as ImageIcon, Zap } from 'lucide-react';
 
 // ==================================================================================
@@ -103,7 +62,6 @@ const RACE_COLORS = {
   "Xélor": "#7B1FA2",    // Violet
   "Éliatrope": "#00E5FF",// Cyan Wakfu
   "Dragon": "#FFFFFF",   // Blanc
-  "Demi-Dragon": "#FFFFFF", // Blanc (Sipho)
   "Shushu": "#607D8B",   // Gris Bleu
   "Ecaflip": "#F44336",  // Rouge Chance
   "Eniripsa": "#E91E63", // Rose Soin
@@ -138,7 +96,7 @@ const getRaceColor = (speciesArray) => {
 };
 
 // ==================================================================================
-// 📸 BASE DE DONNÉES COMPLÈTE & CORRIGÉE 📸
+// 📸 BASE DE DONNÉES COMPLÈTE 📸
 // ==================================================================================
 const CHARACTERS_DB = [
   // --- HÉROS PRINCIPAUX ---
@@ -146,7 +104,7 @@ const CHARACTERS_DB = [
     nom: "Yugo", 
     genre: "Homme", 
     espece: ["Éliatrope"], 
-    nature: ["Immortel", "Roi"], 
+    nature: ["Immortel", "Roi", "Demi-Dieu"], 
     affiliation: ["Confrérie du Tofu", "Conseil des Six"], 
     apparition: "Saison 1", 
     img: "https://static.wikia.nocookie.net/krosmoz/images/0/00/Illu_Yugo_Adulte_S4.jpg/revision/latest?cb=20240218003526&path-prefix=fr" 
@@ -643,6 +601,15 @@ const CHARACTERS_DB = [
     img: "https://static.wikia.nocookie.net/krosmoz/images/4/40/Ig%C3%B4le.png/revision/latest?cb=20210711123301&path-prefix=fr" 
   },
   { 
+    nom: "Le Chêne Mou", 
+    genre: "Homme", 
+    espece: ["Abraknyde"], 
+    nature: ["Gardien", "Mortel"], 
+    affiliation: ["Forêt Maléfique"], 
+    apparition: "Saison 1", 
+    img: "" 
+  },
+  { 
     nom: "Vampyro (Wagner)", 
     genre: "Homme", 
     espece: ["Iop"], 
@@ -798,7 +765,7 @@ const CHARACTERS_DB = [
   { 
     nom: "Général Frida Mofette", 
     genre: "Femme", 
-    espece: ["Steamer"], 
+    espece: ["Humain"], 
     nature: ["Mortel", "Général"], 
     affiliation: ["Sufokia"], 
     apparition: "Saison 2", 
@@ -843,9 +810,9 @@ const CHARACTERS_DB = [
   { 
     nom: "Cassis", 
     genre: "Homme", 
-    espece: ["Feca"], 
+    espece: ["Humain"], 
     nature: ["Mortel"], 
-    affiliation: ["Chevaliers Justice"], 
+    affiliation: ["Sufokia", "Gouverneur"], 
     apparition: "Saison 2", 
     img: "https://static.wikia.nocookie.net/villains/images/b/bc/Cassis.png/revision/latest/thumbnail/width/360/height/360?cb=20240510034738" 
   },
@@ -946,8 +913,8 @@ const WakfuTile = ({ content, status, delay, label, isImage, imgUrl, isIdentity,
          {/* CONTENU INTERNE */}
          <div className="relative z-10 w-full h-full flex items-center justify-center">
            {isImage ? (
-              // --- IMAGE IDENTITÉ ---
-              <div className="w-full h-full flex items-center justify-center">
+             // --- IMAGE IDENTITÉ ---
+             <div className="w-full h-full flex items-center justify-center">
                  {imgUrl ? (
                     <img 
                       src={imgUrl} 
@@ -958,12 +925,12 @@ const WakfuTile = ({ content, status, delay, label, isImage, imgUrl, isIdentity,
                  ) : (
                     <div className="w-full h-full flex items-center justify-center bg-[#1B2435]/20 rounded-xl"><ImageIcon size={32} className="text-slate-400"/></div>
                  )}
-              </div>
+             </div>
            ) : (
-              // --- TEXTE NORMAL ---
-              <span className="font-black text-xs md:text-sm uppercase leading-tight drop-shadow-md text-white break-words w-full">
-                {content}
-              </span>
+             // --- TEXTE NORMAL ---
+             <span className="font-black text-xs md:text-sm uppercase leading-tight drop-shadow-md text-white break-words w-full">
+               {content}
+             </span>
            )}
          </div>
          
@@ -1159,24 +1126,57 @@ export default function Wakfudle() {
       {/* --- MODALE VICTOIRE --- */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-all duration-500">
-           <div className="bg-white p-8 rounded-[2rem] text-center max-w-sm w-full shadow-[0_0_50px_rgba(0,209,230,0.6)] border-4 border-[#00D1E6] animate-[popIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden flex flex-col items-center">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-300 to-blue-500"></div>
+            
+            <div className="bg-white p-8 rounded-[2rem] text-center max-w-sm w-full shadow-[0_0_50px_rgba(0,209,230,0.6)] border-4 border-[#00D1E6] animate-[popIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden flex flex-col items-center">
               
-              <div className="mb-6 inline-flex p-4 bg-yellow-50 rounded-full border-2 border-yellow-100 shadow-inner">
-                <Trophy className="text-yellow-400 drop-shadow-md" size={64} fill="currentColor" />
+              {/* Background Ray effect */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-cyan-200/40 to-transparent rounded-full blur-3xl animate-pulse"></div>
+
+              {/* Victory Title */}
+              <div className="relative z-10 mb-6">
+                 <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00D1E6] to-blue-600 uppercase italic tracking-tighter drop-shadow-sm">
+                   VICTOIRE !
+                 </h2>
               </div>
+
+              {/* Character Reveal */}
+              <div className="relative z-10 mb-6 group">
+                 <div className="w-40 h-40 rounded-2xl overflow-hidden border-4 border-[#00D1E6] shadow-[0_0_30px_rgba(0,209,230,0.4)] relative bg-white transform transition-transform duration-500 hover:scale-105 hover:rotate-2">
+                    {target.img ? (
+                        <img src={target.img} alt={target.nom} className="w-full h-full object-cover object-top" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-100">
+                            <ImageIcon size={48} className="text-slate-300"/>
+                        </div>
+                    )}
+                    {/* Shine effect */}
+                    <div className="absolute -top-[100%] -left-[100%] w-[300%] h-[300%] bg-gradient-to-b from-white/40 to-transparent rotate-45 animate-[shine_3s_infinite_2s] pointer-events-none"></div>
+                 </div>
+                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#00D1E6] text-white text-xs font-black px-3 py-1 rounded-full shadow-lg whitespace-nowrap border-2 border-white">
+                    {target.nom}
+                 </div>
+              </div>
+
+              {/* Stats */}
+              <p className="text-slate-500 mb-8 font-medium relative z-10">
+                Trouvé en <span className="font-black text-[#00D1E6] text-xl">{guesses.length}</span> essai{guesses.length > 1 ? 's' : ''}
+              </p>
               
-              <h2 className="text-4xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Victoire !</h2>
-              <p className="text-slate-500 mb-8 font-medium">C'était bien <span className="text-cyan-500 font-bold uppercase">{target.nom}</span>.</p>
-              
-              <button onClick={startNewGame} className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-cyan-200 hover:shadow-cyan-300 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                <RefreshCw size={20} strokeWidth={3} /> Rejouer
+              {/* Replay Button */}
+              <button 
+                onClick={startNewGame} 
+                className="relative z-10 group w-full py-4 bg-gradient-to-r from-[#00D1E6] to-[#0088CC] hover:from-[#33E2F2] hover:to-[#33A6FF] text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-cyan-200/50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl active:scale-95 flex items-center justify-center gap-3 text-lg overflow-hidden"
+              >
+                {/* Button Shine */}
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shine_1s_ease-in-out] pointer-events-none"></div>
+                
+                <RefreshCw size={24} strokeWidth={3} className="group-hover:rotate-180 transition-transform duration-500"/> 
+                Rejouer
               </button>
-           </div>
+            </div>
         </div>
       )}
 
-      {/* --- AIDE --- */}
       {showHelp && (
         <div className="fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowHelp(false)}>
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-[popIn_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
