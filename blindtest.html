@@ -127,9 +127,8 @@
                         <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Durée (sec)</span><span id="display-duration" class="bg-white text-black px-2 rounded border border-gray-500">20s</span></div>
                         <input type="range" min="5" max="45" value="20" id="setting-duration" class="w-full accent-red-600 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
                     </div>
-                    <!-- NOUVEAU : Slider pour le nombre de rounds -->
                     <div>
-                        <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Nombre de Musiques</span><span id="display-rounds" class="bg-white text-black px-2 rounded border border-gray-500">10</span></div>
+                        <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Nombre de Rounds</span><span id="display-rounds" class="bg-white text-black px-2 rounded border border-gray-500">10</span></div>
                         <input type="range" min="5" max="50" step="5" value="10" id="setting-rounds" class="w-full accent-yellow-400 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
                     </div>
                     <div class="mt-auto">
@@ -165,13 +164,12 @@
             <div class="timer-container max-w-2xl shadow-inner bg-black">
                 <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
             </div>
-            <!-- Round Indicator -->
             <div class="absolute right-6 top-4 font-manga text-white text-xl">
                 <span id="current-round-display" class="text-yellow-400">1</span> / <span id="total-rounds-display">10</span>
             </div>
         </div>
 
-        <!-- SCOREBOARD OVERLAY (Tous les 5 rounds) -->
+        <!-- SCOREBOARD OVERLAY -->
         <div id="scoreboard-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex items-center justify-center">
              <div class="manga-panel p-12 max-w-4xl w-full text-center bg-[#1a1a1a]">
                  <h2 class="text-5xl font-manga text-yellow-400 mb-8 text-shadow-lg">CLASSEMENT PROVISOIRE</h2>
@@ -212,9 +210,10 @@
                 </div>
                 
                 <!-- Indicateurs de validation -->
-                <div id="status-indicators" class="flex gap-4 mt-8">
+                <div id="status-indicators" class="flex gap-4 mt-8 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg">ANIME OK (+1)</div>
                     <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg">TITRE OK (+1)</div>
+                    <div id="status-op" class="hidden bg-blue-500 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg">NUMÉRO OK (+0.5)</div>
                 </div>
             </div>
 
@@ -237,7 +236,7 @@
 
             <div class="max-w-3xl mx-auto flex gap-4">
                 <!-- Input qui écoute la touche entrée -->
-                <input type="text" id="input-guess" placeholder="Tapez votre réponse..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
+                <input type="text" id="input-guess" placeholder="Tapez votre réponse (Anime, Titre ou OP X)..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
                 <button onclick="submitGuess()" class="btn-pop btn-red w-40 rounded-lg text-2xl shadow-[4px_4px_0px_#000]">ENVOYER</button>
             </div>
         </div>
@@ -270,6 +269,7 @@
         let roundTimer = null;
         let animeFound = false;
         let songFound = false;
+        let opFound = false;
         let currentSongData = null;
 
         const videoEl = document.getElementById('game-video');
@@ -310,13 +310,14 @@
             if (!target) return false;
             const normInput = input.toLowerCase().trim();
             const normTarget = target.toLowerCase().trim();
-            if (normInput === normTarget) return true; // Exact match
-            if (normTarget.includes(normInput) && normInput.length > 3) return true; // Partial match included
+            if (normInput === normTarget) return true;
+            // Si le mot clé est inclus (ex: "naruto" dans "naruto shippuden") et a une taille décente
+            if (normTarget.includes(normInput) && normInput.length > 3) return true; 
             
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
-            return similarity > 0.75; // 75% de similarité requise
+            return similarity > 0.75; // 75% de similarité
         }
 
         window.updateSettings = () => {
@@ -390,10 +391,16 @@
                     document.getElementById('setting-rounds').value = data.settings.rounds;
                 }
                 
-                // Mise à jour affichage du round total
                 document.getElementById('total-rounds-display').innerText = data.settings.rounds;
 
-                if (data.status === 'playing') {
+                // GESTION DU RETOUR AU LOBBY
+                if (data.status === 'lobby') {
+                    document.getElementById('screen-game').classList.add('hidden');
+                    document.getElementById('screen-lobby').classList.remove('hidden');
+                    // Reset de l'état local du jeu pour la prochaine partie
+                    animeFound = false; songFound = false; opFound = false;
+                }
+                else if (data.status === 'playing') {
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
@@ -406,13 +413,12 @@
         function renderPlayers(players) {
             const t1 = document.getElementById('list-team-1');
             const t2 = document.getElementById('list-team-2');
-            const s1 = document.getElementById('score-team-1'); // Pour le scoreboard
+            const s1 = document.getElementById('score-team-1');
             const s2 = document.getElementById('score-team-2');
             
             t1.innerHTML = ''; t2.innerHTML = '';
             if(s1) s1.innerHTML = ''; if(s2) s2.innerHTML = '';
 
-            // Tri par score
             const sortedPlayers = Object.values(players).sort((a,b) => b.score - a.score);
 
             sortedPlayers.forEach(p => {
@@ -420,7 +426,6 @@
                 el.className = "flex items-center gap-2 bg-[#222] border border-gray-600 p-2 rounded mb-2 shadow-sm";
                 el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-8 h-8 rounded border-2 border-white bg-black"> <div class="flex-1 min-w-0"><div class="font-bold text-gray-200 text-sm truncate uppercase font-manga tracking-wider">${p.name}</div><div class="text-xs text-yellow-400 font-mono font-bold">${p.score} PTS</div></div>`;
                 
-                // Création d'une copie pour le scoreboard
                 const elScore = el.cloneNode(true);
 
                 if (p.team === 1) {
@@ -452,16 +457,10 @@
             lastStartTime = gameState.startTime;
             
             const songData = OP_DATABASE[gameState.songIndex];
-            currentSongData = songData; // Stocker pour vérification
+            currentSongData = songData;
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
-            // LOGIQUE SCOREBOARD INTERMÉDIAIRE (Tous les 5 rounds)
-            if (gameState.currentRound > 1 && (gameState.currentRound - 1) % 5 === 0 && gameState.phase === 'guessing') {
-                // On vient de finir un bloc de 5, l'host doit attendre un peu ou on affiche un overlay
-                // Ici on l'affiche pendant la phase guessing pour simplifier, ou on crée une phase 'intermission'
-            }
-            
-            // GESTION OVERLAY SCOREBOARD
+            // SCOREBOARD INTERMÉDIAIRE
             const scoreboardOverlay = document.getElementById('scoreboard-overlay');
             if (gameState.phase === 'reveal' && gameState.currentRound % 5 === 0) {
                 scoreboardOverlay.classList.remove('hidden');
@@ -469,18 +468,16 @@
                 scoreboardOverlay.classList.add('hidden');
             }
 
-
             if (gameState.phase === 'guessing') {
-                // RESET LOCAL
-                animeFound = false; 
-                songFound = false;
+                // RESET LOCAL POUR LE NOUVEAU ROUND
+                animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
+                document.getElementById('status-op').classList.add('hidden');
                 
                 document.getElementById('result-display').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
-                
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
@@ -513,13 +510,16 @@
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    // Délai plus long si c'est un multiple de 5 (pour voir le scoreboard)
+                    // FIN DE PARTIE OU ROUND SUIVANT
                     const delay = (gameState.currentRound % 5 === 0) ? 10000 : 5000;
                     
                     setTimeout(() => {
                         if (gameState.currentRound >= settings.rounds) {
-                            // FIN DE PARTIE (A gérer plus tard)
-                            alert("Partie terminée !");
+                            // RETOUR AU LOBBY
+                            update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                                status: 'lobby',
+                                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
+                            });
                             return; 
                         }
 
@@ -544,10 +544,9 @@
             let pointsEarned = 0;
             let feedback = "";
 
-            // VERIFICATION ANIME (1pt)
+            // 1. VERIF ANIME (1pt)
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
-                // Vérif Alias
                 if (!matchAnime && currentSongData.alt) {
                     for (let alias of currentSongData.alt) {
                         if (isCloseMatch(guess, alias)) { matchAnime = true; break; }
@@ -562,7 +561,7 @@
                 }
             }
 
-            // VERIFICATION CHANSON (1pt)
+            // 2. VERIF CHANSON (1pt)
             if (!songFound) {
                 if (isCloseMatch(guess, currentSongData.song)) {
                     songFound = true;
@@ -572,15 +571,26 @@
                 }
             }
 
-            // SI POINTS GAGNÉS -> SAUVEGARDE DB
+            // 3. VERIF NUMÉRO OP (0.5pt)
+            // Logique : On cherche un chiffre dans la réponse qui correspond au numéro de l'OP
+            if (!opFound && currentSongData.num) {
+                // On extrait les nombres de la réponse utilisateur
+                const inputNums = guess.match(/\d+/g);
+                if (inputNums && inputNums.includes(currentSongData.num.toString())) {
+                    opFound = true;
+                    pointsEarned += 0.5;
+                    document.getElementById('status-op').classList.remove('hidden');
+                    feedback = feedback ? "COMBO !!!" : "NUMÉRO OK !";
+                }
+            }
+
+            // SAUVEGARDE POINTS
             if (pointsEarned > 0) {
-                // On récupère le score actuel pour l'incrémenter
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: currentScore + pointsEarned });
                 });
                 
-                // Animation points
                 const popup = document.createElement('div');
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold';
                 popup.style.left = '50%';
@@ -592,7 +602,7 @@
 
             input.value = "";
             input.placeholder = feedback || "NON...";
-            setTimeout(() => input.placeholder = "NOM DE L'ANIME...", 1000);
+            setTimeout(() => input.placeholder = "Tapez votre réponse...", 1000);
         };
 
     </script>
