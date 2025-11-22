@@ -6,7 +6,6 @@
     <title>Blindtest JCJ | Red Empire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Police style Manga/Comic -->
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -165,7 +164,7 @@
                 </div>
 
                 <div class="flex gap-3">
-                    <input type="text" id="input-room-code" placeholder="CODE" class="input-manga w-32 text-center text-2xl uppercase rounded-lg">
+                    <input type="text" id="input-room-code" placeholder="CODE" class="input-manga w-32 text-center text-2xl uppercase rounded-lg text-black">
                     <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl">
                         REJOINDRE
                     </button>
@@ -181,7 +180,7 @@
     <div id="screen-lobby" class="hidden flex-grow flex flex-col md:flex-row p-6 gap-6 h-full">
         
         <!-- GAUCHE : CONFIGURATION -->
-        <div class="w-full md:w-1/3 flex flex-col gap-4">
+        <div class="w-full md:w-80 flex flex-col gap-4">
             <!-- Carte Code -->
             <div class="manga-panel p-6 text-center bg-yellow-500 border-black">
                 <span class="bg-black text-yellow-500 text-xs font-bold px-3 py-1 rounded mb-2 inline-block border border-black shadow-[2px_2px_0px_#000]">CODE SALLE</span>
@@ -209,6 +208,15 @@
                         <input type="range" min="5" max="50" step="5" value="10" id="setting-rounds" class="w-full accent-yellow-400 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
                     </div>
 
+                    <!-- Option Nombre d'équipes -->
+                    <div>
+                        <div class="flex justify-between font-bold mb-2 text-gray-300">
+                            <span>Nombre d'Équipes</span>
+                            <span id="display-teams-count" class="bg-white text-black px-2 rounded border border-gray-500">2</span>
+                        </div>
+                        <input type="range" min="2" max="4" step="1" value="2" id="setting-teamcount" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
+                    </div>
+
                     <!-- Option Mort Subite -->
                     <div class="flex items-center justify-between bg-[#222] p-3 rounded border border-gray-600">
                         <div class="flex flex-col">
@@ -231,7 +239,7 @@
                 <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center text-gray-500">
                     <i class="fa-solid fa-hourglass-half text-4xl mb-4 animate-pulse"></i>
                     <p class="font-bold text-sm uppercase">En attente de l'hôte...</p>
-                    <div id="guest-settings-display" class="mt-4 text-xs bg-[#222] p-2 rounded border border-gray-700 hidden text-yellow-400 font-bold"></div>
+                    <div id="guest-settings-display" class="mt-4 text-xs bg-[#222] p-2 rounded border border-gray-700 hidden text-yellow-400 font-bold space-y-1"></div>
                 </div>
             </div>
         </div>
@@ -239,26 +247,14 @@
         <!-- DROITE : JOUEURS -->
         <div class="flex-1 manga-panel flex flex-col bg-[#151515]">
             <div class="h-16 bg-[#0a0a0a] flex items-center justify-between px-6 border-b-2 border-white">
-                <span class="font-manga text-2xl tracking-wide text-yellow-400 text-shadow-sm">JOUEURS</span>
-                <div class="flex gap-3">
-                    <button onclick="switchTeam(1)" class="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-blue-500 shadow-[2px_2px_0px_#fff]">BLEU</button>
-                    <button onclick="switchTeam(2)" class="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-red-500 shadow-[2px_2px_0px_#fff]">ROUGE</button>
-                </div>
+                <span class="font-manga text-2xl tracking-wide text-yellow-400 text-shadow-sm">ÉQUIPES</span>
+                <!-- Zone des boutons de changement d'équipe (dynamique) -->
+                <div id="team-switcher" class="flex gap-2"></div>
             </div>
             
-            <div class="flex-grow grid grid-cols-2 relative bg-[#111]">
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-white border-4 border-black px-4 py-2 rounded-full shadow-[4px_4px_0px_#000]">
-                     <span class="font-manga text-3xl text-black">VS</span>
-                </div>
-
-                <!-- Team Blue -->
-                <div class="p-4 border-r-2 border-white/20 bg-blue-900/10">
-                    <div id="list-team-1" class="space-y-3"></div>
-                </div>
-                <!-- Team Red -->
-                <div class="p-4 bg-red-900/10">
-                    <div id="list-team-2" class="space-y-3"></div>
-                </div>
+            <!-- Grille des équipes (dynamique) -->
+            <div id="teams-grid" class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4 relative bg-[#111] overflow-y-auto">
+                <!-- Injecté par JS -->
             </div>
         </div>
     </div>
@@ -286,19 +282,12 @@
 
         <!-- SCOREBOARD OVERLAY (Tous les 5 rounds) -->
         <div id="scoreboard-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex items-center justify-center">
-             <div class="manga-panel p-8 md:p-12 max-w-5xl w-full text-center bg-[#1a1a1a] border-4 border-yellow-400">
+             <div class="manga-panel p-8 md:p-12 max-w-6xl w-full text-center bg-[#1a1a1a] border-4 border-yellow-400 max-h-[90vh] overflow-y-auto">
                  <h2 class="text-6xl font-manga text-white mb-2 text-shadow-black" style="-webkit-text-stroke: 2px black;">CLASSEMENT</h2>
                  <div class="h-1 w-32 bg-yellow-400 mx-auto mb-8"></div>
 
-                 <div class="grid grid-cols-2 gap-8 text-left">
-                     <div class="border-r-2 border-white/10 pr-4">
-                         <h3 class="text-blue-400 font-manga text-3xl mb-6 border-b-2 border-blue-500 inline-block">ÉQUIPE BLEUE</h3>
-                         <div id="score-team-1" class="space-y-2"></div>
-                     </div>
-                     <div class="pl-4">
-                         <h3 class="text-red-400 font-manga text-3xl mb-6 border-b-2 border-red-500 inline-block">ÉQUIPE ROUGE</h3>
-                         <div id="score-team-2" class="space-y-2"></div>
-                     </div>
+                 <div id="scoreboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+                     <!-- Injecté par JS -->
                  </div>
                  <div class="mt-10 py-2 px-6 bg-black inline-block rounded border border-gray-700">
                     <p class="text-gray-400 font-bold animate-pulse text-sm">MANCHE SUIVANTE IMMINENTE...</p>
@@ -326,16 +315,13 @@
                 <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
                     <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
                     <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
-                        <!-- Sillons -->
                         <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
                         <div class="absolute inset-10 rounded-full border-[20px] border-[#222] opacity-60"></div>
                         
-                        <!-- Sticker Central -->
                         <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
                             <i class="fa-solid fa-music text-4xl text-white"></i>
                         </div>
                     </div>
-                    <!-- Bras de lecture (Déco) -->
                     <div class="absolute -top-4 -right-4 w-32 h-4 bg-gray-300 rotate-45 origin-top-right border-2 border-black rounded-full shadow-lg z-30"></div>
                 </div>
 
@@ -366,7 +352,7 @@
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
                 <div class="bg-yellow-400 border-4 border-black p-8 max-w-2xl w-full text-center shadow-[12px_12px_0px_#000] transform -rotate-1">
                     <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
-                    <h2 id="res-anime" class="text-3xl md:text-5xl font-manga text-white text-shadow-black mb-1" style="text-shadow: 2px 2px 0 #000;">ANIME NAME</h2>
+                    <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-white text-shadow-black mb-1" style="text-shadow: 2px 2px 0 #000;">ANIME NAME</h2>
                     <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 mt-3">
                         <p id="res-song" class="text-black text-xl font-bold italic bg-white inline-block px-4 py-1 border-2 border-black">"Song Title"</p>
                         <p id="res-op-num" class="text-white bg-black text-lg font-bold px-3 py-1 border-2 border-white font-manga transform skew-x-[-10deg]">OP 1</p>
@@ -405,6 +391,14 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // --- CONFIGURATION DES ÉQUIPES ---
+        const TEAM_CONFIG = [
+            { id: 1, name: "BLEU", class: "bg-blue-600", text: "text-blue-400", border: "border-blue-500", bgList: "bg-blue-900/10" },
+            { id: 2, name: "ROUGE", class: "bg-red-600", text: "text-red-400", border: "border-red-500", bgList: "bg-red-900/10" },
+            { id: 3, name: "VERT", class: "bg-green-600", text: "text-green-400", border: "border-green-500", bgList: "bg-green-900/10" },
+            { id: 4, name: "JAUNE", class: "bg-yellow-500", text: "text-yellow-400", border: "border-yellow-500", bgList: "bg-yellow-900/10" }
+        ];
+
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
@@ -413,37 +407,31 @@
         let songFound = false;
         let opFound = false;
         let currentSongData = null;
-        let currentSettings = { duration: 20, rounds: 10, suddenDeath: false };
-        
-        // GESTION DU VOLUME PERSISTANT
+        let currentSettings = { duration: 20, rounds: 10, suddenDeath: false, teamCount: 2 };
         let userVolume = 0.5;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Initialiser le volume depuis le localStorage si dispo, sinon 0.5
+        // Initialiser le volume
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
 
         window.updateVolume = (val) => {
             userVolume = val;
-            localStorage.setItem('userVolume', val); // Sauvegarde locale
+            localStorage.setItem('userVolume', val);
             if(videoEl) videoEl.volume = userVolume;
         }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // On affiche le pseudo de base
                 document.querySelector('#user-badge span').innerText = user.displayName;
-                
-                // PUIS on cherche le vrai profil dans la DB pour mettre à jour l'UI locale
                 get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
                     if (snapshot.exists()) {
                         const userData = snapshot.val();
                         if (userData.username) document.querySelector('#user-badge span').innerText = userData.username;
-                        // Vous pouvez aussi ajouter une image de profil dans la navbar ici si vous voulez
                     }
                 });
             } else {
@@ -452,7 +440,6 @@
             }
         });
 
-        // --- ALGO DE LEVENSHTEIN (FUZZY LOGIC) ---
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -490,23 +477,21 @@
             if (!isHost) return;
             const duration = parseInt(document.getElementById('setting-duration').value);
             const rounds = parseInt(document.getElementById('setting-rounds').value);
+            const teamCount = parseInt(document.getElementById('setting-teamcount').value);
             const suddenDeath = document.getElementById('setting-suddendeath').checked;
             
-            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration, rounds, suddenDeath });
+            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration, rounds, teamCount, suddenDeath });
             document.getElementById('display-duration').innerText = duration + 's';
             document.getElementById('display-rounds').innerText = rounds;
+            document.getElementById('display-teams-count').innerText = teamCount;
         };
 
-        // FONCTION POUR RÉCUPÉRER LE PROFIL COMPLET
         async function getUserProfile(uid) {
             try {
                 const snap = await get(child(ref(db), `users/${uid}`));
                 if (snap.exists()) {
                     const val = snap.val();
-                    return {
-                        name: val.username || currentUser.displayName,
-                        avatar: val.avatar || currentUser.photoURL
-                    };
+                    return { name: val.username || currentUser.displayName, avatar: val.avatar || currentUser.photoURL };
                 }
             } catch(e) { console.error(e); }
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
@@ -517,14 +502,12 @@
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
             currentRoomId = roomCode;
             isHost = true;
-
-            // On récupère le vrai profil
             const profile = await getUserProfile(currentUser.uid);
 
             const roomData = {
                 host: currentUser.uid,
                 status: 'lobby',
-                settings: { duration: 20, rounds: 10, suddenDeath: false },
+                settings: { duration: 20, rounds: 10, suddenDeath: false, teamCount: 2 },
                 players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
@@ -532,7 +515,7 @@
             try {
                 await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
                 enterLobby(roomCode);
-            } catch(e) { console.error(e); alert("Erreur création. Vérifiez les règles Firebase."); }
+            } catch(e) { console.error(e); alert("Erreur création."); }
         };
 
         window.joinRoom = async () => {
@@ -546,16 +529,10 @@
                 if (snapshot.exists()) {
                     currentRoomId = code;
                     isHost = false;
-                    
-                    // On récupère le vrai profil
                     const profile = await getUserProfile(currentUser.uid);
-                    
                     const updates = {};
                     updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { 
-                        name: profile.name, 
-                        team: 1, 
-                        score: 0, 
-                        avatar: profile.avatar 
+                        name: profile.name, team: 1, score: 0, avatar: profile.avatar 
                     };
                     await update(ref(db), updates);
                     enterLobby(code);
@@ -578,14 +555,18 @@
                 if (!data) return;
 
                 currentSettings = data.settings;
-                renderPlayers(data.players);
+                renderLobbyTeams(data.players, data.settings.teamCount);
                 
                 if (!isHost) {
                     document.getElementById('display-duration').innerText = data.settings.duration + 's';
                     document.getElementById('setting-duration').value = data.settings.duration;
                     document.getElementById('setting-rounds').value = data.settings.rounds;
-                    if(data.settings.suddenDeath) document.getElementById('guest-settings-display').innerHTML = "⚡ MODE MORT SUBITE : ACTIF";
-                    else document.getElementById('guest-settings-display').innerHTML = "";
+                    document.getElementById('setting-teamcount').value = data.settings.teamCount;
+                    
+                    let text = "";
+                    if(data.settings.suddenDeath) text += "⚡ MORT SUBITE | ";
+                    text += `${data.settings.teamCount} ÉQUIPES`;
+                    document.getElementById('guest-settings-display').innerHTML = text;
                     document.getElementById('guest-settings-display').classList.remove('hidden');
                 }
                 
@@ -612,39 +593,99 @@
             });
         }
 
-        function renderPlayers(players) {
-            const t1 = document.getElementById('list-team-1');
-            const t2 = document.getElementById('list-team-2');
-            const s1 = document.getElementById('score-team-1');
-            const s2 = document.getElementById('score-team-2');
+        // --- RENDU DYNAMIQUE DES ÉQUIPES (LOBBY) ---
+        function renderLobbyTeams(players, teamCount) {
+            const grid = document.getElementById('teams-grid');
+            grid.innerHTML = '';
             
-            t1.innerHTML = ''; t2.innerHTML = '';
-            if(s1) s1.innerHTML = ''; if(s2) s2.innerHTML = '';
+            // Met à jour la grille CSS pour le nombre d'équipes
+            if(teamCount > 2) {
+                grid.className = "flex-grow grid grid-cols-2 gap-4 p-4 relative bg-[#111] overflow-y-auto";
+            } else {
+                grid.className = "flex-grow grid grid-cols-2 gap-4 p-4 relative bg-[#111] overflow-y-auto";
+            }
 
-            const sortedPlayers = Object.values(players).sort((a,b) => b.score - a.score);
+            const teamSwitcher = document.getElementById('team-switcher');
+            teamSwitcher.innerHTML = '';
 
-            sortedPlayers.forEach(p => {
-                const el = document.createElement('div');
-                // MODIFICATION: Joueurs plus gros, image plus grande
-                el.className = "flex items-center gap-4 bg-white border-2 border-black p-4 rounded shadow-[2px_2px_0px_#000] mb-2";
-                el.innerHTML = `
-                    <img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-14 h-14 rounded border-2 border-black bg-black object-cover"> 
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-black text-xl truncate uppercase font-manga tracking-wider">${p.name}</div>
-                        <div class="text-lg text-red-600 font-manga font-bold">${p.score} PTS</div>
-                    </div>
-                `;
+            // Pour chaque équipe active
+            for (let i = 0; i < teamCount; i++) {
+                const conf = TEAM_CONFIG[i];
+                const teamId = i + 1;
+
+                // Création du bouton pour rejoindre
+                const btn = document.createElement('button');
+                btn.className = `text-[10px] font-bold px-3 py-1 rounded border-2 transition-all uppercase hover:opacity-80 text-white ${conf.class} border-white`;
+                btn.innerText = conf.name;
+                btn.onclick = () => switchTeam(teamId);
+                teamSwitcher.appendChild(btn);
+
+                // Création de la colonne
+                const col = document.createElement('div');
+                col.className = `p-3 border rounded bg-opacity-20 ${conf.bgList} border-${conf.class.split('-')[1]}-500/50`;
                 
-                const elScore = el.cloneNode(true);
+                // Titre équipe
+                const title = document.createElement('div');
+                title.className = `font-bold text-xs mb-2 text-white border-b border-white/20 pb-1 uppercase`;
+                title.innerText = `ÉQUIPE ${conf.name}`;
+                col.appendChild(title);
 
-                if (p.team === 1) {
-                    t1.appendChild(el);
-                    if(s1) s1.appendChild(elScore);
-                } else {
-                    t2.appendChild(el);
-                    if(s2) s2.appendChild(elScore);
-                }
-            });
+                // Liste joueurs
+                const list = document.createElement('div');
+                list.className = "space-y-2";
+
+                Object.values(players).forEach(p => {
+                    if (p.team === teamId) {
+                        const el = document.createElement('div');
+                        el.className = "flex items-center gap-2 bg-white border-2 border-black p-2 rounded shadow-[2px_2px_0px_#000]";
+                        el.innerHTML = `
+                            <img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-10 h-10 rounded border border-black bg-black object-cover"> 
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-black text-sm truncate uppercase font-manga tracking-wider">${p.name}</div>
+                                <div class="text-xs text-red-600 font-manga font-bold">${p.score} PTS</div>
+                            </div>
+                        `;
+                        list.appendChild(el);
+                    }
+                });
+                col.appendChild(list);
+                grid.appendChild(col);
+            }
+        }
+
+        // --- RENDU DYNAMIQUE DU SCOREBOARD ---
+        function renderScoreboard(players, teamCount) {
+             const grid = document.getElementById('scoreboard-grid');
+             grid.innerHTML = '';
+             
+             for(let i = 0; i < teamCount; i++) {
+                 const conf = TEAM_CONFIG[i];
+                 const teamId = i + 1;
+                 
+                 const col = document.createElement('div');
+                 if(i < teamCount - 1) col.className = "border-r border-white/10 pr-4";
+                 
+                 const title = document.createElement('h3');
+                 title.className = `font-bold mb-4 border-b-2 inline-block text-2xl font-manga ${conf.text} border-${conf.class.split('-')[1]}-500`;
+                 title.innerText = `ÉQUIPE ${conf.name}`;
+                 col.appendChild(title);
+                 
+                 const list = document.createElement('div');
+                 list.className = "space-y-2";
+                 
+                 // Trier joueurs de cette équipe par score
+                 const teamPlayers = Object.values(players).filter(p => p.team === teamId).sort((a,b) => b.score - a.score);
+                 
+                 teamPlayers.forEach(p => {
+                     const el = document.createElement('div');
+                     el.className = "flex items-center gap-2 bg-[#222] border border-gray-600 p-2 rounded mb-2 shadow-sm";
+                     el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-8 h-8 rounded border-2 border-white bg-black"> <div class="flex-1 min-w-0"><div class="font-bold text-gray-200 text-sm truncate uppercase font-manga tracking-wider">${p.name}</div><div class="text-xs text-yellow-400 font-mono font-bold">${p.score} PTS</div></div>`;
+                     list.appendChild(el);
+                 });
+                 
+                 col.appendChild(list);
+                 grid.appendChild(col);
+             }
         }
 
         window.switchTeam = (teamId) => { update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { team: teamId }); };
@@ -673,6 +714,11 @@
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
             const scoreboardOverlay = document.getElementById('scoreboard-overlay');
+            // Mise à jour des joueurs dans le scoreboard avant affichage
+            get(child(ref(db), `blindtest/rooms/${currentRoomId}/players`)).then(snap => {
+                if(snap.exists()) renderScoreboard(snap.val(), settings.teamCount);
+            });
+
             if (gameState.phase === 'reveal' && gameState.currentRound % 5 === 0) {
                 scoreboardOverlay.classList.remove('hidden');
             } else {
@@ -722,7 +768,8 @@
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    const delay = (gameState.currentRound % 5 === 0) ? 8000 : 5000;
+                    // MODIFICATION: Temps d'attente augmenté à 8000ms (8 secondes)
+                    const delay = (gameState.currentRound % 5 === 0) ? 12000 : 8000;
                     
                     setTimeout(() => {
                         if (gameState.currentRound >= settings.rounds) {
