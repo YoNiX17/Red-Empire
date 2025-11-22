@@ -530,6 +530,7 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
+        // MODIFICATION: NOUVEAU MÉLANGE À CHAQUE LANCEMENT
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -537,18 +538,13 @@
             isHost = true;
             const profile = await getUserProfile(currentUser.uid);
 
-            // MÉLANGE DU PAQUET À LA CRÉATION
-            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
-            const shuffledDeck = shuffleArray(allIndices);
-
             const roomData = {
                 host: currentUser.uid,
                 createdAt: Date.now(),
                 status: 'lobby',
                 settings: { duration: 20, rounds: 10, suddenDeath: false, teamCount: 2 },
                 players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
-                // On stocke le paquet mélangé (deck)
-                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: shuffledDeck, seekTime: 0 }
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
 
             try {
@@ -720,26 +716,27 @@
 
         window.switchTeam = (teamId) => { update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { team: teamId }); };
 
+        // MODIFICATION: NOUVEAU MÉLANGE À CHAQUE LANCEMENT
         window.startGame = () => {
-            // Le deck est déjà mélangé, on prend le premier (index 0)
+            // 1. On génère un NOUVEAU deck mélangé pour cette nouvelle partie
+            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
+            const newDeck = shuffleArray(allIndices);
+            
+            // 2. On prend le premier son du nouveau deck
+            const firstSongIndex = newDeck[0];
             const randomSeek = Math.floor(Math.random() * 16) + 30;
 
-            // On doit lire le deck actuel depuis la DB pour prendre le premier item
-            get(child(ref(db), `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
-                const deck = snap.val();
-                const firstSongIndex = deck[0];
-
-                update(ref(db, `blindtest/rooms/${currentRoomId}`), {
-                    status: 'playing',
-                    gameState: {
-                        currentRound: 1,
-                        songIndex: firstSongIndex,
-                        startTime: Date.now() + 3000,
-                        phase: 'guessing',
-                        deck: deck, // On garde le deck
-                        seekTime: randomSeek
-                    }
-                });
+            // 3. On met à jour la DB avec ce nouveau deck
+            update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                status: 'playing',
+                gameState: {
+                    currentRound: 1,
+                    songIndex: firstSongIndex,
+                    startTime: Date.now() + 3000,
+                    phase: 'guessing',
+                    deck: newDeck, // Le deck est remplacé ici
+                    seekTime: randomSeek
+                }
             });
         };
 
