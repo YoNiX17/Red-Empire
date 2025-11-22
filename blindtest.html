@@ -752,7 +752,8 @@
             
             // 2. On prend le premier son du nouveau deck
             const firstSongIndex = newDeck[0];
-            const randomSeek = Math.floor(Math.random() * 16) + 30;
+            // MODIFICATION : Seek entre 40s et 50s (Range = 11)
+            const randomSeek = Math.floor(Math.random() * 11) + 40;
 
             // 3. On met à jour la DB avec ce nouveau deck
             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
@@ -883,7 +884,8 @@
                         const nextIndex = gameState.deck[gameState.currentRound]; 
                         // (round 1 -> index 0, round 2 -> index 1...)
                         
-                        const nextSeek = Math.floor(Math.random() * 16) + 30;
+                        // MODIFICATION : Seek entre 40s et 50s pour les rounds suivants aussi
+                        const nextSeek = Math.floor(Math.random() * 11) + 40;
 
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: gameState.currentRound + 1,
