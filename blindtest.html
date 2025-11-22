@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blindtest JCJ | Red Empire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shojumaru&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #ff003c; /* Cyberpunk Red */
+            --secondary: #711c91; /* Cyberpunk Purple */
+            --dark: #050103;
+            --glass: rgba(15, 5, 10, 0.8);
+        }
+
+        body { 
+            background-color: var(--dark); 
+            color: #e5e5e5; 
+            font-family: 'Rajdhani', sans-serif; 
+            overflow: hidden; 
+        }
+        
+        .font-jap { font-family: 'Shojumaru', system-ui; }
+        .font-tech { font-family: 'Orbitron', sans-serif; }
+
+        /* --- CRT SCANLINE EFFECT --- */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        /* --- HUD BORDERS --- */
+        .hud-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 0, 60, 0.3);
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.1);
+            position: relative;
+            clip-path: polygon(
+                15px 0, 100% 0, 
+                100% calc(100% - 15px), calc(100% - 15px) 100%, 
+                0 100%, 0 15px
+            );
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        /* Interaction Panneau */
+        .hud-panel:hover {
+            border-color: rgba(255, 0, 60, 0.8);
+            box-shadow: 0 0 40px rgba(255, 0, 60, 0.2);
+        }
+
+        /* Décorations coins */
+        .hud-corner {
+            position: absolute; 
+            width: 8px; 
+            height: 8px;
+            border: 2px solid var(--primary);
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        .hc-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+        .hc-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+        .hc-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+        .hc-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+        
+        .hud-panel:hover .hud-corner {
+            opacity: 1;
+            box-shadow: 0 0 10px var(--primary);
+            border-color: #fff; 
+        }
+
+        /* --- NEON TEXT --- */
+        .text-neon {
+            text-shadow: 0 0 5px var(--primary), 0 0 20px var(--primary);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
+        .pulse-ring::before {
+            content: ''; position: absolute; inset: -10px; border: 2px solid var(--primary); border-radius: 50%;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        .spin-disk { animation: spin-slow 6s linear infinite; }
+        .paused-disk { animation-play-state: paused !important; }
+        
+        /* Visualizer bars */
+        .bar { width: 8px; background: var(--primary); box-shadow: 0 0 15px var(--primary); margin: 0 2px; }
+        .playing .bar { animation: sound 0.5s ease-in-out infinite alternate; }
+        @keyframes sound { 0% { height: 10px; opacity: 0.5; } 100% { height: 60px; opacity: 1; } }
+        .bar:nth-child(odd) { animation-duration: 0.4s; }
+        .bar:nth-child(2n) { animation-duration: 0.6s; }
+        .bar:nth-child(3n) { animation-duration: 0.3s; }
+
+        /* Timer Bar */
+        @keyframes load { from { width: 100%; } to { width: 0%; } }
+        .timer-bar { height: 4px; background: var(--primary); width: 100%; box-shadow: 0 0 20px var(--primary); }
+        .timer-running { animation: load linear forwards; }
+
+        /* Glitch input focus */
+        .input-cyber:focus {
+            box-shadow: 0 0 15px var(--secondary);
+            border-color: var(--secondary);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col crt bg-black">
+
+    <!-- BACKGROUND -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vh] h-[80vh] border border-red-900/20 rounded-full animate-[spin-slow_60s_linear_infinite] pointer-events-none"></div>
+    </div>
+
+    <!-- NAVBAR SIMPLIFIÉE -->
+    <nav class="relative z-50 h-20 flex items-center justify-between px-8 border-b border-white/5 bg-black/80 backdrop-blur-md">
+        <a href="blindtest_hub.html" class="group flex items-center gap-3 text-gray-400 hover:text-white transition-all">
+            <div class="w-10 h-10 flex items-center justify-center border border-gray-700 group-hover:border-red-500 group-hover:bg-red-500/10 rounded transition-all transform group-hover:-translate-x-1">
+                <i class="fa-solid fa-chevron-left"></i>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] font-tech tracking-widest text-gray-500 group-hover:text-red-500">SYSTÈME</span>
+                <span class="font-bold font-mono text-sm tracking-wider">QUITTER</span>
+            </div>
+        </a>
+
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+            <h1 class="font-jap text-4xl text-white tracking-widest text-neon drop-shadow-lg">BLINDTEST <span class="text-red-600">JCJ</span></h1>
+            <div class="w-32 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-1"></div>
+        </div>
+
+        <div class="w-20"></div>
+    </nav>
+
+
+    <!-- ÉCRAN 1 : MENU PRINCIPAL -->
+    <div id="screen-menu" class="relative z-10 flex-grow flex items-center justify-center p-4">
+        <div class="hud-panel p-12 max-w-md w-full text-center">
+            <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
+            <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
+            
+            <div class="mb-10 relative inline-block pulse-ring">
+                <div class="w-24 h-24 bg-gradient-to-br from-red-900 to-black rounded-full flex items-center justify-center border-2 border-red-600 shadow-[0_0_30px_rgba(255,0,60,0.4)]">
+                    <i class="fa-solid fa-play text-4xl text-white ml-1"></i>
+                </div>
+            </div>
+            
+            <h2 class="text-2xl font-tech font-bold text-white mb-2 tracking-widest">CONNEXION REQUISE</h2>
+            <div class="h-px w-1/2 bg-red-900 mx-auto mb-8"></div>
+            
+            <div class="space-y-4">
+                <button onclick="createRoom()" class="w-full py-4 bg-red-700 hover:bg-red-600 text-white font-bold font-tech tracking-wider text-lg clip-path-polygon transition-all hover:shadow-[0_0_20px_rgba(255,0,60,0.6)] hover:-translate-y-1 border-l-4 border-white">
+                    CRÉER UNE SALLE
+                </button>
+                
+                <div class="text-xs text-gray-500 font-mono my-4">- OU REJOINDRE -</div>
+
+                <div class="flex gap-2 h-14">
+                    <input type="text" id="input-room-code" placeholder="CODE SALLE" class="w-2/3 bg-black border border-red-900/50 px-4 text-white font-mono text-center text-xl focus:border-red-500 outline-none input-cyber tracking-[0.2em] uppercase">
+                    <button onclick="joinRoom()" class="w-1/3 bg-gray-800 hover:bg-white hover:text-black text-gray-300 font-bold text-sm transition-all border border-gray-700">
+                        ENTRER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ÉCRAN 2 : LOBBY -->
+    <div id="screen-lobby" class="hidden relative z-10 flex-grow flex flex-col md:flex-row p-8 gap-8 h-[calc(100vh-80px)]">
+        
+        <!-- GAUCHE : INFO & SETTINGS -->
+        <div class="w-full md:w-1/3 flex flex-col gap-4">
+            <div class="hud-panel p-6 text-center bg-black/60">
+                <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
+                <span class="text-[10px] text-red-500 font-tech tracking-[0.3em] border border-red-900/50 px-2 py-1">ID DE MISSION</span>
+                <div id="lobby-code" class="text-7xl font-mono font-black text-white tracking-tighter mt-2 text-neon">----</div>
+            </div>
+
+            <div class="hud-panel p-6 flex-grow flex flex-col bg-black/40">
+                <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
+                
+                <h3 class="text-white font-bold mb-8 font-tech uppercase flex items-center gap-3 border-b border-white/10 pb-4">
+                    <i class="fa-solid fa-sliders text-red-600"></i> Configuration
+                </h3>
+                
+                <div id="host-controls" class="hidden space-y-8">
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-400 mb-2 font-mono uppercase">
+                            <span>Durée / Round</span>
+                            <span id="display-duration" class="text-red-500 font-bold text-lg">20s</span>
+                        </div>
+                        <div class="relative h-2 bg-gray-800 rounded-full">
+                            <input type="range" min="5" max="45" value="20" id="setting-duration" class="absolute w-full h-full opacity-0 cursor-pointer z-10" oninput="updateSettings()">
+                            <div class="absolute h-full bg-red-600 rounded-full" style="width: 40%" id="range-progress"></div>
+                            <div class="absolute h-4 w-4 bg-white rounded-full top-1/2 -translate-y-1/2 shadow-[0_0_10px_white]" style="left: 40%" id="range-thumb"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <button onclick="startGame()" class="w-full py-6 bg-gradient-to-r from-green-700 to-green-500 text-white font-black font-tech tracking-[0.2em] text-xl clip-path-polygon hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all border-b-4 border-green-900">
+                            INITIALISER
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center opacity-50">
+                    <div class="w-16 h-16 border-t-4 border-r-4 border-red-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-xs font-mono uppercase tracking-widest">En attente de l'host...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DROITE : TEAMS -->
+        <div class="flex-1 hud-panel p-0 flex flex-col overflow-hidden bg-black/20">
+            <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
+            <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
+
+            <div class="h-16 bg-white/5 flex items-center justify-between px-8 border-b border-white/10">
+                <span class="font-tech font-bold text-white tracking-widest text-lg">ESCOUADES</span>
+                <div class="flex gap-3">
+                    <button onclick="switchTeam(1)" class="text-[10px] font-bold bg-blue-600/20 text-blue-300 px-4 py-2 border border-blue-500 hover:bg-blue-500 hover:text-white transition-all uppercase tracking-wider">Team Blue</button>
+                    <button onclick="switchTeam(2)" class="text-[10px] font-bold bg-red-600/20 text-red-300 px-4 py-2 border border-red-500 hover:bg-red-500 hover:text-white transition-all uppercase tracking-wider">Team Red</button>
+                </div>
+            </div>
+            
+            <div class="flex-grow grid grid-cols-2 relative">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                     <h1 class="font-jap text-7xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] italic pr-2">VS</h1>
+                </div>
+
+                <div class="p-6 border-r border-white/5 bg-gradient-to-b from-blue-900/10 to-transparent">
+                    <div id="list-team-1" class="space-y-3"></div>
+                </div>
+                <div class="p-6 bg-gradient-to-b from-red-900/10 to-transparent">
+                    <div id="list-team-2" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ÉCRAN 3 : JEU -->
+    <div id="screen-game" class="hidden relative z-10 flex-grow flex flex-col">
+        
+        <!-- Timer Bar -->
+        <div class="w-full bg-black h-2 absolute top-0 z-30 shadow-[0_0_20px_#ff003c]">
+            <div id="game-timer-bar" class="timer-bar" style="width: 100%;"></div>
+        </div>
+
+        <!-- CENTRE -->
+        <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden">
+            
+            <div class="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+
+            <!-- Video Player -->
+            <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black hidden">
+                <div class="w-full h-full max-w-6xl max-h-[80vh] border-y-4 border-red-600 bg-black relative shadow-[0_0_100px_rgba(255,0,60,0.3)]">
+                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <div class="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-4 py-1 font-tech tracking-widest">SOURCE VIDÉO</div>
+                </div>
+            </div>
+
+            <!-- Vinyle Mode -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center scale-100 transition-transform duration-500">
+                
+                <div id="visualizer" class="flex items-end gap-1 h-24 mb-12 opacity-0 transition-opacity duration-500">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+
+                <div class="relative w-80 h-80 md:w-96 md:h-96 flex items-center justify-center">
+                    <div class="absolute inset-0 border border-red-600/30 rounded-full animate-[spin-slow_10s_linear_infinite]"></div>
+                    <div class="absolute inset-4 border border-purple-600/30 rounded-full animate-[spin-slow_15s_linear_infinite_reverse]"></div>
+                    
+                    <div class="w-64 h-64 rounded-full bg-black border-4 border-gray-800 shadow-[0_0_60px_rgba(255,0,60,0.4)] flex items-center justify-center spin-disk paused-disk relative z-10" id="disk">
+                        <div class="absolute inset-0 rounded-full bg-[repeating-radial-gradient(#1a1a1a_0,#1a1a1a_2px,#222_3px)]"></div>
+                        <div class="absolute w-24 h-24 bg-gradient-to-br from-red-700 to-purple-900 rounded-full flex items-center justify-center border-2 border-white/20 z-20">
+                            <i class="fa-solid fa-music text-3xl text-white/50"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center">
+                    <h2 class="text-6xl font-jap text-white tracking-widest mb-2 text-neon">ECOUTEZ</h2>
+                    <div class="inline-block border-y border-red-900/50 py-1 px-4">
+                        <p class="text-red-500 font-tech text-xs animate-pulse tracking-[0.3em]">ANALYSE DU FLUX AUDIO...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume -->
+            <div class="absolute top-6 right-6 z-30 group">
+                <div class="bg-black/80 backdrop-blur border border-red-900/30 rounded-full p-3 flex items-center gap-3 hover:border-red-500 transition-colors">
+                    <i class="fa-solid fa-volume-high text-gray-400 group-hover:text-white"></i>
+                    <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600" oninput="document.getElementById('game-video').volume = this.value">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BAS : INPUT ZONE -->
+        <div class="bg-black/90 backdrop-blur-xl border-t-2 border-red-900 p-8 relative z-30">
+            
+            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-0 z-50 flex flex-col items-center justify-center pointer-events-none">
+                <div class="bg-black border-y-4 border-red-600 p-12 w-full text-center shadow-[0_0_100px_rgba(0,0,0,0.9)] backdrop-blur-xl transform transition-transform">
+                    <h3 class="text-red-500 font-mono text-sm uppercase tracking-[0.5em] mb-4">RÉSULTAT POSITIF</h3>
+                    <h2 id="res-anime" class="text-4xl md:text-8xl font-black text-white font-display mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">ANIME NAME</h2>
+                    <p id="res-song" class="text-gray-300 text-2xl font-jap">"Song Title"</p>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto flex gap-0 transform skew-x-[-10deg]">
+                <div class="flex-1 bg-gray-900 border-2 border-gray-700 border-r-0 p-1 group focus-within:border-red-500 transition-colors">
+                    <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="w-full h-16 bg-transparent text-white text-2xl font-bold px-6 outline-none placeholder-gray-700 uppercase font-mono tracking-wide transform skew-x-[10deg]" autocomplete="off">
+                </div>
+                <button onclick="submitGuess()" class="w-48 bg-red-700 hover:bg-red-600 text-white font-bold text-xl border-2 border-red-500 transition-colors shadow-[0_0_30px_rgba(220,38,38,0.2)]">
+                    <span class="block transform skew-x-[10deg]">ENVOYER</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        
+        // IMPORT DE LA LISTE D'OPENINGS
+        import { OP_DATABASE } from "./op_database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let currentRoomId = null;
+        let isHost = false;
+        let roundTimer = null;
+        
+        const videoEl = document.getElementById('game-video');
+        const diskEl = document.getElementById('disk');
+        const visualizerEl = document.getElementById('visualizer');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                alert("Veuillez vous identifier au QG.");
+                window.location.href = "index.html";
+            }
+        });
+
+        window.updateSettings = () => {
+            if (!isHost) return;
+            const range = document.getElementById('setting-duration');
+            const duration = parseInt(range.value);
+            
+            const percent = ((duration - range.min) / (range.max - range.min)) * 100;
+            document.getElementById('range-progress').style.width = percent + "%";
+            document.getElementById('range-thumb').style.left = percent + "%";
+            
+            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration });
+            document.getElementById('display-duration').innerText = duration + 's';
+        };
+
+        window.createRoom = async () => {
+            if (!currentUser) return;
+            const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            currentRoomId = roomCode;
+            isHost = true;
+
+            const roomData = {
+                host: currentUser.uid,
+                status: 'lobby',
+                settings: { duration: 20, rounds: 5 },
+                players: { [currentUser.uid]: { name: currentUser.displayName, team: 1, score: 0, avatar: currentUser.photoURL } },
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
+            };
+
+            await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
+            enterLobby(roomCode);
+        };
+
+        window.joinRoom = async () => {
+            if (!currentUser) return;
+            const code = document.getElementById('input-room-code').value.toUpperCase();
+            if (code.length < 4) return alert("Code invalide");
+
+            const roomRef = ref(db, `blindtest/rooms/${code}`);
+            const snapshot = await get(roomRef);
+
+            if (snapshot.exists()) {
+                currentRoomId = code;
+                isHost = false;
+                const updates = {};
+                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = {
+                    name: currentUser.displayName,
+                    team: 1, 
+                    score: 0,
+                    avatar: currentUser.photoURL
+                };
+                await update(ref(db), updates);
+                enterLobby(code);
+            } else {
+                alert("Salle introuvable !");
+            }
+        };
+
+        function enterLobby(code) {
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-lobby').classList.remove('hidden');
+            document.getElementById('lobby-code').innerText = code;
+
+            if (isHost) {
+                document.getElementById('host-controls').classList.remove('hidden');
+                document.getElementById('guest-controls').classList.add('hidden');
+            }
+
+            onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                renderPlayers(data.players);
+                
+                if (!isHost) {
+                    document.getElementById('display-duration').innerText = data.settings.duration + 's';
+                    const range = document.getElementById('setting-duration');
+                    const percent = ((data.settings.duration - 5) / (45 - 5)) * 100;
+                    document.getElementById('range-progress').style.width = percent + "%";
+                    document.getElementById('range-thumb').style.left = percent + "%";
+                }
+
+                if (data.status === 'playing') {
+                    if (document.getElementById('screen-game').classList.contains('hidden')) {
+                        document.getElementById('screen-lobby').classList.add('hidden');
+                        document.getElementById('screen-game').classList.remove('hidden');
+                    }
+                    handleGameSync(data.gameState, data.settings);
+                }
+            });
+        }
+
+        function renderPlayers(players) {
+            const t1 = document.getElementById('list-team-1');
+            const t2 = document.getElementById('list-team-2');
+            t1.innerHTML = ''; t2.innerHTML = '';
+
+            Object.values(players).forEach(p => {
+                const el = document.createElement('div');
+                el.className = "flex items-center gap-3 text-white text-sm bg-black/40 p-3 border-l-4 mb-2 transition-all hover:bg-white/5 " + (p.team === 1 ? "border-blue-500" : "border-red-500");
+                el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-10 h-10 rounded object-cover border border-white/10"> <div><div class="font-bold font-tech uppercase text-xs tracking-wider">${p.name}</div><div class="text-[10px] text-gray-400 font-mono">SCORE: ${p.score}</div></div>`;
+                
+                if (p.team === 1) t1.appendChild(el);
+                else t2.appendChild(el);
+            });
+        }
+
+        window.switchTeam = (teamId) => {
+            update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { team: teamId });
+        };
+
+        window.startGame = () => {
+            const randomIndex = Math.floor(Math.random() * OP_DATABASE.length);
+            update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                status: 'playing',
+                gameState: {
+                    currentRound: 1,
+                    songIndex: randomIndex,
+                    startTime: Date.now() + 3000,
+                    phase: 'guessing'
+                }
+            });
+        };
+
+        let lastPhase = '';
+        let lastStartTime = 0;
+
+        function handleGameSync(gameState, settings) {
+            if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
+            lastPhase = gameState.phase;
+            lastStartTime = gameState.startTime;
+            
+            const songData = OP_DATABASE[gameState.songIndex];
+
+            if (gameState.phase === 'guessing') {
+                document.getElementById('result-display').classList.add('hidden');
+                document.getElementById('video-wrapper').classList.add('hidden');
+                document.getElementById('vinyl-wrapper').classList.remove('hidden');
+                
+                document.getElementById('input-guess').value = "";
+                document.getElementById('input-guess').disabled = false;
+                document.getElementById('input-guess').focus();
+
+                videoEl.src = songData.url;
+                videoEl.volume = 0.5;
+                videoEl.play().catch(e => console.log("Autoplay bloqué"));
+
+                diskEl.classList.remove('paused-disk');
+                visualizerEl.style.opacity = 1;
+                visualizerEl.classList.add('playing');
+
+                const bar = document.getElementById('game-timer-bar');
+                bar.classList.remove('timer-running');
+                void bar.offsetWidth;
+                bar.style.animationDuration = settings.duration + 's';
+                bar.classList.add('timer-running');
+
+                if (isHost) {
+                    clearTimeout(roundTimer);
+                    roundTimer = setTimeout(() => {
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+                    }, settings.duration * 1000);
+                }
+
+            } else if (gameState.phase === 'reveal') {
+                document.getElementById('result-display').classList.remove('hidden');
+                document.getElementById('res-anime').innerText = songData.anime;
+                document.getElementById('res-song').innerText = songData.song;
+                
+                document.getElementById('video-wrapper').classList.remove('hidden');
+                document.getElementById('vinyl-wrapper').classList.add('hidden');
+                
+                diskEl.classList.add('paused-disk');
+                visualizerEl.style.opacity = 0;
+                visualizerEl.classList.remove('playing');
+                
+                document.getElementById('input-guess').disabled = true;
+
+                if (isHost) {
+                    setTimeout(() => {
+                        const nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
+                            currentRound: gameState.currentRound + 1,
+                            songIndex: nextIndex,
+                            startTime: Date.now(),
+                            phase: 'guessing'
+                        });
+                    }, 5000);
+                }
+            }
+        }
+
+        window.submitGuess = () => {
+            const userGuess = document.getElementById('input-guess').value;
+            document.getElementById('input-guess').value = "";
+            console.log("Réponse:", userGuess);
+            
+            const input = document.getElementById('input-guess');
+            input.placeholder = "DONNÉES ENVOYÉES...";
+            setTimeout(() => input.placeholder = "ENTREZ LE NOM DE L'ANIME...", 2000);
+        };
+
+    </script>
+</body>
+</html>
