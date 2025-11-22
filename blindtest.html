@@ -6,6 +6,7 @@
     <title>Blindtest JCJ | Red Empire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Police style Manga/Comic -->
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -29,7 +30,7 @@
         
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* PANELS */
+        /* --- PANNEAUX MANGA DARK --- */
         .manga-panel {
             background: var(--panel-bg);
             border: 3px solid var(--border-color);
@@ -38,54 +39,76 @@
             overflow: hidden;
         }
         
-        /* SPEED LINES */
         .speed-lines::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
             pointer-events: none;
         }
 
-        /* BOUTONS */
+        /* --- BOUTONS POP --- */
         .btn-pop {
-            background: var(--border-color); color: var(--dark-bg);
-            font-family: 'Bangers', cursive; text-transform: uppercase;
-            border: 2px solid var(--border-color); transition: all 0.1s ease;
+            background: var(--border-color);
+            color: var(--dark-bg);
+            font-family: 'Bangers', cursive;
+            text-transform: uppercase;
+            border: 2px solid var(--border-color);
+            transition: all 0.1s ease;
             box-shadow: 4px 4px 0px var(--yellow);
         }
-        .btn-pop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--yellow); background: var(--yellow); }
-        .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--yellow); }
+        .btn-pop:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--yellow);
+            background: var(--yellow);
+            color: var(--dark-bg);
+            border-color: var(--yellow);
+        }
+        .btn-pop:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--yellow);
+        }
         
-        .btn-red { background: var(--red); color: white; border-color: var(--red); box-shadow: 4px 4px 0px var(--border-color); }
-        .btn-red:hover { background: #ff4444; color: white; box-shadow: 6px 6px 0px var(--border-color); border-color: #ff4444; }
+        .btn-red { 
+            background: var(--red); 
+            color: white; 
+            border-color: var(--red);
+            box-shadow: 4px 4px 0px var(--border-color); 
+        }
+        .btn-red:hover { 
+            background: #ff4444; 
+            color: white; 
+            box-shadow: 6px 6px 0px var(--border-color); 
+            border-color: #ff4444;
+        }
 
-        /* ANIMATIONS */
+        /* --- TIMER BAR --- */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
-        .timer-bar { height: 6px; background: var(--yellow); width: 100%; }
+        .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
         .timer-running { animation: shrink linear forwards; }
 
+        /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
 
-        /* INPUT */
+        /* --- INPUT STYLE --- */
         .input-manga {
-            border: 3px solid var(--border-color); background: #222; color: white;
-            font-family: 'Bangers', cursive; letter-spacing: 1px; box-shadow: inset 4px 4px 0px #000;
+            border: 3px solid var(--border-color);
+            background: #222;
+            color: white;
+            font-family: 'Bangers', cursive;
+            letter-spacing: 1px;
+            box-shadow: inset 4px 4px 0px #000;
         }
         .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
+        .input-manga::placeholder { color: #666; }
 
-        /* NOTIFICATIONS POINTS */
-        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
-        .points-popup { position: absolute; animation: flyUp 1.5s forwards; font-family: 'Bangers'; text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 50; }
-        
-        /* TOGGLE SWITCH */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #68D391;
-        }
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -6px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -96,181 +119,259 @@
             <i class="fa-solid fa-chevron-left"></i>
             <span class="font-manga text-xl tracking-wider">QUITTER</span>
         </a>
+        
         <div class="absolute left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-1 skew-x-[-10deg] border-2 border-white shadow-[4px_4px_0px_#ff2e2e]">
             <h1 class="font-manga text-2xl skew-x-[10deg] tracking-widest">BLINDTEST <span class="text-red-600">ARENA</span></h1>
         </div>
+
         <div id="user-badge" class="flex items-center gap-2 bg-gray-800 px-4 py-1 rounded-full border-2 border-white">
             <div class="w-3 h-3 bg-green-500 rounded-full border border-white"></div>
             <span class="text-sm font-bold truncate max-w-[100px] text-white">Joueur</span>
         </div>
     </nav>
 
-    <!-- MENU -->
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 1 : MENU PRINCIPAL                   -->
+    <!-- ========================================== -->
     <div id="screen-menu" class="flex-grow flex items-center justify-center p-4">
         <div class="manga-panel p-8 max-w-md w-full text-center speed-lines">
+            
             <div class="w-24 h-24 bg-red-600 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-white shadow-[0px_0px_20px_rgba(255,46,46,0.4)]">
                 <i class="fa-solid fa-play text-4xl text-white pl-1"></i>
             </div>
+            
             <h2 class="text-5xl font-manga text-white mb-2 text-shadow-sm">PRÊT AU COMBAT ?</h2>
-            <div class="space-y-4 mt-8">
-                <button onclick="createRoom()" class="btn-pop btn-red w-full py-4 text-2xl tracking-wider rounded-lg transform transition hover:-rotate-1">CRÉER UNE SALLE</button>
-                <div class="flex gap-3 mt-4">
+            <p class="text-gray-400 font-bold mb-8 text-sm tracking-wider">REJOIGNEZ UNE ARÈNE MUSICALE</p>
+            
+            <div class="space-y-4">
+                <button onclick="createRoom()" class="btn-pop btn-red w-full py-4 text-2xl tracking-wider rounded-lg transform transition hover:-rotate-1">
+                    CRÉER UNE SALLE
+                </button>
+                
+                <div class="flex items-center gap-3 opacity-50">
+                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
+                    <span class="text-xs font-bold text-gray-500">OU</span>
+                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
+                </div>
+
+                <div class="flex gap-3">
                     <input type="text" id="input-room-code" placeholder="CODE" class="input-manga w-32 text-center text-2xl uppercase rounded-lg">
-                    <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl">REJOINDRE</button>
+                    <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl">
+                        REJOINDRE
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- LOBBY -->
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 2 : LOBBY                            -->
+    <!-- ========================================== -->
     <div id="screen-lobby" class="hidden flex-grow flex flex-col md:flex-row p-6 gap-6 h-full">
+        
+        <!-- GAUCHE : CONFIGURATION -->
         <div class="w-full md:w-1/3 flex flex-col gap-4">
+            <!-- Carte Code -->
             <div class="manga-panel p-6 text-center bg-yellow-500 border-black">
                 <span class="bg-black text-yellow-500 text-xs font-bold px-3 py-1 rounded mb-2 inline-block border border-black shadow-[2px_2px_0px_#000]">CODE SALLE</span>
                 <div id="lobby-code" class="text-6xl font-manga text-black tracking-wider mt-2">----</div>
             </div>
+
+            <!-- Carte Paramètres -->
             <div class="manga-panel p-6 flex-grow flex flex-col bg-[#1a1a1a]">
                 <h3 class="font-manga text-3xl mb-6 text-white border-b-4 border-red-600 inline-block w-max pr-4">PARAMÈTRES</h3>
+                
                 <div id="host-controls" class="hidden space-y-6">
                     <div>
-                        <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Durée (sec)</span><span id="display-duration" class="bg-white text-black px-2 rounded border border-gray-500">20s</span></div>
-                        <input type="range" min="5" max="45" value="20" id="setting-duration" class="w-full accent-red-600 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
-                    </div>
-                    <div>
-                        <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Nombre de Rounds</span><span id="display-rounds" class="bg-white text-black px-2 rounded border border-gray-500">10</span></div>
-                        <input type="range" min="5" max="50" step="5" value="10" id="setting-rounds" class="w-full accent-yellow-400 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
+                        <div class="flex justify-between font-bold mb-2 text-gray-300">
+                            <span>Temps / Manche</span>
+                            <span id="display-duration" class="bg-white text-black px-2 rounded border border-gray-500">20s</span>
+                        </div>
+                        <input type="range" min="5" max="45" value="20" id="setting-duration" class="w-full" onchange="updateSettings()">
                     </div>
                     
-                    <!-- OPTION MORT SUBITE -->
+                    <div>
+                        <div class="flex justify-between font-bold mb-2 text-gray-300">
+                            <span>Nombre de Rounds</span>
+                            <span id="display-rounds" class="bg-white text-black px-2 rounded border border-gray-500">10</span>
+                        </div>
+                        <input type="range" min="5" max="50" step="5" value="10" id="setting-rounds" class="w-full" onchange="updateSettings()">
+                    </div>
+
+                    <!-- Option Mort Subite -->
                     <div class="flex items-center justify-between bg-[#222] p-3 rounded border border-gray-600">
                         <div class="flex flex-col">
-                            <span class="font-bold text-white">Mort Subite</span>
-                            <span class="text-[10px] text-gray-400">Le premier qui trouve arrête le round</span>
+                            <span class="font-bold text-white text-sm">Mort Subite</span>
+                            <span class="text-[10px] text-gray-400">Le premier qui trouve gagne le round</span>
                         </div>
-                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="setting-suddendeath" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" onchange="updateSettings()"/>
-                            <label for="setting-suddendeath" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                        </div>
+                        <input type="checkbox" id="setting-suddendeath" class="w-5 h-5 accent-red-600 cursor-pointer" onchange="updateSettings()">
                     </div>
 
                     <div class="mt-auto">
-                        <button onclick="startGame()" class="btn-pop btn-red w-full py-4 text-2xl rounded-lg transform transition hover:scale-105">LANCER</button>
+                        <button onclick="startGame()" class="btn-pop btn-red w-full py-4 text-2xl rounded-lg transform transition hover:scale-105">
+                            LANCER LA PARTIE !
+                        </button>
                     </div>
                 </div>
+                
                 <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center text-gray-500">
-                    <i class="fa-solid fa-hourglass-half text-4xl mb-4 animate-pulse"></i><p class="font-bold text-sm uppercase">En attente de l'hôte...</p>
-                    <div id="guest-settings-display" class="mt-4 text-xs bg-[#222] p-2 rounded border border-gray-700 hidden">
-                        <!-- Affiche les settings aux invités -->
-                    </div>
+                    <i class="fa-solid fa-hourglass-half text-4xl mb-4 animate-pulse"></i>
+                    <p class="font-bold text-sm uppercase">En attente de l'hôte...</p>
+                    <div id="guest-settings-display" class="mt-4 text-xs bg-[#222] p-2 rounded border border-gray-700 hidden text-yellow-400 font-bold"></div>
                 </div>
             </div>
         </div>
+
+        <!-- DROITE : JOUEURS -->
         <div class="flex-1 manga-panel flex flex-col bg-[#151515]">
             <div class="h-16 bg-[#0a0a0a] flex items-center justify-between px-6 border-b-2 border-white">
-                <span class="font-manga text-2xl tracking-wide text-yellow-400">JOUEURS</span>
+                <span class="font-manga text-2xl tracking-wide text-yellow-400 text-shadow-sm">JOUEURS</span>
                 <div class="flex gap-3">
                     <button onclick="switchTeam(1)" class="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-blue-500 shadow-[2px_2px_0px_#fff]">BLEU</button>
                     <button onclick="switchTeam(2)" class="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-red-500 shadow-[2px_2px_0px_#fff]">ROUGE</button>
                 </div>
             </div>
+            
             <div class="flex-grow grid grid-cols-2 relative bg-[#111]">
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-white border-4 border-black px-4 py-2 rounded-full shadow-[4px_4px_0px_#000]"><span class="font-manga text-3xl text-black">VS</span></div>
-                <div class="p-4 border-r-2 border-white/20 bg-blue-900/10"><div id="list-team-1" class="space-y-3"></div></div>
-                <div class="p-4 bg-red-900/10"><div id="list-team-2" class="space-y-3"></div></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-white border-4 border-black px-4 py-2 rounded-full shadow-[4px_4px_0px_#000]">
+                     <span class="font-manga text-3xl text-black">VS</span>
+                </div>
+
+                <!-- Team Blue -->
+                <div class="p-4 border-r-2 border-white/20 bg-blue-900/10">
+                    <div id="list-team-1" class="space-y-3"></div>
+                </div>
+                <!-- Team Red -->
+                <div class="p-4 bg-red-900/10">
+                    <div id="list-team-2" class="space-y-3"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- JEU -->
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 3 : JEU (IN GAME)                    -->
+    <!-- ========================================== -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#111]">
         
-        <!-- Timer -->
-        <div class="w-full bg-[#1a1a1a] p-4 border-b-4 border-white flex justify-center shadow-lg z-20">
-            <div class="timer-container max-w-2xl shadow-inner bg-black">
-                <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
+        <!-- Timer & Compteur Round -->
+        <div class="w-full bg-[#1a1a1a] p-4 border-b-4 border-white flex flex-col items-center shadow-lg z-20 relative">
+            
+            <!-- Compteur de Manche (Centré et stylé) -->
+            <div class="bg-black border-2 border-white px-4 py-1 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] mb-2 z-10 transform -skew-x-12">
+                <span class="font-manga text-xl text-white skew-x-12">
+                    MANCHE <span id="current-round-display" class="text-yellow-400 text-2xl">1</span><span class="text-gray-500 mx-1">/</span><span id="total-rounds-display">10</span>
+                </span>
             </div>
-            <div class="absolute right-6 top-4 font-manga text-white text-xl">
-                <span id="current-round-display" class="text-yellow-400">1</span> / <span id="total-rounds-display">10</span>
+
+            <div class="timer-container max-w-2xl shadow-inner bg-black w-full">
+                <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
             </div>
         </div>
 
-        <!-- SCOREBOARD OVERLAY -->
+        <!-- SCOREBOARD OVERLAY (Tous les 5 rounds) -->
         <div id="scoreboard-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex items-center justify-center">
-             <div class="manga-panel p-12 max-w-4xl w-full text-center bg-[#1a1a1a]">
-                 <h2 class="text-5xl font-manga text-yellow-400 mb-8 text-shadow-lg">CLASSEMENT PROVISOIRE</h2>
+             <div class="manga-panel p-8 md:p-12 max-w-5xl w-full text-center bg-[#1a1a1a] border-4 border-yellow-400">
+                 <h2 class="text-6xl font-manga text-white mb-2 text-shadow-black" style="-webkit-text-stroke: 2px black;">CLASSEMENT</h2>
+                 <div class="h-1 w-32 bg-yellow-400 mx-auto mb-8"></div>
+
                  <div class="grid grid-cols-2 gap-8 text-left">
-                     <div class="border-r border-white/20 pr-4">
-                         <h3 class="text-blue-400 font-bold mb-4 border-b border-blue-500">ÉQUIPE BLEUE</h3>
+                     <div class="border-r-2 border-white/10 pr-4">
+                         <h3 class="text-blue-400 font-manga text-3xl mb-6 border-b-2 border-blue-500 inline-block">ÉQUIPE BLEUE</h3>
                          <div id="score-team-1" class="space-y-2"></div>
                      </div>
                      <div class="pl-4">
-                         <h3 class="text-red-400 font-bold mb-4 border-b border-red-500">ÉQUIPE ROUGE</h3>
+                         <h3 class="text-red-400 font-manga text-3xl mb-6 border-b-2 border-red-500 inline-block">ÉQUIPE ROUGE</h3>
                          <div id="score-team-2" class="space-y-2"></div>
                      </div>
                  </div>
-                 <p class="mt-8 text-gray-500 animate-pulse">La partie reprend dans quelques instants...</p>
+                 <div class="mt-10 py-2 px-6 bg-black inline-block rounded border border-gray-700">
+                    <p class="text-gray-400 font-bold animate-pulse text-sm">MANCHE SUIVANTE IMMINENTE...</p>
+                 </div>
              </div>
         </div>
 
-        <!-- CENTRE -->
+        <!-- CENTRE : DISQUE & VIDEO -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
-            <!-- Révélation -->
+            
+            <!-- Effet de fond discret -->
+            <div class="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(45deg,#fff_25%,transparent_25%,transparent_75%,#fff_75%,#fff),linear-gradient(45deg,#fff_25%,transparent_25%,transparent_75%,#fff_75%,#fff)]" style="background-size: 20px 20px; background-position: 0 0, 10px 10px;"></div>
+
+            <!-- Video Player (Révélation) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden">
                     <video id="game-video" class="w-full h-full object-contain" playsinline></video>
                 </div>
             </div>
 
-            <!-- Devinette -->
+            <!-- Mode Vinyle (Devinette) -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300">
+                
+                <!-- Disque -->
                 <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
+                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
                     <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                        <!-- Sillons -->
                         <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
-                        <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner"><i class="fa-solid fa-music text-4xl text-white"></i></div>
+                        <div class="absolute inset-10 rounded-full border-[20px] border-[#222] opacity-60"></div>
+                        
+                        <!-- Sticker Central -->
+                        <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
+                            <i class="fa-solid fa-music text-4xl text-white"></i>
+                        </div>
                     </div>
+                    <!-- Bras de lecture (Déco) -->
                     <div class="absolute -top-4 -right-4 w-32 h-4 bg-gray-300 rotate-45 origin-top-right border-2 border-black rounded-full shadow-lg z-30"></div>
                 </div>
+
                 <div class="text-center bg-white px-8 py-2 border-4 border-black rounded-full shadow-[4px_4px_0px_#000] transform -rotate-2">
                     <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">ÉCOUTEZ !</h2>
                 </div>
-                
+
                 <!-- Indicateurs de validation -->
                 <div id="status-indicators" class="flex gap-4 mt-8 flex-wrap justify-center">
-                    <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg">ANIME OK (+1)</div>
-                    <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg">TITRE OK (+1)</div>
-                    <div id="status-op" class="hidden bg-blue-500 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg">NUMÉRO OK (+0.5)</div>
+                    <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">ANIME OK (+1)</div>
+                    <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg font-manga tracking-wide">TITRE OK (+1)</div>
+                    <div id="status-op" class="hidden bg-blue-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">NUMÉRO OK (+0.5)</div>
                 </div>
             </div>
 
             <!-- Volume -->
             <div class="absolute top-4 right-4 z-30 bg-[#222] border-2 border-white rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
                 <i class="fa-solid fa-volume-high text-gray-400"></i>
-                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20 accent-white h-1 bg-gray-600 rounded-lg cursor-pointer" oninput="document.getElementById('game-video').volume = this.value">
+                <input type="range" min="0" max="1" step="0.1" class="w-20 accent-white h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
+
         </div>
 
-        <!-- BAS -->
+        <!-- BAS : INPUT RÉPONSE -->
         <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            
+            <!-- Résultat Overlay (Pop-up victoire) -->
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
-                <div class="bg-yellow-400 border-4 border-black p-8 max-w-2xl w-full text-center shadow-[12px_12px_0px_rgba(0,0,0,0.5)] transform -rotate-1">
+                <div class="bg-yellow-400 border-4 border-black p-8 max-w-2xl w-full text-center shadow-[12px_12px_0px_#000] transform -rotate-1">
                     <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
-                    <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-white text-shadow-black mb-2 drop-shadow-md" style="-webkit-text-stroke: 2px black;">ANIME NAME</h2>
-                    <div class="flex items-center justify-center gap-4 mt-2">
-                         <p id="res-song" class="text-black text-2xl font-bold italic bg-white px-4 py-1 border-2 border-black">"Song Title"</p>
-                         <!-- NOUVEAU : Numéro OP -->
-                         <p id="res-op-num" class="text-white bg-black text-xl font-bold px-3 py-1 border-2 border-white font-manga">OP 1</p>
+                    <h2 id="res-anime" class="text-3xl md:text-5xl font-manga text-white text-shadow-black mb-1" style="text-shadow: 2px 2px 0 #000;">ANIME NAME</h2>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 mt-3">
+                        <p id="res-song" class="text-black text-xl font-bold italic bg-white inline-block px-4 py-1 border-2 border-black">"Song Title"</p>
+                        <p id="res-op-num" class="text-white bg-black text-lg font-bold px-3 py-1 border-2 border-white font-manga transform skew-x-[-10deg]">OP 1</p>
                     </div>
                 </div>
             </div>
 
-            <div class="max-w-3xl mx-auto flex gap-4">
-                <!-- Input qui écoute la touche entrée -->
-                <input type="text" id="input-guess" placeholder="Tapez votre réponse (Anime, Titre ou OP X)..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="btn-pop btn-red w-40 rounded-lg text-2xl shadow-[4px_4px_0px_#000]">ENVOYER</button>
+            <div class="max-w-3xl mx-auto flex gap-3">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
+                <button onclick="submitGuess()" class="btn-pop btn-red w-40 rounded-lg text-2xl shadow-[4px_4px_0px_#000]">
+                    ENVOYER
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -301,9 +402,23 @@
         let opFound = false;
         let currentSongData = null;
         let currentSettings = { duration: 20, rounds: 10, suddenDeath: false };
+        
+        // GESTION DU VOLUME PERSISTANT
+        let userVolume = 0.5;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
+
+        // Initialiser le volume depuis le localStorage si dispo, sinon 0.5
+        const savedVol = localStorage.getItem('userVolume');
+        if(savedVol) userVolume = parseFloat(savedVol);
+        document.getElementById('volume-slider').value = userVolume;
+
+        window.updateVolume = (val) => {
+            userVolume = val;
+            localStorage.setItem('userVolume', val); // Sauvegarde locale
+            if(videoEl) videoEl.volume = userVolume;
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -315,7 +430,6 @@
             }
         });
 
-        // --- ALGO DE LEVENSHTEIN ---
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -413,16 +527,14 @@
                 const data = snapshot.val();
                 if (!data) return;
 
-                // Save settings locally for use in game logic
                 currentSettings = data.settings;
-
                 renderPlayers(data.players);
                 
                 if (!isHost) {
                     document.getElementById('display-duration').innerText = data.settings.duration + 's';
                     document.getElementById('setting-duration').value = data.settings.duration;
                     document.getElementById('setting-rounds').value = data.settings.rounds;
-                    if(data.settings.suddenDeath) document.getElementById('guest-settings-display').innerHTML = "⚡ Mode Mort Subite ACTIF";
+                    if(data.settings.suddenDeath) document.getElementById('guest-settings-display').innerHTML = "⚡ MODE MORT SUBITE : ACTIF";
                     else document.getElementById('guest-settings-display').innerHTML = "";
                     document.getElementById('guest-settings-display').classList.remove('hidden');
                 }
@@ -433,13 +545,12 @@
                     document.getElementById('screen-game').classList.add('hidden');
                     document.getElementById('screen-lobby').classList.remove('hidden');
                     
-                    // FIX AUDIO BUG: On force l'arrêt quand on revient au lobby
+                    // FIX : Arrêt complet audio au retour lobby
                     if(videoEl) {
                         videoEl.pause();
                         videoEl.src = "";
                         videoEl.load();
                     }
-
                     animeFound = false; songFound = false; opFound = false;
                 }
                 else if (data.status === 'playing') {
@@ -465,8 +576,9 @@
 
             sortedPlayers.forEach(p => {
                 const el = document.createElement('div');
-                el.className = "flex items-center gap-2 bg-[#222] border border-gray-600 p-2 rounded mb-2 shadow-sm";
-                el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-8 h-8 rounded border-2 border-white bg-black"> <div class="flex-1 min-w-0"><div class="font-bold text-gray-200 text-sm truncate uppercase font-manga tracking-wider">${p.name}</div><div class="text-xs text-yellow-400 font-mono font-bold">${p.score} PTS</div></div>`;
+                // STYLE POP pour les joueurs
+                el.className = "flex items-center gap-2 bg-white border-2 border-black p-2 rounded shadow-[2px_2px_0px_#000] mb-2";
+                el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-8 h-8 rounded border border-black"> <div class="flex-1 min-w-0"><div class="font-bold text-black text-sm truncate uppercase font-manga tracking-wider">${p.name}</div><div class="text-xs text-red-600 font-manga font-bold text-lg">${p.score} PTS</div></div>`;
                 
                 const elScore = el.cloneNode(true);
 
@@ -496,7 +608,6 @@
         function handleGameSync(gameState, settings) {
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
             
-            // Nettoyage préventif des timers si changement de phase
             if (isHost) clearTimeout(roundTimer);
 
             lastPhase = gameState.phase;
@@ -507,6 +618,7 @@
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
             const scoreboardOverlay = document.getElementById('scoreboard-overlay');
+            // Affiche le scoreboard tous les 5 rounds pendant la phase reveal
             if (gameState.phase === 'reveal' && gameState.currentRound % 5 === 0) {
                 scoreboardOverlay.classList.remove('hidden');
             } else {
@@ -527,7 +639,7 @@
                 document.getElementById('input-guess').focus();
 
                 videoEl.src = songData.url;
-                videoEl.volume = 0.5;
+                videoEl.volume = userVolume; // Applique le volume sauvegardé
                 videoEl.play().catch(e => console.log("Autoplay bloqué"));
                 diskEl.classList.remove('disk-paused');
                 
@@ -547,7 +659,6 @@
                 document.getElementById('result-display').classList.remove('hidden');
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
-                // Affiche le numéro de l'opening
                 document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
                 
                 document.getElementById('video-wrapper').classList.remove('hidden');
@@ -557,7 +668,7 @@
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    const delay = (gameState.currentRound % 5 === 0) ? 10000 : 5000;
+                    const delay = (gameState.currentRound % 5 === 0) ? 8000 : 5000;
                     
                     setTimeout(() => {
                         if (gameState.currentRound >= settings.rounds) {
@@ -588,8 +699,8 @@
 
             let pointsEarned = 0;
             let feedback = "";
+            let roundFinished = false;
 
-            // 1. VERIF ANIME (1pt)
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
                 if (!matchAnime && currentSongData.alt) {
@@ -604,20 +715,13 @@
                     document.getElementById('status-anime').classList.remove('hidden');
                     feedback = "ANIME TROUVÉ !";
                     
-                    // --- LOGIQUE "MORT SUBITE" (Si active) ---
+                    // --- MORT SUBITE ---
                     if (currentSettings.suddenDeath) {
-                        // On déclenche la fin du round immédiatement
-                        // N'importe qui peut écrire ça, la base se synchronisera
-                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
-                            phase: 'reveal', 
-                            startTime: Date.now() 
-                        });
-                        // Le points sont ajoutés, mais la phase changera instantanément pour tout le monde
+                        roundFinished = true;
                     }
                 }
             }
 
-            // 2. VERIF CHANSON (1pt)
             if (!songFound) {
                 if (isCloseMatch(guess, currentSongData.song)) {
                     songFound = true;
@@ -627,7 +731,6 @@
                 }
             }
 
-            // 3. VERIF NUMÉRO OP (0.5pt)
             if (!opFound && currentSongData.num) {
                 const inputNums = guess.match(/\d+/g);
                 if (inputNums && inputNums.includes(currentSongData.num.toString())) {
@@ -638,7 +741,6 @@
                 }
             }
 
-            // SAUVEGARDE POINTS
             if (pointsEarned > 0) {
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
@@ -652,6 +754,15 @@
                 popup.innerText = `+${pointsEarned}`;
                 document.body.appendChild(popup);
                 setTimeout(() => popup.remove(), 1500);
+
+                if (roundFinished) {
+                    // Si mort subite activée et anime trouvé
+                    // On écrit dans la DB pour passer au reveal pour tout le monde
+                    update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                        phase: 'reveal', 
+                        startTime: Date.now() 
+                    });
+                }
             }
 
             input.value = "";
