@@ -77,6 +77,15 @@
         /* NOTIFICATIONS POINTS */
         @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
         .points-popup { position: absolute; animation: flyUp 1.5s forwards; font-family: 'Bangers'; text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 50; }
+        
+        /* TOGGLE SWITCH */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -131,12 +140,28 @@
                         <div class="flex justify-between font-bold mb-2 text-gray-300"><span>Nombre de Rounds</span><span id="display-rounds" class="bg-white text-black px-2 rounded border border-gray-500">10</span></div>
                         <input type="range" min="5" max="50" step="5" value="10" id="setting-rounds" class="w-full accent-yellow-400 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
                     </div>
+                    
+                    <!-- OPTION MORT SUBITE -->
+                    <div class="flex items-center justify-between bg-[#222] p-3 rounded border border-gray-600">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-white">Mort Subite</span>
+                            <span class="text-[10px] text-gray-400">Le premier qui trouve arrête le round</span>
+                        </div>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle" id="setting-suddendeath" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" onchange="updateSettings()"/>
+                            <label for="setting-suddendeath" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+
                     <div class="mt-auto">
                         <button onclick="startGame()" class="btn-pop btn-red w-full py-4 text-2xl rounded-lg transform transition hover:scale-105">LANCER</button>
                     </div>
                 </div>
                 <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center text-gray-500">
                     <i class="fa-solid fa-hourglass-half text-4xl mb-4 animate-pulse"></i><p class="font-bold text-sm uppercase">En attente de l'hôte...</p>
+                    <div id="guest-settings-display" class="mt-4 text-xs bg-[#222] p-2 rounded border border-gray-700 hidden">
+                        <!-- Affiche les settings aux invités -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -230,7 +255,11 @@
                 <div class="bg-yellow-400 border-4 border-black p-8 max-w-2xl w-full text-center shadow-[12px_12px_0px_rgba(0,0,0,0.5)] transform -rotate-1">
                     <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
                     <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-white text-shadow-black mb-2 drop-shadow-md" style="-webkit-text-stroke: 2px black;">ANIME NAME</h2>
-                    <p id="res-song" class="text-black text-2xl font-bold italic bg-white inline-block px-4 py-1 border-2 border-black mt-2">"Song Title"</p>
+                    <div class="flex items-center justify-center gap-4 mt-2">
+                         <p id="res-song" class="text-black text-2xl font-bold italic bg-white px-4 py-1 border-2 border-black">"Song Title"</p>
+                         <!-- NOUVEAU : Numéro OP -->
+                         <p id="res-op-num" class="text-white bg-black text-xl font-bold px-3 py-1 border-2 border-white font-manga">OP 1</p>
+                    </div>
                 </div>
             </div>
 
@@ -271,6 +300,7 @@
         let songFound = false;
         let opFound = false;
         let currentSongData = null;
+        let currentSettings = { duration: 20, rounds: 10, suddenDeath: false };
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
@@ -285,7 +315,7 @@
             }
         });
 
-        // --- ALGO DE LEVENSHTEIN (FUZZY LOGIC) ---
+        // --- ALGO DE LEVENSHTEIN ---
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -311,21 +341,21 @@
             const normInput = input.toLowerCase().trim();
             const normTarget = target.toLowerCase().trim();
             if (normInput === normTarget) return true;
-            // Si le mot clé est inclus (ex: "naruto" dans "naruto shippuden") et a une taille décente
             if (normTarget.includes(normInput) && normInput.length > 3) return true; 
             
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
-            return similarity > 0.75; // 75% de similarité
+            return similarity > 0.75; 
         }
 
         window.updateSettings = () => {
             if (!isHost) return;
             const duration = parseInt(document.getElementById('setting-duration').value);
             const rounds = parseInt(document.getElementById('setting-rounds').value);
+            const suddenDeath = document.getElementById('setting-suddendeath').checked;
             
-            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration, rounds });
+            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration, rounds, suddenDeath });
             document.getElementById('display-duration').innerText = duration + 's';
             document.getElementById('display-rounds').innerText = rounds;
         };
@@ -339,7 +369,7 @@
             const roomData = {
                 host: currentUser.uid,
                 status: 'lobby',
-                settings: { duration: 20, rounds: 10 },
+                settings: { duration: 20, rounds: 10, suddenDeath: false },
                 players: { [currentUser.uid]: { name: currentUser.displayName, team: 1, score: 0, avatar: currentUser.photoURL } },
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
@@ -383,21 +413,33 @@
                 const data = snapshot.val();
                 if (!data) return;
 
+                // Save settings locally for use in game logic
+                currentSettings = data.settings;
+
                 renderPlayers(data.players);
                 
                 if (!isHost) {
                     document.getElementById('display-duration').innerText = data.settings.duration + 's';
                     document.getElementById('setting-duration').value = data.settings.duration;
                     document.getElementById('setting-rounds').value = data.settings.rounds;
+                    if(data.settings.suddenDeath) document.getElementById('guest-settings-display').innerHTML = "⚡ Mode Mort Subite ACTIF";
+                    else document.getElementById('guest-settings-display').innerHTML = "";
+                    document.getElementById('guest-settings-display').classList.remove('hidden');
                 }
                 
                 document.getElementById('total-rounds-display').innerText = data.settings.rounds;
 
-                // GESTION DU RETOUR AU LOBBY
                 if (data.status === 'lobby') {
                     document.getElementById('screen-game').classList.add('hidden');
                     document.getElementById('screen-lobby').classList.remove('hidden');
-                    // Reset de l'état local du jeu pour la prochaine partie
+                    
+                    // FIX AUDIO BUG: On force l'arrêt quand on revient au lobby
+                    if(videoEl) {
+                        videoEl.pause();
+                        videoEl.src = "";
+                        videoEl.load();
+                    }
+
                     animeFound = false; songFound = false; opFound = false;
                 }
                 else if (data.status === 'playing') {
@@ -453,6 +495,10 @@
 
         function handleGameSync(gameState, settings) {
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
+            
+            // Nettoyage préventif des timers si changement de phase
+            if (isHost) clearTimeout(roundTimer);
+
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
             
@@ -460,7 +506,6 @@
             currentSongData = songData;
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
-            // SCOREBOARD INTERMÉDIAIRE
             const scoreboardOverlay = document.getElementById('scoreboard-overlay');
             if (gameState.phase === 'reveal' && gameState.currentRound % 5 === 0) {
                 scoreboardOverlay.classList.remove('hidden');
@@ -469,7 +514,6 @@
             }
 
             if (gameState.phase === 'guessing') {
-                // RESET LOCAL POUR LE NOUVEAU ROUND
                 animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
@@ -494,7 +538,6 @@
                 bar.classList.add('timer-running');
 
                 if (isHost) {
-                    clearTimeout(roundTimer);
                     roundTimer = setTimeout(() => {
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
                     }, settings.duration * 1000);
@@ -504,18 +547,20 @@
                 document.getElementById('result-display').classList.remove('hidden');
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
+                // Affiche le numéro de l'opening
+                document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
+                
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
+                
                 diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    // FIN DE PARTIE OU ROUND SUIVANT
                     const delay = (gameState.currentRound % 5 === 0) ? 10000 : 5000;
                     
                     setTimeout(() => {
                         if (gameState.currentRound >= settings.rounds) {
-                            // RETOUR AU LOBBY
                             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                                 status: 'lobby',
                                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
@@ -558,6 +603,17 @@
                     pointsEarned += 1;
                     document.getElementById('status-anime').classList.remove('hidden');
                     feedback = "ANIME TROUVÉ !";
+                    
+                    // --- LOGIQUE "MORT SUBITE" (Si active) ---
+                    if (currentSettings.suddenDeath) {
+                        // On déclenche la fin du round immédiatement
+                        // N'importe qui peut écrire ça, la base se synchronisera
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                            phase: 'reveal', 
+                            startTime: Date.now() 
+                        });
+                        // Le points sont ajoutés, mais la phase changera instantanément pour tout le monde
+                    }
                 }
             }
 
@@ -572,9 +628,7 @@
             }
 
             // 3. VERIF NUMÉRO OP (0.5pt)
-            // Logique : On cherche un chiffre dans la réponse qui correspond au numéro de l'OP
             if (!opFound && currentSongData.num) {
-                // On extrait les nombres de la réponse utilisateur
                 const inputNums = guess.match(/\d+/g);
                 if (inputNums && inputNums.includes(currentSongData.num.toString())) {
                     opFound = true;
