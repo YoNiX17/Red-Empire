@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Blindtest Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        neon: { purple: '#a855f7', pink: '#ec4899' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: { 'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
+        .glass-panel { background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(168, 85, 247, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); }
+        
+        .mode-card { transition: all 0.4s ease; position: relative; overflow: hidden; }
+        .mode-card:hover { transform: translateY(-8px); box-shadow: 0 0 40px rgba(168, 85, 247, 0.3); border-color: #a855f7; }
+        
+        .locked-card { opacity: 0.6; filter: grayscale(0.9); cursor: not-allowed; border-style: dashed; border-color: rgba(255,255,255,0.1); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen">
+
+    <!-- Backgrounds -->
+    <canvas id="canvas-container"></canvas>
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_20%,black_100%)] pointer-events-none z-[-1]"></div>
+    <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_bottom,transparent_50%,black_50%)] bg-[length:100%_4px]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-purple-900/30 bg-black/80 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-crown text-empire-600 text-2xl group-hover:animate-pulse"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="games.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-arrow-left mr-2"></i>RETOUR AU HUB</a>
+                <span class="text-sm font-mono font-bold text-purple-400 text-glow border-b-2 border-purple-600 pb-1">BLINDTEST ARENA</span>
+            </div>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden text-white"><i class="fa-solid fa-bars text-2xl"></i></button>
+        </div>
+         <div id="mobile-menu" class="hidden absolute top-16 left-0 w-full bg-black border-b border-purple-900 p-4 md:hidden">
+            <a href="games.html" class="block py-2 text-gray-400 hover:text-white">RETOUR AU HUB</a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-12 text-center relative z-10 px-4">
+        <div data-aos="fade-down" class="inline-block mb-4 px-3 py-1 border border-purple-500/30 rounded-full bg-purple-900/20 backdrop-blur-sm">
+            <span class="text-xs font-mono font-bold tracking-[0.2em] text-purple-300 uppercase">MODE SÉLECTION</span>
+        </div>
+        <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+            CHOISIS TON <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">COMBAT</span>
+        </h1>
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto">Écoutez. Devinez. Dominez.</p>
+    </section>
+
+    <!-- SELECTION GRID -->
+    <section class="flex-grow max-w-7xl mx-auto px-6 lg:px-8 pb-24 w-full relative z-10 flex flex-col justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            
+            <!-- CARD 1: PARTIE NORMALE (ACTIVE) -->
+            <div class="mode-card glass-panel rounded-2xl h-full border border-purple-500/30 relative flex flex-col" data-aos="fade-up" data-aos-delay="0">
+                <div class="absolute top-0 right-0 px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold font-mono rounded-bl-xl border-b border-l border-green-500/30">EN LIGNE</div>
+                
+                <div class="h-48 bg-gradient-to-b from-purple-900/40 to-black relative overflow-hidden flex items-center justify-center">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                    <i class="fa-solid fa-users text-6xl text-purple-400 group-hover:scale-110 transition-transform duration-500"></i>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center">
+                    <h2 class="font-display text-2xl font-bold text-white mb-3">PARTIE NORMALE</h2>
+                    <p class="text-gray-400 text-sm mb-8 flex-grow leading-relaxed">
+                        Créez une salle privée ou rejoignez vos amis. Configurez le nombre de rounds, la durée et les équipes. Pas d'enjeu, juste du fun.
+                    </p>
+                    <!-- LIEN VERS LA PAGE DE JEU -->
+                    <a href="blindtest.html" class="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold font-display uppercase tracking-wider rounded-lg shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all transform hover:-translate-y-1 block">
+                        JOUER
+                    </a>
+                </div>
+            </div>
+
+            <!-- CARD 2: CLASSÉ / RANKED (LOCKED) -->
+            <div class="mode-card locked-card glass-panel rounded-2xl h-full border border-white/5 relative flex flex-col" data-aos="fade-up" data-aos-delay="150">
+                <div class="absolute top-4 right-4 text-gray-600"><i class="fa-solid fa-lock text-2xl"></i></div>
+                
+                <div class="h-48 bg-gray-900/30 flex items-center justify-center">
+                    <i class="fa-solid fa-trophy text-6xl text-gray-700"></i>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center">
+                    <h2 class="font-display text-2xl font-bold text-gray-500 mb-3">MODE CLASSÉ</h2>
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">
+                        Affrontez l'élite du serveur pour des points de rang (MMR). Montez les échelons de Bronze à Empereur.
+                    </p>
+                    <div class="mt-auto py-2 bg-gray-900 rounded border border-white/5 text-gray-500 text-xs font-mono uppercase">
+                        SAISON 1 : BIENTÔT
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: TOURNOI (LOCKED) -->
+            <div class="mode-card locked-card glass-panel rounded-2xl h-full border border-white/5 relative flex flex-col" data-aos="fade-up" data-aos-delay="300">
+                <div class="absolute top-4 right-4 text-gray-600"><i class="fa-solid fa-lock text-2xl"></i></div>
+                
+                <div class="h-48 bg-gray-900/30 flex items-center justify-center">
+                    <i class="fa-solid fa-crown text-6xl text-gray-700"></i>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center">
+                    <h2 class="font-display text-2xl font-bold text-gray-500 mb-3">TOURNOI</h2>
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">
+                        Événements spéciaux organisés par le Staff. Inscription requise. Récompenses exclusives à la clé.
+                    </p>
+                    <div class="mt-auto py-2 bg-gray-900 rounded border border-white/5 text-gray-500 text-xs font-mono uppercase">
+                        AUCUN ÉVÉNEMENT EN COURS
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-purple-900/30 bg-black py-8 mt-auto relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            © 2024 Red Empire Systems. Music Division.
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        // Particles (Purple Theme)
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        class Particle {
+            constructor(x, y, dx, dy, size, color) {
+                this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size; this.color = color;
+            }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+                if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+                this.x += this.dx; this.y += this.dy; this.draw();
+            }
+        }
+        function init() {
+            particlesArray = [];
+            for(let i=0; i<80; i++) {
+                let size = Math.random() * 2;
+                let x = Math.random() * innerWidth; let y = Math.random() * innerHeight;
+                let dx = (Math.random() - 0.5) * 0.3; let dy = (Math.random() - 0.5) * 0.3;
+                particlesArray.push(new Particle(x, y, dx, dy, size, '#a855f7')); // Purple particles
+            }
+        }
+        function animate() { requestAnimationFrame(animate); ctx.clearRect(0,0,innerWidth, innerHeight); particlesArray.forEach(p => p.update()); }
+        window.addEventListener('resize', ()=>{ canvas.width=innerWidth; canvas.height=innerHeight; init(); });
+        init(); animate();
+    </script>
+    
+    <!-- Pour l'état de connexion -->
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
