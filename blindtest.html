@@ -518,6 +518,7 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
+        // MODIFICATION 1 : Gestion de l'historique et démarrage aléatoire
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -527,11 +528,12 @@
 
             const roomData = {
                 host: currentUser.uid,
-                createdAt: Date.now(), // Pour le nettoyage
+                createdAt: Date.now(),
                 status: 'lobby',
                 settings: { duration: 20, rounds: 10, suddenDeath: false, teamCount: 2 },
                 players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
-                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
+                // History pour ne pas répéter, seekTime pour sync le début
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', history: [], seekTime: 0 }
             };
 
             try {
@@ -703,11 +705,23 @@
 
         window.switchTeam = (teamId) => { update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { team: teamId }); };
 
+        // MODIFICATION 2 : Démarrage avec historique et seekTime aléatoire
         window.startGame = () => {
+            // Initialisation : On prend un index au hasard, on le met dans l'historique
             const randomIndex = Math.floor(Math.random() * OP_DATABASE.length);
+            // Random start entre 30 et 45s
+            const randomSeek = Math.floor(Math.random() * 16) + 30;
+
             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                 status: 'playing',
-                gameState: { currentRound: 1, songIndex: randomIndex, startTime: Date.now() + 3000, phase: 'guessing' }
+                gameState: {
+                    currentRound: 1,
+                    songIndex: randomIndex,
+                    startTime: Date.now() + 3000,
+                    phase: 'guessing',
+                    history: [randomIndex],
+                    seekTime: randomSeek
+                }
             });
         };
 
@@ -751,6 +765,8 @@
                 document.getElementById('input-guess').focus();
 
                 videoEl.src = songData.url;
+                // MODIFICATION 3 : Appliquer le seekTime pour tous
+                videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume; 
                 videoEl.play().catch(e => console.log("Autoplay bloqué"));
                 diskEl.classList.remove('disk-paused');
@@ -792,12 +808,26 @@
                             return; 
                         }
 
-                        const nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
+                        // MODIFICATION 4 : Choisir un index NON PRÉSENT dans l'historique
+                        let nextIndex;
+                        let attempts = 0;
+                        const history = gameState.history || [];
+                        
+                        do {
+                           nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
+                           attempts++;
+                        } while (history.includes(nextIndex) && attempts < 100);
+
+                        const nextHistory = [...history, nextIndex];
+                        const nextSeek = Math.floor(Math.random() * 16) + 30;
+
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: gameState.currentRound + 1,
                             songIndex: nextIndex,
                             startTime: Date.now(),
-                            phase: 'guessing'
+                            phase: 'guessing',
+                            history: nextHistory,
+                            seekTime: nextSeek
                         });
                     }, delay);
                 }
