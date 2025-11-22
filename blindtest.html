@@ -117,6 +117,28 @@
         .toggle-checkbox:checked + .toggle-label {
             background-color: #68D391;
         }
+
+        /* --- LOADER SPINNER --- */
+        .loader-ring {
+            display: inline-block;
+            width: 64px;
+            height: 64px;
+        }
+        .loader-ring:after {
+            content: " ";
+            display: block;
+            width: 46px;
+            height: 46px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            border-color: #facc15 transparent #facc15 transparent;
+            animation: loader-ring 1.2s linear infinite;
+        }
+        @keyframes loader-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -304,8 +326,14 @@
             <!-- Video Player (Révélation) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden">
-                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 </div>
+            </div>
+            
+            <!-- LOADER OVERLAY (Buffering) -->
+            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                <div class="loader-ring"></div>
+                <p class="text-yellow-400 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
             </div>
 
             <!-- Mode Vinyle (Devinette) -->
@@ -742,6 +770,7 @@
 
         let lastPhase = '';
         let lastStartTime = 0;
+        let onPlayListener = null; // Stockage pour nettoyage
 
         function handleGameSync(gameState, settings) {
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
@@ -779,25 +808,53 @@
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
 
+                // RESET ET LOADER
+                const bar = document.getElementById('game-timer-bar');
+                bar.classList.remove('timer-running');
+                bar.style.width = '100%'; // Reset visual
+                
+                document.getElementById('loader-overlay').classList.remove('hidden'); // Affiche le loader
+                diskEl.classList.add('disk-paused'); // Disque arrêté pendant le chargement
+
+                // Nettoyage ancien listener
+                if(onPlayListener) {
+                    videoEl.removeEventListener('playing', onPlayListener);
+                    onPlayListener = null;
+                }
+
                 videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume; 
-                videoEl.play().catch(e => console.log("Autoplay bloqué"));
-                diskEl.classList.remove('disk-paused');
                 
-                const bar = document.getElementById('game-timer-bar');
-                bar.classList.remove('timer-running');
-                void bar.offsetWidth;
-                bar.style.animationDuration = settings.duration + 's';
-                bar.classList.add('timer-running');
+                // --- NOUVELLE LOGIQUE DE SYNCHRO TIMER ---
+                onPlayListener = () => {
+                    console.log("Lecture commencée - Lancement Timer");
+                    
+                    // 1. Cache le loader
+                    document.getElementById('loader-overlay').classList.add('hidden');
+                    
+                    // 2. Lance les animations
+                    diskEl.classList.remove('disk-paused');
+                    bar.style.animationDuration = settings.duration + 's';
+                    bar.classList.add('timer-running');
 
-                if (isHost) {
-                    roundTimer = setTimeout(() => {
-                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                    }, settings.duration * 1000);
-                }
+                    // 3. SI HÔTE : Lance le chrono de fin de round ICI
+                    if (isHost) {
+                        clearTimeout(roundTimer);
+                        roundTimer = setTimeout(() => {
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+                        }, settings.duration * 1000);
+                    }
+                };
+
+                // On attache l'écouteur (once: true pour éviter les bugs si buffering au milieu)
+                videoEl.addEventListener('playing', onPlayListener, { once: true });
+
+                // Lance la lecture (déclenchera 'playing' quand prêt)
+                videoEl.play().catch(e => console.log("Autoplay bloqué ou erreur:", e));
 
             } else if (gameState.phase === 'reveal') {
+                document.getElementById('loader-overlay').classList.add('hidden'); // Cache loader au cas où
                 document.getElementById('result-display').classList.remove('hidden');
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
