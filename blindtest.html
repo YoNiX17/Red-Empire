@@ -6,171 +6,158 @@
     <title>Blindtest JCJ | Red Empire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Shojumaru&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Police style Manga/Comic -->
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #ff003c; /* Cyberpunk Red */
-            --secondary: #711c91; /* Cyberpunk Purple */
-            --dark: #050103;
-            --glass: rgba(15, 5, 10, 0.8);
+            --red: #ff2e2e;
+            --yellow: #facc15;
+            --dark-bg: #121212;
+            --panel-bg: #1a1a1a;
+            --text-main: #eeeeee;
+            --border-color: #ffffff;
         }
 
         body { 
-            background-color: var(--dark); 
-            color: #e5e5e5; 
-            font-family: 'Rajdhani', sans-serif; 
-            overflow: hidden; 
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: 'Roboto Condensed', sans-serif;
+            overflow: hidden;
+            /* Motif à pois sombre style Manga (Halftone) */
+            background-image: radial-gradient(#333 20%, transparent 20%);
+            background-size: 12px 12px;
         }
         
-        .font-jap { font-family: 'Shojumaru', system-ui; }
-        .font-tech { font-family: 'Orbitron', sans-serif; }
+        .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* --- CRT SCANLINE EFFECT --- */
-        .crt::before {
-            content: " ";
-            display: block;
+        /* --- PANNEAUX MANGA DARK --- */
+        .manga-panel {
+            background: var(--panel-bg);
+            border: 3px solid var(--border-color);
+            /* Ombre dure colorée pour le style Pop */
+            box-shadow: 8px 8px 0px var(--red);
+            transition: transform 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Effet de vitesse sur les panneaux (plus subtil en sombre) */
+        .speed-lines::before {
+            content: '';
             position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px;
-            z-index: 100;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
             pointer-events: none;
         }
+
+        /* --- BOUTONS POP --- */
+        .btn-pop {
+            background: var(--border-color); /* Blanc */
+            color: var(--dark-bg);
+            font-family: 'Bangers', cursive;
+            text-transform: uppercase;
+            border: 2px solid var(--border-color);
+            transition: all 0.1s ease;
+            box-shadow: 4px 4px 0px var(--yellow);
+        }
+        .btn-pop:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--yellow);
+            background: var(--yellow);
+            color: var(--dark-bg);
+            border-color: var(--yellow);
+        }
+        .btn-pop:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--yellow);
+        }
         
-        /* --- HUD BORDERS --- */
-        .hud-panel {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 0, 60, 0.3);
-            box-shadow: 0 0 30px rgba(255, 0, 60, 0.1);
-            position: relative;
-            clip-path: polygon(
-                15px 0, 100% 0, 
-                100% calc(100% - 15px), calc(100% - 15px) 100%, 
-                0 100%, 0 15px
-            );
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        .btn-red { 
+            background: var(--red); 
+            color: white; 
+            border-color: var(--red);
+            box-shadow: 4px 4px 0px var(--border-color); 
         }
-        
-        /* Interaction Panneau */
-        .hud-panel:hover {
-            border-color: rgba(255, 0, 60, 0.8);
-            box-shadow: 0 0 40px rgba(255, 0, 60, 0.2);
+        .btn-red:hover { 
+            background: #ff4444; 
+            color: white; 
+            box-shadow: 6px 6px 0px var(--border-color); 
+            border-color: #ff4444;
         }
 
-        /* Décorations coins */
-        .hud-corner {
-            position: absolute; 
-            width: 8px; 
-            height: 8px;
-            border: 2px solid var(--primary);
-            transition: all 0.3s ease;
-            opacity: 0.5;
-        }
-        .hc-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
-        .hc-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
-        .hc-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
-        .hc-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
-        
-        .hud-panel:hover .hud-corner {
-            opacity: 1;
-            box-shadow: 0 0 10px var(--primary);
-            border-color: #fff; 
-        }
+        /* --- TIMER BAR --- */
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
+        .timer-running { animation: shrink linear forwards; }
 
-        /* --- NEON TEXT --- */
-        .text-neon {
-            text-shadow: 0 0 5px var(--primary), 0 0 20px var(--primary);
+        /* --- DISQUE QUI TOURNE --- */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .disk-spin { animation: spin 3s linear infinite; }
+        .disk-paused { animation-play-state: paused !important; }
+
+        /* --- INPUT STYLE --- */
+        .input-manga {
+            border: 3px solid var(--border-color);
+            background: #222;
+            color: white;
+            font-family: 'Bangers', cursive;
+            letter-spacing: 1px;
+            box-shadow: inset 4px 4px 0px #000;
         }
-
-        /* --- ANIMATIONS --- */
-        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
-        .pulse-ring::before {
-            content: ''; position: absolute; inset: -10px; border: 2px solid var(--primary); border-radius: 50%;
-            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-
-        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
-        .spin-disk { animation: spin-slow 6s linear infinite; }
-        .paused-disk { animation-play-state: paused !important; }
-        
-        /* Visualizer bars */
-        .bar { width: 8px; background: var(--primary); box-shadow: 0 0 15px var(--primary); margin: 0 2px; }
-        .playing .bar { animation: sound 0.5s ease-in-out infinite alternate; }
-        @keyframes sound { 0% { height: 10px; opacity: 0.5; } 100% { height: 60px; opacity: 1; } }
-        .bar:nth-child(odd) { animation-duration: 0.4s; }
-        .bar:nth-child(2n) { animation-duration: 0.6s; }
-        .bar:nth-child(3n) { animation-duration: 0.3s; }
-
-        /* Timer Bar */
-        @keyframes load { from { width: 100%; } to { width: 0%; } }
-        .timer-bar { height: 4px; background: var(--primary); width: 100%; box-shadow: 0 0 20px var(--primary); }
-        .timer-running { animation: load linear forwards; }
-
-        /* Glitch input focus */
-        .input-cyber:focus {
-            box-shadow: 0 0 15px var(--secondary);
-            border-color: var(--secondary);
-        }
+        .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
+        .input-manga::placeholder { color: #666; }
     </style>
 </head>
-<body class="h-screen flex flex-col crt bg-black">
+<body class="h-screen flex flex-col">
 
-    <!-- BACKGROUND -->
-    <div class="fixed inset-0 z-0">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
-        <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vh] h-[80vh] border border-red-900/20 rounded-full animate-[spin-slow_60s_linear_infinite] pointer-events-none"></div>
-    </div>
-
-    <!-- NAVBAR SIMPLIFIÉE -->
-    <nav class="relative z-50 h-20 flex items-center justify-between px-8 border-b border-white/5 bg-black/80 backdrop-blur-md">
-        <a href="blindtest_hub.html" class="group flex items-center gap-3 text-gray-400 hover:text-white transition-all">
-            <div class="w-10 h-10 flex items-center justify-center border border-gray-700 group-hover:border-red-500 group-hover:bg-red-500/10 rounded transition-all transform group-hover:-translate-x-1">
-                <i class="fa-solid fa-chevron-left"></i>
-            </div>
-            <div class="flex flex-col">
-                <span class="text-[10px] font-tech tracking-widest text-gray-500 group-hover:text-red-500">SYSTÈME</span>
-                <span class="font-bold font-mono text-sm tracking-wider">QUITTER</span>
-            </div>
+    <!-- NAVBAR -->
+    <nav class="h-16 bg-[#111] border-b-4 border-white flex items-center justify-between px-6 z-50 shadow-lg">
+        <a href="blindtest_hub.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span class="font-manga text-xl tracking-wider">QUITTER</span>
         </a>
-
-        <div class="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-            <h1 class="font-jap text-4xl text-white tracking-widest text-neon drop-shadow-lg">BLINDTEST <span class="text-red-600">JCJ</span></h1>
-            <div class="w-32 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-1"></div>
+        
+        <div class="absolute left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-1 skew-x-[-10deg] border-2 border-white shadow-[4px_4px_0px_#ff2e2e]">
+            <h1 class="font-manga text-2xl skew-x-[10deg] tracking-widest">BLINDTEST <span class="text-red-600">ARENA</span></h1>
         </div>
 
-        <div class="w-20"></div>
+        <div id="user-badge" class="flex items-center gap-2 bg-gray-800 px-4 py-1 rounded-full border-2 border-white">
+            <div class="w-3 h-3 bg-green-500 rounded-full border border-white"></div>
+            <span class="text-sm font-bold truncate max-w-[100px] text-white">Joueur</span>
+        </div>
     </nav>
 
 
-    <!-- ÉCRAN 1 : MENU PRINCIPAL -->
-    <div id="screen-menu" class="relative z-10 flex-grow flex items-center justify-center p-4">
-        <div class="hud-panel p-12 max-w-md w-full text-center">
-            <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
-            <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
+    <!-- ========================================== -->
+    <!-- ÉCRAN 1 : MENU PRINCIPAL                   -->
+    <!-- ========================================== -->
+    <div id="screen-menu" class="flex-grow flex items-center justify-center p-4">
+        <div class="manga-panel p-8 max-w-md w-full text-center speed-lines">
             
-            <div class="mb-10 relative inline-block pulse-ring">
-                <div class="w-24 h-24 bg-gradient-to-br from-red-900 to-black rounded-full flex items-center justify-center border-2 border-red-600 shadow-[0_0_30px_rgba(255,0,60,0.4)]">
-                    <i class="fa-solid fa-play text-4xl text-white ml-1"></i>
-                </div>
+            <div class="w-24 h-24 bg-red-600 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-white shadow-[0px_0px_20px_rgba(255,46,46,0.4)]">
+                <i class="fa-solid fa-play text-4xl text-white pl-1"></i>
             </div>
             
-            <h2 class="text-2xl font-tech font-bold text-white mb-2 tracking-widest">CONNEXION REQUISE</h2>
-            <div class="h-px w-1/2 bg-red-900 mx-auto mb-8"></div>
+            <h2 class="text-5xl font-manga text-white mb-2 text-shadow-sm">PRÊT AU COMBAT ?</h2>
+            <p class="text-gray-400 font-bold mb-8 text-sm tracking-wider">REJOIGNEZ UNE ARÈNE MUSICALE</p>
             
             <div class="space-y-4">
-                <button onclick="createRoom()" class="w-full py-4 bg-red-700 hover:bg-red-600 text-white font-bold font-tech tracking-wider text-lg clip-path-polygon transition-all hover:shadow-[0_0_20px_rgba(255,0,60,0.6)] hover:-translate-y-1 border-l-4 border-white">
+                <button onclick="createRoom()" class="btn-pop btn-red w-full py-4 text-2xl tracking-wider rounded-lg transform transition hover:-rotate-1">
                     CRÉER UNE SALLE
                 </button>
                 
-                <div class="text-xs text-gray-500 font-mono my-4">- OU REJOINDRE -</div>
+                <div class="flex items-center gap-3 opacity-50">
+                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
+                    <span class="text-xs font-bold text-gray-500">OU</span>
+                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
+                </div>
 
-                <div class="flex gap-2 h-14">
-                    <input type="text" id="input-room-code" placeholder="CODE SALLE" class="w-2/3 bg-black border border-red-900/50 px-4 text-white font-mono text-center text-xl focus:border-red-500 outline-none input-cyber tracking-[0.2em] uppercase">
-                    <button onclick="joinRoom()" class="w-1/3 bg-gray-800 hover:bg-white hover:text-black text-gray-300 font-bold text-sm transition-all border border-gray-700">
-                        ENTRER
+                <div class="flex gap-3">
+                    <input type="text" id="input-room-code" placeholder="CODE" class="input-manga w-32 text-center text-2xl uppercase rounded-lg">
+                    <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl">
+                        REJOINDRE
                     </button>
                 </div>
             </div>
@@ -178,73 +165,67 @@
     </div>
 
 
-    <!-- ÉCRAN 2 : LOBBY -->
-    <div id="screen-lobby" class="hidden relative z-10 flex-grow flex flex-col md:flex-row p-8 gap-8 h-[calc(100vh-80px)]">
+    <!-- ========================================== -->
+    <!-- ÉCRAN 2 : LOBBY                            -->
+    <!-- ========================================== -->
+    <div id="screen-lobby" class="hidden flex-grow flex flex-col md:flex-row p-6 gap-6 h-full">
         
-        <!-- GAUCHE : INFO & SETTINGS -->
+        <!-- GAUCHE : CONFIGURATION -->
         <div class="w-full md:w-1/3 flex flex-col gap-4">
-            <div class="hud-panel p-6 text-center bg-black/60">
-                <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
-                <span class="text-[10px] text-red-500 font-tech tracking-[0.3em] border border-red-900/50 px-2 py-1">ID DE MISSION</span>
-                <div id="lobby-code" class="text-7xl font-mono font-black text-white tracking-tighter mt-2 text-neon">----</div>
+            <!-- Carte Code -->
+            <div class="manga-panel p-6 text-center bg-[#222] border-white">
+                <span class="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded mb-2 inline-block border border-black shadow-[2px_2px_0px_#000]">CODE SALLE</span>
+                <div id="lobby-code" class="text-6xl font-manga text-white tracking-wider mt-2">----</div>
             </div>
 
-            <div class="hud-panel p-6 flex-grow flex flex-col bg-black/40">
-                <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
+            <!-- Carte Paramètres -->
+            <div class="manga-panel p-6 flex-grow flex flex-col bg-[#1a1a1a]">
+                <h3 class="font-manga text-3xl mb-6 text-white border-b-4 border-red-600 inline-block w-max pr-4">PARAMÈTRES</h3>
                 
-                <h3 class="text-white font-bold mb-8 font-tech uppercase flex items-center gap-3 border-b border-white/10 pb-4">
-                    <i class="fa-solid fa-sliders text-red-600"></i> Configuration
-                </h3>
-                
-                <div id="host-controls" class="hidden space-y-8">
+                <div id="host-controls" class="hidden space-y-6">
                     <div>
-                        <div class="flex justify-between text-xs text-gray-400 mb-2 font-mono uppercase">
-                            <span>Durée / Round</span>
-                            <span id="display-duration" class="text-red-500 font-bold text-lg">20s</span>
+                        <div class="flex justify-between font-bold mb-2 text-gray-300">
+                            <span>Temps de réponse</span>
+                            <span id="display-duration" class="bg-white text-black px-2 rounded border border-gray-500">20s</span>
                         </div>
-                        <div class="relative h-2 bg-gray-800 rounded-full">
-                            <input type="range" min="5" max="45" value="20" id="setting-duration" class="absolute w-full h-full opacity-0 cursor-pointer z-10" oninput="updateSettings()">
-                            <div class="absolute h-full bg-red-600 rounded-full" style="width: 40%" id="range-progress"></div>
-                            <div class="absolute h-4 w-4 bg-white rounded-full top-1/2 -translate-y-1/2 shadow-[0_0_10px_white]" style="left: 40%" id="range-thumb"></div>
-                        </div>
+                        <input type="range" min="5" max="45" value="20" id="setting-duration" class="w-full accent-red-600 h-2 bg-gray-700 rounded-lg cursor-pointer" onchange="updateSettings()">
                     </div>
                     
                     <div class="mt-auto">
-                        <button onclick="startGame()" class="w-full py-6 bg-gradient-to-r from-green-700 to-green-500 text-white font-black font-tech tracking-[0.2em] text-xl clip-path-polygon hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all border-b-4 border-green-900">
-                            INITIALISER
+                        <button onclick="startGame()" class="btn-pop btn-red w-full py-4 text-2xl rounded-lg transform transition hover:scale-105">
+                            LANCER LA PARTIE !
                         </button>
                     </div>
                 </div>
                 
-                <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center opacity-50">
-                    <div class="w-16 h-16 border-t-4 border-r-4 border-red-600 rounded-full animate-spin mb-4"></div>
-                    <p class="text-xs font-mono uppercase tracking-widest">En attente de l'host...</p>
+                <div id="guest-controls" class="flex-grow flex flex-col items-center justify-center text-center text-gray-500">
+                    <i class="fa-solid fa-hourglass-half text-4xl mb-4 animate-pulse"></i>
+                    <p class="font-bold text-sm uppercase">En attente de l'hôte...</p>
                 </div>
             </div>
         </div>
 
-        <!-- DROITE : TEAMS -->
-        <div class="flex-1 hud-panel p-0 flex flex-col overflow-hidden bg-black/20">
-            <div class="hud-corner hc-tl"></div><div class="hud-corner hc-tr"></div>
-            <div class="hud-corner hc-bl"></div><div class="hud-corner hc-br"></div>
-
-            <div class="h-16 bg-white/5 flex items-center justify-between px-8 border-b border-white/10">
-                <span class="font-tech font-bold text-white tracking-widest text-lg">ESCOUADES</span>
+        <!-- DROITE : JOUEURS -->
+        <div class="flex-1 manga-panel flex flex-col bg-[#151515]">
+            <div class="h-16 bg-[#0a0a0a] flex items-center justify-between px-6 border-b-2 border-white">
+                <span class="font-manga text-2xl tracking-wide text-yellow-400 text-shadow-sm">JOUEURS</span>
                 <div class="flex gap-3">
-                    <button onclick="switchTeam(1)" class="text-[10px] font-bold bg-blue-600/20 text-blue-300 px-4 py-2 border border-blue-500 hover:bg-blue-500 hover:text-white transition-all uppercase tracking-wider">Team Blue</button>
-                    <button onclick="switchTeam(2)" class="text-[10px] font-bold bg-red-600/20 text-red-300 px-4 py-2 border border-red-500 hover:bg-red-500 hover:text-white transition-all uppercase tracking-wider">Team Red</button>
+                    <button onclick="switchTeam(1)" class="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-blue-500 shadow-[2px_2px_0px_#fff]">BLEU</button>
+                    <button onclick="switchTeam(2)" class="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded border-2 border-white hover:bg-red-500 shadow-[2px_2px_0px_#fff]">ROUGE</button>
                 </div>
             </div>
             
-            <div class="flex-grow grid grid-cols-2 relative">
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                     <h1 class="font-jap text-7xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] italic pr-2">VS</h1>
+            <div class="flex-grow grid grid-cols-2 relative bg-[#111]">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-white border-4 border-black px-4 py-2 rounded-full shadow-[4px_4px_0px_#000]">
+                     <span class="font-manga text-3xl text-black">VS</span>
                 </div>
 
-                <div class="p-6 border-r border-white/5 bg-gradient-to-b from-blue-900/10 to-transparent">
+                <!-- Team Blue -->
+                <div class="p-4 border-r-2 border-white/20 bg-blue-900/10">
                     <div id="list-team-1" class="space-y-3"></div>
                 </div>
-                <div class="p-6 bg-gradient-to-b from-red-900/10 to-transparent">
+                <!-- Team Red -->
+                <div class="p-4 bg-red-900/10">
                     <div id="list-team-2" class="space-y-3"></div>
                 </div>
             </div>
@@ -252,96 +233,92 @@
     </div>
 
 
-    <!-- ÉCRAN 3 : JEU -->
-    <div id="screen-game" class="hidden relative z-10 flex-grow flex flex-col">
+    <!-- ========================================== -->
+    <!-- ÉCRAN 3 : JEU (IN GAME)                    -->
+    <!-- ========================================== -->
+    <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#111]">
         
-        <!-- Timer Bar -->
-        <div class="w-full bg-black h-2 absolute top-0 z-30 shadow-[0_0_20px_#ff003c]">
-            <div id="game-timer-bar" class="timer-bar" style="width: 100%;"></div>
+        <!-- Timer -->
+        <div class="w-full bg-[#1a1a1a] p-4 border-b-4 border-white flex justify-center shadow-lg z-20">
+            <div class="timer-container max-w-2xl shadow-inner bg-black">
+                <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
+            </div>
         </div>
 
-        <!-- CENTRE -->
-        <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden">
+        <!-- CENTRE : DISQUE & VIDEO -->
+        <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <div class="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+            <!-- Effet de fond discret -->
+            <div class="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(45deg,#fff_25%,transparent_25%,transparent_75%,#fff_75%,#fff),linear-gradient(45deg,#fff_25%,transparent_25%,transparent_75%,#fff_75%,#fff)]" style="background-size: 20px 20px; background-position: 0 0, 10px 10px;"></div>
 
-            <!-- Video Player -->
-            <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black hidden">
-                <div class="w-full h-full max-w-6xl max-h-[80vh] border-y-4 border-red-600 bg-black relative shadow-[0_0_100px_rgba(255,0,60,0.3)]">
+            <!-- Video Player (Révélation) -->
+            <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
+                <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden">
                     <video id="game-video" class="w-full h-full object-contain" playsinline></video>
-                    <div class="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-4 py-1 font-tech tracking-widest">SOURCE VIDÉO</div>
                 </div>
             </div>
 
-            <!-- Vinyle Mode -->
-            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center scale-100 transition-transform duration-500">
+            <!-- Mode Vinyle (Devinette) -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300">
                 
-                <div id="visualizer" class="flex items-end gap-1 h-24 mb-12 opacity-0 transition-opacity duration-500">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                </div>
-
-                <div class="relative w-80 h-80 md:w-96 md:h-96 flex items-center justify-center">
-                    <div class="absolute inset-0 border border-red-600/30 rounded-full animate-[spin-slow_10s_linear_infinite]"></div>
-                    <div class="absolute inset-4 border border-purple-600/30 rounded-full animate-[spin-slow_15s_linear_infinite_reverse]"></div>
-                    
-                    <div class="w-64 h-64 rounded-full bg-black border-4 border-gray-800 shadow-[0_0_60px_rgba(255,0,60,0.4)] flex items-center justify-center spin-disk paused-disk relative z-10" id="disk">
-                        <div class="absolute inset-0 rounded-full bg-[repeating-radial-gradient(#1a1a1a_0,#1a1a1a_2px,#222_3px)]"></div>
-                        <div class="absolute w-24 h-24 bg-gradient-to-br from-red-700 to-purple-900 rounded-full flex items-center justify-center border-2 border-white/20 z-20">
-                            <i class="fa-solid fa-music text-3xl text-white/50"></i>
+                <!-- Disque -->
+                <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
+                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                        <!-- Sillons -->
+                        <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
+                        <div class="absolute inset-10 rounded-full border-[20px] border-[#222] opacity-60"></div>
+                        
+                        <!-- Sticker Central -->
+                        <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
+                            <i class="fa-solid fa-music text-4xl text-white"></i>
                         </div>
                     </div>
+                    <!-- Bras de lecture (Déco) -->
+                    <div class="absolute -top-4 -right-4 w-32 h-4 bg-gray-300 rotate-45 origin-top-right border-2 border-black rounded-full shadow-lg z-30"></div>
                 </div>
 
-                <div class="mt-16 text-center">
-                    <h2 class="text-6xl font-jap text-white tracking-widest mb-2 text-neon">ECOUTEZ</h2>
-                    <div class="inline-block border-y border-red-900/50 py-1 px-4">
-                        <p class="text-red-500 font-tech text-xs animate-pulse tracking-[0.3em]">ANALYSE DU FLUX AUDIO...</p>
-                    </div>
+                <div class="text-center bg-white px-8 py-2 border-4 border-black rounded-full shadow-[4px_4px_0px_#000] transform -rotate-2">
+                    <h2 class="text-4xl font-manga text-black tracking-widest">ÉCOUTEZ !</h2>
                 </div>
             </div>
 
             <!-- Volume -->
-            <div class="absolute top-6 right-6 z-30 group">
-                <div class="bg-black/80 backdrop-blur border border-red-900/30 rounded-full p-3 flex items-center gap-3 hover:border-red-500 transition-colors">
-                    <i class="fa-solid fa-volume-high text-gray-400 group-hover:text-white"></i>
-                    <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600" oninput="document.getElementById('game-video').volume = this.value">
-                </div>
+            <div class="absolute top-4 right-4 z-30 bg-[#222] border-2 border-white rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                <i class="fa-solid fa-volume-high text-gray-400"></i>
+                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20 accent-white h-1 bg-gray-600 rounded-lg cursor-pointer" oninput="document.getElementById('game-video').volume = this.value">
             </div>
 
         </div>
 
-        <!-- BAS : INPUT ZONE -->
-        <div class="bg-black/90 backdrop-blur-xl border-t-2 border-red-900 p-8 relative z-30">
+        <!-- BAS : INPUT RÉPONSE -->
+        <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
             
-            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-0 z-50 flex flex-col items-center justify-center pointer-events-none">
-                <div class="bg-black border-y-4 border-red-600 p-12 w-full text-center shadow-[0_0_100px_rgba(0,0,0,0.9)] backdrop-blur-xl transform transition-transform">
-                    <h3 class="text-red-500 font-mono text-sm uppercase tracking-[0.5em] mb-4">RÉSULTAT POSITIF</h3>
-                    <h2 id="res-anime" class="text-4xl md:text-8xl font-black text-white font-display mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">ANIME NAME</h2>
-                    <p id="res-song" class="text-gray-300 text-2xl font-jap">"Song Title"</p>
+            <!-- Résultat Overlay (Pop-up victoire) -->
+            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
+                <div class="bg-yellow-400 border-4 border-black p-8 max-w-2xl w-full text-center shadow-[12px_12px_0px_rgba(0,0,0,0.5)] transform -rotate-1">
+                    <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
+                    <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-white text-shadow-black mb-2 drop-shadow-md" style="-webkit-text-stroke: 2px black;">ANIME NAME</h2>
+                    <p id="res-song" class="text-black text-2xl font-bold italic bg-white inline-block px-4 py-1 border-2 border-black mt-2">"Song Title"</p>
                 </div>
             </div>
 
-            <div class="max-w-4xl mx-auto flex gap-0 transform skew-x-[-10deg]">
-                <div class="flex-1 bg-gray-900 border-2 border-gray-700 border-r-0 p-1 group focus-within:border-red-500 transition-colors">
-                    <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="w-full h-16 bg-transparent text-white text-2xl font-bold px-6 outline-none placeholder-gray-700 uppercase font-mono tracking-wide transform skew-x-[10deg]" autocomplete="off">
-                </div>
-                <button onclick="submitGuess()" class="w-48 bg-red-700 hover:bg-red-600 text-white font-bold text-xl border-2 border-red-500 transition-colors shadow-[0_0_30px_rgba(220,38,38,0.2)]">
-                    <span class="block transform skew-x-[10deg]">ENVOYER</span>
+            <div class="max-w-3xl mx-auto flex gap-4">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off">
+                <button onclick="submitGuess()" class="btn-pop btn-red w-40 rounded-lg text-2xl shadow-[4px_4px_0px_#000]">
+                    ENVOYER
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT -->
+    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue, update, remove, push, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
-        // IMPORT DE LA LISTE D'OPENINGS
+        // IMPORT EXTERNE (Fichier op_database.js requis dans le même dossier)
         import { OP_DATABASE } from "./op_database.js";
 
         const firebaseConfig = {
@@ -363,16 +340,15 @@
         let currentRoomId = null;
         let isHost = false;
         let roundTimer = null;
-        
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
-        const visualizerEl = document.getElementById('visualizer');
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                document.querySelector('#user-badge span').innerText = user.displayName;
             } else {
-                alert("Veuillez vous identifier au QG.");
+                alert("Connexion requise !");
                 window.location.href = "index.html";
             }
         });
@@ -380,14 +356,8 @@
         window.updateSettings = () => {
             if (!isHost) return;
             const range = document.getElementById('setting-duration');
-            const duration = parseInt(range.value);
-            
-            const percent = ((duration - range.min) / (range.max - range.min)) * 100;
-            document.getElementById('range-progress').style.width = percent + "%";
-            document.getElementById('range-thumb').style.left = percent + "%";
-            
-            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration });
-            document.getElementById('display-duration').innerText = duration + 's';
+            update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration: parseInt(range.value) });
+            document.getElementById('display-duration').innerText = range.value + 's';
         };
 
         window.createRoom = async () => {
@@ -404,33 +374,38 @@
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
 
-            await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
-            enterLobby(roomCode);
+            try {
+                await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
+                enterLobby(roomCode);
+            } catch(e) {
+                console.error(e);
+                alert("Erreur création. Vérifiez les règles Firebase.");
+            }
         };
 
         window.joinRoom = async () => {
             if (!currentUser) return;
             const code = document.getElementById('input-room-code').value.toUpperCase();
-            if (code.length < 4) return alert("Code invalide");
+            if (code.length < 4) return alert("Code trop court");
 
-            const roomRef = ref(db, `blindtest/rooms/${code}`);
-            const snapshot = await get(roomRef);
+            try {
+                const roomRef = ref(db, `blindtest/rooms/${code}`);
+                const snapshot = await get(roomRef);
 
-            if (snapshot.exists()) {
-                currentRoomId = code;
-                isHost = false;
-                const updates = {};
-                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = {
-                    name: currentUser.displayName,
-                    team: 1, 
-                    score: 0,
-                    avatar: currentUser.photoURL
-                };
-                await update(ref(db), updates);
-                enterLobby(code);
-            } else {
-                alert("Salle introuvable !");
-            }
+                if (snapshot.exists()) {
+                    currentRoomId = code;
+                    isHost = false;
+                    const updates = {};
+                    updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = {
+                        name: currentUser.displayName,
+                        team: 1, score: 0, avatar: currentUser.photoURL
+                    };
+                    await update(ref(db), updates);
+                    enterLobby(code);
+                } else {
+                    alert("Salle introuvable !");
+                }
+            } catch(e) { alert("Erreur connexion salle."); }
         };
 
         function enterLobby(code) {
@@ -451,10 +426,7 @@
                 
                 if (!isHost) {
                     document.getElementById('display-duration').innerText = data.settings.duration + 's';
-                    const range = document.getElementById('setting-duration');
-                    const percent = ((data.settings.duration - 5) / (45 - 5)) * 100;
-                    document.getElementById('range-progress').style.width = percent + "%";
-                    document.getElementById('range-thumb').style.left = percent + "%";
+                    document.getElementById('setting-duration').value = data.settings.duration;
                 }
 
                 if (data.status === 'playing') {
@@ -474,9 +446,14 @@
 
             Object.values(players).forEach(p => {
                 const el = document.createElement('div');
-                el.className = "flex items-center gap-3 text-white text-sm bg-black/40 p-3 border-l-4 mb-2 transition-all hover:bg-white/5 " + (p.team === 1 ? "border-blue-500" : "border-red-500");
-                el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-10 h-10 rounded object-cover border border-white/10"> <div><div class="font-bold font-tech uppercase text-xs tracking-wider">${p.name}</div><div class="text-[10px] text-gray-400 font-mono">SCORE: ${p.score}</div></div>`;
-                
+                el.className = "flex items-center gap-2 bg-[#222] border border-gray-600 p-2 rounded mb-2 shadow-sm";
+                el.innerHTML = `
+                    <img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-10 h-10 rounded border-2 border-white bg-black"> 
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-white text-sm truncate uppercase font-manga tracking-wider">${p.name}</div>
+                        <div class="text-xs text-yellow-400 font-mono font-bold">${p.score} PTS</div>
+                    </div>
+                `;
                 if (p.team === 1) t1.appendChild(el);
                 else t2.appendChild(el);
             });
@@ -522,10 +499,8 @@
                 videoEl.volume = 0.5;
                 videoEl.play().catch(e => console.log("Autoplay bloqué"));
 
-                diskEl.classList.remove('paused-disk');
-                visualizerEl.style.opacity = 1;
-                visualizerEl.classList.add('playing');
-
+                diskEl.classList.remove('disk-paused');
+                
                 const bar = document.getElementById('game-timer-bar');
                 bar.classList.remove('timer-running');
                 void bar.offsetWidth;
@@ -547,10 +522,7 @@
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 
-                diskEl.classList.add('paused-disk');
-                visualizerEl.style.opacity = 0;
-                visualizerEl.classList.remove('playing');
-                
+                diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
@@ -570,11 +542,10 @@
         window.submitGuess = () => {
             const userGuess = document.getElementById('input-guess').value;
             document.getElementById('input-guess').value = "";
-            console.log("Réponse:", userGuess);
-            
-            const input = document.getElementById('input-guess');
-            input.placeholder = "DONNÉES ENVOYÉES...";
-            setTimeout(() => input.placeholder = "ENTREZ LE NOM DE L'ANIME...", 2000);
+            const btn = document.querySelector('button[onclick="submitGuess()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "OK !";
+            setTimeout(() => btn.innerText = originalText, 1000);
         };
 
     </script>
