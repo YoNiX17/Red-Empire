@@ -53,12 +53,30 @@
 
         .gold-glow { text-shadow: 0 0 20px rgba(234, 179, 8, 0.6); }
         
+        /* SEARCH OVERLAY */
+        #search-overlay {
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+        }
+        .loader-circle {
+            width: 60px; height: 60px; border: 4px solid #eab308; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #030303; }
         ::-webkit-scrollbar-thumb { background: #ca8a04; border-radius: 3px; }
     </style>
 </head>
 <body class="antialiased selection:bg-gold-500 selection:text-black flex flex-col min-h-screen">
+
+    <!-- SEARCH OVERLAY (Caché par défaut) -->
+    <div id="search-overlay" class="hidden fixed inset-0 z-[100] flex flex-col items-center justify-center">
+        <div class="loader-circle mb-6"></div>
+        <h2 class="font-display text-3xl text-white uppercase tracking-widest animate-pulse">Recherche d'adversaire...</h2>
+        <p class="font-mono text-gold-500 text-sm mt-2">NE QUITTEZ PAS LA PAGE</p>
+        <button onclick="cancelSearch()" class="mt-8 px-6 py-2 border border-red-600 text-red-500 rounded hover:bg-red-600 hover:text-white transition font-bold uppercase text-xs">Annuler</button>
+    </div>
 
     <!-- Backgrounds -->
     <canvas id="canvas-container"></canvas>
@@ -117,9 +135,9 @@
                         Le test ultime de compétence individuelle. Pas d'excuses, pas de coéquipiers. Juste vous et votre savoir.
                     </p>
                     
-                    <a href="blindtest.html" class="w-full py-4 bg-white text-black hover:bg-gold-400 font-black font-display uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] transition-all transform hover:-translate-y-1 block">
+                    <button onclick="startMatchmaking()" class="w-full py-4 bg-white text-black hover:bg-gold-400 font-black font-display uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] transition-all transform hover:-translate-y-1 block">
                         COMBATTRE
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -186,7 +204,7 @@
     <script>
         AOS.init();
 
-        // Particles (Gold Theme for Ranked)
+        // Particles
         const canvas = document.getElementById('canvas-container');
         const ctx = canvas.getContext('2d');
         let particlesArray;
@@ -210,7 +228,6 @@
                 let size = Math.random() * 2;
                 let x = Math.random() * innerWidth; let y = Math.random() * innerHeight;
                 let dx = (Math.random() - 0.5) * 0.2; let dy = (Math.random() - 0.5) * 0.2;
-                // Particules Or/Jaune
                 let color = Math.random() > 0.5 ? '#eab308' : '#a16207';
                 particlesArray.push(new Particle(x, y, dx, dy, size, color));
             }
@@ -221,6 +238,180 @@
         init(); animate();
     </script>
     
-    <script type="module" src="auth.js"></script>
+    <!-- MATCHMAKING SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue, remove, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let searchListener = null;
+        let currentUser = null;
+
+        // Wait for Auth
+        auth.onAuthStateChanged(user => {
+            if(user) currentUser = user;
+            else window.location.href = "index.html";
+        });
+
+        window.startMatchmaking = async () => {
+            if (!currentUser) return alert("Vous devez être connecté !");
+            
+            const overlay = document.getElementById('search-overlay');
+            overlay.classList.remove('hidden');
+
+            const queueRef = ref(db, 'blindtest/queues/1v1/pending');
+
+            try {
+                // 1. Tenter de rejoindre une salle existante (Transaction pour éviter les conflits)
+                const result = await runTransaction(queueRef, (currentData) => {
+                    if (currentData === null) {
+                        // Personne n'attend, on prend la place
+                        return { uid: currentUser.uid, roomId: Math.random().toString(36).substring(2, 8).toUpperCase() };
+                    } else {
+                        // Quelqu'un attend ! On retourne null pour "consommer" la place (la supprimer)
+                        // Mais on doit noter l'ID de la salle pour la rejoindre
+                        return null; // Ce return null va annuler la transaction ? Non, delete.
+                        // Wait, transaction returns {committed, snapshot}. 
+                        // If we return null, we are essentially deleting the node. 
+                        // We need to capture the data BEFORE deleting, but transaction handler must return the new value.
+                        // So if data exists, we return null (delete it) to claim it.
+                    }
+                });
+
+                if (result.committed) {
+                    const snapshot = result.snapshot;
+                    const val = snapshot.val();
+
+                    if (val === null) {
+                        // ON A CRÉÉ LA SALLE (On est le Joueur 1)
+                        // On doit maintenant attendre que quelqu'un rejoigne.
+                        // Mais wait, la transaction a écrit nos données dans 'pending'.
+                        // Donc on doit écouter 'blindtest/queues/1v1/pending' pour voir quand elle disparaît (quand J2 arrive).
+                        // OU MIEUX : On a défini un roomId. On va créer la salle et attendre dedans.
+                        
+                        // On récupère le roomId qu'on vient d'écrire ? Non, transaction result doesn't give write data easily if we set it.
+                        // Re-reading logic:
+                        // If currentData is null, we returned {uid, roomId}. The DB now has this.
+                        // We are Player 1.
+                        
+                        // On doit retrouver l'ID qu'on a généré ? C'est compliqué avec transaction.
+                        // Simplification : On lit d'abord.
+                        
+                        // --- LOGIQUE SIMPLIFIÉE SANS TRANSACTION COMPLEXE ---
+                        // 1. On regarde s'il y a quelqu'un
+                        const snap = await get(queueRef);
+                        
+                        if (snap.exists()) {
+                            // QUELQU'UN ATTEND (On est J2)
+                            const pendingData = snap.val();
+                            
+                            // On supprime la file d'attente pour bloquer l'accès
+                            await remove(queueRef);
+                            
+                            // On rejoint la salle qu'il a créée
+                            joinGameRoom(pendingData.roomId, 2);
+                        } else {
+                            // PERSONNE (On est J1)
+                            const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                            
+                            // On s'inscrit en attente
+                            await set(queueRef, { uid: currentUser.uid, roomId: newRoomId });
+                            
+                            // On crée la salle dans la DB
+                            await createGameRoom(newRoomId);
+                            
+                            // On écoute si la salle devient "playing" (signe que J2 a rejoint via joinGameRoom logic)
+                            // Ou plus simple : J2 va supprimer notre entrée 'pending', donc on écoute la suppression.
+                            const pRef = ref(db, 'blindtest/queues/1v1/pending');
+                            searchListener = onValue(pRef, (s) => {
+                                if (s.val() === null) {
+                                    // On a été retiré de la file -> Match trouvé !
+                                    window.location.href = `blindtest_1v1.html?room=${newRoomId}`;
+                                }
+                            });
+                        }
+                    } else {
+                        // Cas rare : on est passé dans le "else" de la transaction qui a return null (J2 a pris la place)
+                        // Avec la logique simplifiée au-dessus (get/set), ce bloc n'est pas atteint.
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                cancelSearch();
+                alert("Erreur matchmaking. Réessayez.");
+            }
+        };
+
+        async function createGameRoom(roomId) {
+            // Création de la salle avec les settings forcés 1v1
+            const profile = await getUserProfile(currentUser.uid);
+            const roomData = {
+                host: currentUser.uid,
+                status: 'waiting', // Attente de J2
+                settings: { duration: 15, rounds: 15, suddenDeath: true, teamCount: 2, mode: '1v1' },
+                players: { 
+                    [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } 
+                },
+                gameState: { currentRound: 0, songIndex: 0, phase: 'lobby' }
+            };
+            await set(ref(db, `blindtest/rooms/${roomId}`), roomData);
+        }
+
+        async function joinGameRoom(roomId, teamId) {
+            const profile = await getUserProfile(currentUser.uid);
+            
+            // On s'ajoute dans la salle
+            await update(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}`), {
+                name: profile.name, team: teamId, score: 0, avatar: profile.avatar
+            });
+            
+            // On passe la salle en statut "playing" pour lancer le jeu chez J1 et J2
+            // (J1 est redirigé par le listener 'pending' removed, mais c'est plus sûr si on update le status)
+            // Update : Le listener 'pending removed' suffit pour J1. J2 redirige direct.
+            
+            window.location.href = `blindtest_1v1.html?room=${roomId}`;
+        }
+
+        window.cancelSearch = async () => {
+            const overlay = document.getElementById('search-overlay');
+            overlay.classList.add('hidden');
+            
+            // Si on était en attente (J1), on se retire
+            const queueRef = ref(db, 'blindtest/queues/1v1/pending');
+            const snap = await get(queueRef);
+            if(snap.exists() && snap.val().uid === currentUser.uid) {
+                await remove(queueRef);
+            }
+            
+            if(searchListener) searchListener(); // Unsubscribe
+        };
+
+        // Helper Profile (Copie de auth.js pour être autonome ici)
+        async function getUserProfile(uid) {
+            try {
+                const snap = await get(child(ref(db), `users/${uid}`));
+                if (snap.exists()) {
+                    const val = snap.val();
+                    return { name: val.username || currentUser.displayName, avatar: val.avatar || currentUser.photoURL };
+                }
+            } catch(e) {}
+            return { name: currentUser.displayName, avatar: currentUser.photoURL };
+        }
+    </script>
 </body>
 </html>
