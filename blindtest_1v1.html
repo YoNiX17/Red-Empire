@@ -9,24 +9,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --red: #ff2e2e; --yellow: #facc15; --dark-bg: #050505; }
-        body { background-color: var(--dark-bg); color: #eee; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; }
+        :root {
+            --red: #ff2e2e;
+            --yellow: #facc15;
+            --dark-bg: #121212;
+            --panel-bg: #1a1a1a;
+            --border-color: #ffffff;
+        }
+
+        body { 
+            background-color: var(--dark-bg);
+            color: #eeeeee;
+            font-family: 'Roboto Condensed', sans-serif;
+            overflow: hidden;
+            background-image: radial-gradient(#333 20%, transparent 20%);
+            background-size: 12px 12px;
+        }
+        
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 100; background: #050505;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* --- BOUTONS POP --- */
+        .btn-pop {
+            background: var(--border-color);
+            color: var(--dark-bg);
+            font-family: 'Bangers', cursive;
+            text-transform: uppercase;
+            border: 2px solid var(--border-color);
+            transition: all 0.1s ease;
+            box-shadow: 4px 4px 0px var(--yellow);
+            cursor: pointer;
         }
-        .loader { width: 60px; height: 60px; border: 6px solid #fff; border-bottom-color: #ff2e2e; border-radius: 50%; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- HUD --- */
-        .player-card { background: #111; border: 2px solid #333; padding: 8px 16px; display: flex; align-items: center; gap: 10px; border-radius: 8px; min-width: 180px; }
-        .player-score { font-family: 'Bangers'; font-size: 2rem; color: var(--yellow); }
+        .btn-pop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--yellow); background: var(--yellow); }
+        .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--yellow); }
         
-        /* --- JEU (Même CSS que blindtest.html) --- */
-        .timer-container { width: 100%; height: 10px; background: #333; border: 2px solid #fff; border-radius: 99px; overflow: hidden; margin-top: 5px; }
+        .btn-red { background: var(--red); color: white; border-color: var(--red); box-shadow: 4px 4px 0px var(--border-color); }
+        .btn-red:hover { background: #ff4444; box-shadow: 6px 6px 0px var(--border-color); }
+
+        /* --- JEU --- */
+        .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--yellow); width: 100%; transition: width 1s linear; }
         
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -34,19 +54,29 @@
         .disk-paused { animation-play-state: paused !important; }
 
         .input-manga {
-            border: 3px solid #fff; background: #222; color: white;
-            font-family: 'Bangers'; letter-spacing: 1px; box-shadow: inset 4px 4px 0px #000;
+            border: 3px solid var(--border-color);
+            background: #222; color: white;
+            font-family: 'Bangers', cursive; letter-spacing: 1px;
+            box-shadow: inset 4px 4px 0px #000;
         }
         .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
+
+        /* LOADING OVERLAY */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 100; background: #050505;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loader { width: 60px; height: 60px; border: 6px solid #fff; border-bottom-color: #ff2e2e; border-radius: 50%; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- ECRAN DE CHARGEMENT -->
+    <!-- ECRAN DE CHARGEMENT / MATCHMAKING -->
     <div id="loading-screen">
         <div class="loader mb-8"></div>
-        <h2 id="status-text" class="text-4xl font-manga text-white animate-pulse text-center">CONNEXION...</h2>
-        <p class="text-gray-500 font-mono mt-2 text-sm">RECHERCHE D'UN ADVERSAIRE</p>
+        <h2 id="loading-text" class="text-4xl font-manga text-white animate-pulse text-center">CONNEXION...</h2>
+        <p class="text-gray-500 font-mono mt-2 text-sm">NE QUITTEZ PAS LA PAGE</p>
         <button onclick="window.location.href='blindtest_ranked.html'" class="mt-8 text-red-500 font-bold border border-red-500 px-4 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs">ANNULER</button>
     </div>
 
@@ -55,60 +85,69 @@
         <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white">
             <i class="fa-solid fa-chevron-left"></i> <span class="font-manga text-xl">QUITTER</span>
         </a>
-        <div class="absolute left-1/2 transform -translate-x-1/2">
-            <h1 class="font-manga text-2xl tracking-widest text-white">DUEL <span class="text-red-600">1v1</span></h1>
+        <div class="absolute left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-1 skew-x-[-10deg] border-2 border-white shadow-[4px_4px_0px_#ff2e2e]">
+            <h1 class="font-manga text-2xl skew-x-[10deg] tracking-widest">DUEL <span class="text-red-600">1v1</span></h1>
         </div>
-        <div class="w-20"></div>
+        <div class="w-20"></div> <!-- Spacer -->
     </nav>
 
-    <!-- ZONE DE JEU -->
+    <!-- ECRAN JEU -->
     <div id="screen-game" class="flex-grow flex flex-col bg-[#111] relative hidden">
         
-        <!-- HUD -->
+        <!-- Top Bar -->
         <div class="w-full bg-[#1a1a1a] p-4 border-b-4 border-white flex justify-between items-center shadow-lg z-20">
-            <!-- J1 (Bleu) -->
-            <div class="player-card border-blue-500">
-                <span id="p1-score" class="player-score text-blue-400">0</span>
-                <span id="p1-name" class="font-bold text-sm uppercase text-white">JOUEUR 1</span>
+            <!-- Score J1 -->
+            <div class="flex items-center gap-3">
+                <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-blue-500 bg-black object-cover">
+                <div>
+                    <div id="p1-name" class="font-bold text-blue-400 text-sm uppercase">JOUEUR 1</div>
+                    <div id="p1-score" class="font-manga text-2xl text-white">0 PTS</div>
+                </div>
             </div>
 
-            <!-- Timer Central -->
+            <!-- Timer -->
             <div class="flex flex-col items-center w-1/3">
-                <div class="font-manga text-xl text-white bg-black px-4 rounded border border-white">
-                    ROUND <span id="round-display" class="text-yellow-400">1</span> / 15
+                <div class="bg-black border-2 border-white px-4 py-1 rounded-full shadow-lg mb-1 transform -skew-x-12">
+                    <span class="font-manga text-xl text-white skew-x-12">
+                        ROUND <span id="round-display" class="text-yellow-400">1</span>
+                    </span>
                 </div>
                 <div class="timer-container">
                     <div id="game-timer-bar" class="timer-fill"></div>
                 </div>
             </div>
 
-            <!-- J2 (Rouge) -->
-            <div class="player-card border-red-500 flex-row-reverse text-right">
-                <span id="p2-score" class="player-score text-red-400">0</span>
-                <span id="p2-name" class="font-bold text-sm uppercase text-white">JOUEUR 2</span>
+            <!-- Score J2 -->
+            <div class="flex items-center gap-3 text-right flex-row-reverse">
+                <img id="p2-avatar" src="" class="w-12 h-12 rounded border-2 border-red-500 bg-black object-cover">
+                <div>
+                    <div id="p2-name" class="font-bold text-red-400 text-sm uppercase">JOUEUR 2</div>
+                    <div id="p2-score" class="font-manga text-2xl text-white">0 PTS</div>
+                </div>
             </div>
         </div>
 
-        <!-- CENTRE : DISQUE & VIDEO -->
+        <!-- Centre : Disque / Vidéo -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- Video (Révélation) -->
+            <!-- Video Player (Révélation) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
-                <div class="w-full h-full max-w-4xl max-h-[60vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden relative flex flex-col">
-                    <video id="game-video" class="flex-grow w-full object-contain bg-black"></video>
-                    <div class="bg-black/90 p-4 text-center border-t border-white">
-                        <h3 id="res-anime" class="text-3xl font-manga text-yellow-400">ANIME</h3>
-                        <p id="res-song" class="text-white font-bold text-lg">Titre</p>
+                <div class="w-full h-full max-w-4xl max-h-[60vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden relative">
+                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <div class="absolute bottom-0 w-full bg-black/80 p-4 text-center border-t border-white">
+                        <h3 id="res-anime" class="text-2xl font-manga text-yellow-400">ANIME</h3>
+                        <p id="res-song" class="text-white font-bold">Titre</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Disque (Devinette) -->
-            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
+            <!-- Mode Vinyle (Devinette) -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300">
                 <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
-                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10"></div>
-                    <div class="w-full h-full rounded-full bg-[#111] border-[8px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
                         <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
+                        <div class="absolute inset-10 rounded-full border-[20px] border-[#222] opacity-60"></div>
                         <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
                             <i class="fa-solid fa-music text-4xl text-white"></i>
                         </div>
@@ -120,7 +159,7 @@
             </div>
         </div>
 
-        <!-- INPUT -->
+        <!-- Input Zone -->
         <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
             <div class="max-w-3xl mx-auto flex gap-3">
                 <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off">
@@ -138,7 +177,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, child, onDisconnect, query, orderByChild, equalTo, limitToFirst } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
         const firebaseConfig = {
@@ -165,7 +204,7 @@
         let roundTimer = null;
 
         // ELEMENTS
-        const statusText = document.getElementById('status-text');
+        const loadingText = document.getElementById('loading-text');
         const input = document.getElementById('input-guess');
         const feedback = document.getElementById('feedback-msg');
         const timerBar = document.getElementById('game-timer-bar');
@@ -173,7 +212,7 @@
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // 1. CONNEXION & MATCHMAKING SIMPLE
+        // 1. CONNEXION & MATCHMAKING ULTRA SIMPLE
         onAuthStateChanged(auth, (u) => {
             if (u) {
                 user = u;
@@ -184,58 +223,64 @@
         });
 
         async function findMatch() {
-            statusText.innerText = "RECHERCHE DE SALLE...";
+            loadingText.innerText = "RECHERCHE SALLE...";
             
-            // On cherche une salle 'waiting' existante
+            // 1. Chercher une salle qui est en attente ('waiting')
             const roomsRef = ref(db, 'blindtest/rooms');
-            const snapshot = await get(roomsRef);
-            let foundRoomId = null;
+            // On récupère les salles (idéalement avec une query pour perf, mais ici simple)
+            const q = query(roomsRef, orderByChild('status'), equalTo('waiting'), limitToFirst(1));
+            
+            try {
+                const snapshot = await get(q);
+                
+                if (snapshot.exists()) {
+                    // ON A TROUVÉ UNE SALLE LIBRE
+                    const foundRoom = Object.entries(snapshot.val())[0]; // [id, data]
+                    roomId = foundRoom[0];
+                    const roomData = foundRoom[1];
 
-            if (snapshot.exists()) {
-                snapshot.forEach(childSnap => {
-                    const r = childSnap.val();
-                    // Si salle en attente et pas pleine (moins de 2 joueurs)
-                    if (r.status === 'waiting' && r.players && Object.keys(r.players).length < 2) {
-                        foundRoomId = childSnap.key;
+                    // On vérifie qu'on n'est pas déjà dedans (refresh)
+                    if (roomData.players && !roomData.players[user.uid]) {
+                        loadingText.innerText = "SALLE TROUVÉE !";
+                        isHost = false;
+                        await joinRoom(roomId);
+                    } else if (roomData.players && roomData.players[user.uid]) {
+                        // On est déjà dedans, on reconnecte
+                        isHost = (roomData.host === user.uid);
                     }
-                });
-            }
+                } else {
+                    // AUCUNE SALLE LIBRE -> CRÉATION
+                    loadingText.innerText = "CRÉATION SALLE...";
+                    roomId = Math.random().toString(36).substr(2, 9).toUpperCase();
+                    isHost = true;
+                    await createRoom(roomId);
+                }
 
-            if (foundRoomId) {
-                // REJOINDRE
-                roomId = foundRoomId;
-                isHost = false;
-                statusText.innerText = "SALLE TROUVÉE !";
-                await joinRoom(roomId);
-            } else {
-                // CRÉER
-                roomId = Math.random().toString(36).substr(2, 9).toUpperCase();
-                isHost = true;
-                statusText.innerText = "CRÉATION DE SALLE...";
-                await createRoom(roomId);
-            }
+                // Une fois qu'on a une roomId, on écoute
+                listenToRoom();
 
-            // Écouter la salle
-            listenToRoom();
+            } catch (e) {
+                console.error("Erreur matchmaking", e);
+                loadingText.innerText = "ERREUR RÉSEAU";
+            }
         }
 
         async function createRoom(id) {
             const profile = await getProfile();
             await set(ref(db, `blindtest/rooms/${id}`), {
                 host: user.uid,
-                players: { [user.uid]: { ...profile, team: 1, score: 0 } }, // HOTE = TEAM 1 (BLEU)
+                players: { [user.uid]: { ...profile, team: 1, score: 0 } },
                 status: 'waiting',
-                round: 0,
-                settings: { rounds: 15, duration: 15 }
+                createdAt: Date.now(),
+                gameState: { round: 0 }
             });
-            // Nettoyage si déco
             onDisconnect(ref(db, `blindtest/rooms/${id}`)).remove();
         }
 
         async function joinRoom(id) {
             const profile = await getProfile();
             await update(ref(db, `blindtest/rooms/${id}/players/${user.uid}`), {
-                ...profile, team: 2, score: 0 // INVITE = TEAM 2 (ROUGE)
+                ...profile, team: 2, score: 0
             });
         }
 
@@ -251,7 +296,7 @@
         function listenToRoom() {
             onValue(ref(db, `blindtest/rooms/${roomId}`), (snap) => {
                 const data = snap.val();
-                if (!data) return;
+                if (!data) return; // Salle détruite
 
                 // UPDATE JOUEURS UI
                 if (data.players) {
@@ -261,11 +306,13 @@
 
                     if(p1) {
                         document.getElementById('p1-name').innerText = p1.name;
-                        document.getElementById('p1-score').innerText = p1.score;
+                        document.getElementById('p1-score').innerText = p1.score + " PTS";
+                        document.getElementById('p1-avatar').src = p1.avatar || 'https://ui-avatars.com/api/?name='+p1.name;
                     }
                     if(p2) {
                         document.getElementById('p2-name').innerText = p2.name;
-                        document.getElementById('p2-score').innerText = p2.score;
+                        document.getElementById('p2-score').innerText = p2.score + " PTS";
+                        document.getElementById('p2-avatar').src = p2.avatar || 'https://ui-avatars.com/api/?name='+p2.name;
                     }
 
                     // SI 2 JOUEURS + HOTE + WAITING -> START
@@ -306,7 +353,7 @@
                     index: deck[0],
                     deck: deck,
                     startTime: Date.now(),
-                    seek: Math.floor(Math.random() * 15) + 30
+                    seek: Math.floor(Math.random() * 11) + 40
                 }
             });
         }
@@ -387,7 +434,7 @@
                                 index: nextIdx,
                                 deck: state.deck,
                                 startTime: Date.now(),
-                                seek: Math.floor(Math.random() * 15) + 30
+                                seek: Math.floor(Math.random() * 11) + 40
                             });
                         }
                     }, 5000);
@@ -403,7 +450,15 @@
             const b = clean(target);
             if (a === b) return true;
             if (b.includes(a) && a.length > 3) return true;
-            // Levenshtein simpliste
+            
+            // Levenshtein simpliste pour tolérance
+            if (a.length > 4 && Math.abs(a.length - b.length) < 3) {
+                let mismatches = 0;
+                for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                    if (a[i] !== b[i]) mismatches++;
+                }
+                if (mismatches <= 2) return true;
+            }
             return false;
         }
 
