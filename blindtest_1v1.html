@@ -66,6 +66,14 @@
             transform: translate(2px, 2px);
             box-shadow: 0px 0px 0px var(--yellow);
         }
+        .btn-disabled {
+            background: #555;
+            color: #888;
+            border-color: #666;
+            box-shadow: none;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
         
         .btn-red { 
             background: var(--red); 
@@ -163,11 +171,16 @@
             </div>
             
             <div id="state-idle" class="space-y-4">
-                <button onclick="startMatchmaking()" class="btn-pop btn-red w-full py-6 text-3xl tracking-wider rounded-lg transform transition hover:scale-105 shadow-[0_0_20px_rgba(255,46,46,0.5)]">
+                <button id="btn-search" onclick="startMatchmaking()" class="btn-pop btn-red w-full py-6 text-3xl tracking-wider rounded-lg transform transition hover:scale-105 shadow-[0_0_20px_rgba(255,46,46,0.5)]">
                     <i class="fa-solid fa-swords mr-3"></i> TROUVER UN MATCH
                 </button>
                 <p class="text-xs text-gray-500 mt-2">Mode Classé • 15s/Round • 10 Rounds</p>
-                <p id="db-status" class="text-[10px] text-gray-600 font-mono mt-1">Status DB: Chargement...</p>
+                <!-- STATUS DE CHARGEMENT DE LA DB -->
+                <div id="db-status-container" class="mt-4 p-2 bg-black rounded border border-gray-700">
+                     <p id="db-status" class="text-xs font-mono animate-pulse text-yellow-500">
+                        <i class="fa-solid fa-database mr-1"></i> Chargement des données...
+                     </p>
+                </div>
             </div>
 
             <div id="state-searching" class="hidden space-y-6 py-4">
@@ -291,6 +304,9 @@
         </div>
 
         <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+             <!-- DEBUG INFO (Discret) -->
+             <div id="debug-info" class="absolute bottom-2 right-2 text-[10px] text-gray-600 font-mono z-50 pointer-events-none"></div>
+
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
                 <div class="bg-yellow-400 border-4 border-black p-4 w-full max-w-xl text-center shadow-[8px_8px_0px_#000] transform -rotate-1">
                     <h2 id="res-anime" class="text-2xl md:text-4xl font-manga text-black uppercase truncate">ANIME NAME</h2>
@@ -314,18 +330,36 @@
         import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
         let OP_DATABASE = [];
-        try {
-            const module = await import("./op_database.js");
-            OP_DATABASE = module.OP_DATABASE;
-            console.log("DB chargée :", OP_DATABASE.length, "openings");
-            document.getElementById('db-status').innerText = `Status DB: OK (${OP_DATABASE.length} OPs)`;
-            document.getElementById('db-status').classList.add('text-green-500');
-        } catch (e) {
-            console.error("Erreur chargement op_database.js", e);
-            document.getElementById('db-status').innerText = "Status DB: ERREUR";
-            document.getElementById('db-status').classList.add('text-red-500');
-             OP_DATABASE = [ { anime: "Error", song: "File Not Found", url: "", alt: [] } ];
+        let dbLoaded = false; // Flag pour savoir si la DB est saine
+
+        // CHARGEMENT DB AVEC RETRY ET VERIFICATION
+        async function loadDatabase() {
+            try {
+                const module = await import("./op_database.js");
+                const rawDB = module.OP_DATABASE;
+                
+                if (rawDB && rawDB.length > 50) { // On vérifie qu'on a bien chargé le gros fichier
+                    OP_DATABASE = rawDB;
+                    dbLoaded = true;
+                    console.log("DB chargée avec succès :", OP_DATABASE.length, "openings");
+                    document.getElementById('db-status').innerHTML = `<span class="text-green-500"><i class="fa-solid fa-check"></i> DB Synchronisée (${OP_DATABASE.length} titres)</span>`;
+                    document.getElementById('db-status').classList.remove('animate-pulse');
+                    document.getElementById('btn-search').classList.remove('btn-disabled');
+                } else {
+                    throw new Error("Base de données trop petite (Fichier fallback détecté)");
+                }
+            } catch (e) {
+                console.error("ERREUR CRITIQUE DB:", e);
+                document.getElementById('db-status').innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ERREUR : FICHIER DB MANQUANT<br>Le matchmaking est bloqué.</span>`;
+                // Désactivation du bouton
+                document.getElementById('btn-search').classList.add('btn-disabled');
+                document.getElementById('btn-search').innerText = "ERREUR SYNC";
+                OP_DATABASE = []; 
+                dbLoaded = false;
+            }
         }
+        
+        loadDatabase(); // Lancement immédiat
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -353,7 +387,7 @@
         let myTeamId = 1; 
         let currentSongData = null;
         let roundTimer = null;
-        let fallbackTimer = null; // Important: Timer de secours
+        let fallbackTimer = null; 
         let userVolume = 0.5;
         let animeFound = false;
 
@@ -363,7 +397,6 @@
         // Gestion erreurs vidéo
         videoEl.onerror = () => {
             console.error("Erreur lecture vidéo !");
-            // Si la vidéo plante, on force le démarrage du timer si on est Host
             if (myTeamId === 1 && !roundTimer) {
                 console.warn("Video Error - Forcing Round Start");
                 startRoundTimer(15);
@@ -410,7 +443,7 @@
 
         window.startMatchmaking = async () => {
             if(!currentUser) return;
-            if(OP_DATABASE.length <= 1) return alert("Base de données non chargée !");
+            if(!dbLoaded) return alert("Erreur: La base de données musicale n'est pas chargée. Vérifiez votre connexion ou les fichiers.");
             
             document.getElementById('state-idle').classList.add('hidden');
             document.getElementById('state-searching').classList.remove('hidden');
@@ -594,6 +627,10 @@
                  return;
             }
 
+            // --- MISE À JOUR DEBUG VISUEL ---
+            // Affiche la taille de la DB et l'index actuel pour comparer avec l'ami
+            document.getElementById('debug-info').innerText = `DB: ${OP_DATABASE.length} | IDX: ${gameState.songIndex} | TEAM: ${myTeamId}`;
+
             // RESET COMPLET SI NOUVEAU ROUND
             if (gameState.currentRound !== lastRound) {
                 lastRound = gameState.currentRound;
@@ -603,10 +640,7 @@
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('result-display').classList.add('hidden');
                 
-                // --- FIX IMPORTANT : On ne reset pas la source ici pour éviter l'erreur NotSupported ---
                 videoEl.pause(); 
-                // videoEl.removeAttribute('src'); // SUPPRIMÉ: C'est ça qui causait l'erreur
-                
                 console.log("Reset Round", gameState.currentRound);
             }
 
@@ -615,11 +649,16 @@
             lastPhase = gameState.phase;
             currentStartTime = gameState.startTime;
             
-            // VERIFICATION SAFETY
+            // VERIFICATION SAFETY INDEX
             if(gameState.songIndex === undefined || gameState.songIndex < 0 || gameState.songIndex >= OP_DATABASE.length) {
-                console.error("Index de chanson invalide ! Skip...");
+                console.error("Index de chanson invalide !");
+                // Message d'erreur critique pour l'utilisateur
+                document.getElementById('status-msg').innerText = "ERREUR SYNC DONNÉES";
+                document.getElementById('status-msg').classList.remove('hidden');
+                document.getElementById('status-msg').classList.add('text-red-600');
+                
                  if (myTeamId === 1 && !roundTimer) {
-                    startRoundTimer(1); // Force skip rapide
+                    startRoundTimer(1); // Force skip rapide si Host
                 }
                 return;
             }
@@ -640,18 +679,14 @@
                 diskEl.classList.add('disk-paused');
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 
-                // CHARGEMENT NOUVELLE VIDÉO
-                // On vérifie si on doit vraiment changer la source pour éviter les reload inutiles
                 if (videoEl.src !== currentSongData.url) {
-                    console.log("Chargement URL:", currentSongData.url);
                     videoEl.src = currentSongData.url;
-                    videoEl.load(); // Important après changement de source
+                    videoEl.load(); 
                 }
                 
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
-                // FONCTION QUI DÉMARRE LE TIMER (Centralisée)
                 const startTimerLogic = () => {
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
@@ -667,31 +702,25 @@
                     }
                 };
 
-                // ECOUTEUR DE LECTURE STANDARD
-                // Use 'one' listener pattern by removing previous one if needed, but 'once: true' is cleaner
                 videoEl.addEventListener('playing', startTimerLogic, { once: true });
                 
-                // TENTATIVE DE LECTURE
                 var playPromise = videoEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
-                        console.log("Auto-play bloqué ou erreur :", error);
-                        // Même si ça bloque, on force l'affichage après un court délai pour que le joueur puisse interagir
-                        // Mais surtout, si on est HOST, on doit lancer le timer quand même sinon le jeu freeze !
+                        console.log("Auto-play bloqué :", error);
                         if(myTeamId === 1) {
-                            console.log("Host : Forçage du timer suite erreur lecture");
+                            console.log("Host : Forçage timer");
                             startRoundTimer(settings.duration); 
                         }
                     });
                 }
 
-                // SÉCURITÉ HOST : Si après 5s rien ne s'est passé (lag, bug), on lance quand même
                 if (myTeamId === 1) {
                     fallbackTimer = setTimeout(() => {
                         if(!roundTimer) {
-                            console.warn("Host : Fallback Timer activé (Vidéo trop lente)");
-                            startTimerLogic(); // Force l'UI locale
-                            startRoundTimer(settings.duration); // Force la DB
+                            console.warn("Host : Fallback Timer");
+                            startTimerLogic(); 
+                            startRoundTimer(settings.duration); 
                         }
                     }, 5000);
                 }
@@ -707,12 +736,10 @@
                 if (myTeamId === 1) {
                     setTimeout(() => {
                         const nextRound = gameState.currentRound + 1;
-                        // Calcul du prochain index
                         let nextIndex = 0;
                         if (gameState.deck && gameState.deck[nextRound-1] !== undefined) {
-                             nextIndex = gameState.deck[nextRound-1]; // -1 car array 0-indexed
+                             nextIndex = gameState.deck[nextRound-1]; 
                         } else {
-                             // Fallback si deck vide ou fin
                              nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
                         }
 
@@ -730,10 +757,8 @@
             }
         }
 
-        // Fonction séparée pour lancer le timer DB
         function startRoundTimer(duration) {
             if(roundTimer) clearTimeout(roundTimer);
-            console.log("Timer lancé pour", duration, "secondes");
             roundTimer = setTimeout(() => {
                 update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
             }, duration * 1000);
@@ -743,7 +768,13 @@
         function isCloseMatch(input,target){if(!target)return false;const nI=input.toLowerCase().trim();const nT=target.toLowerCase().trim();if(nI===nT)return true;if(nT.includes(nI)&&nI.length>3)return true;const d=levenshtein(nI,nT);const m=Math.max(nI.length,nT.length);return(1-(d/m))>0.75;}
 
         window.submitGuess = () => {
-            if (!currentSongData || !currentRoomId) return;
+            // FIX CRASH "ON PEUT PAS GUESS"
+            if (!currentRoomId) return;
+            if (!currentSongData) {
+                console.error("Impossible de deviner: Pas de données chanson");
+                return;
+            }
+            
             const input = document.getElementById('input-guess');
             const val = input.value;
             if(!val) return;
@@ -771,6 +802,7 @@
                 const msg = document.getElementById('status-msg');
                 msg.innerText = feedback;
                 msg.classList.remove('hidden');
+                msg.classList.remove('text-red-600'); // Reset couleur erreur
                 
                 input.value = "";
                 input.placeholder = "TROUVÉ !";
