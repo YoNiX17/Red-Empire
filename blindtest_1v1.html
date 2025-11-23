@@ -365,6 +365,7 @@
             console.error("Erreur lecture vidéo !");
             // Si la vidéo plante, on force le démarrage du timer si on est Host
             if (myTeamId === 1 && !roundTimer) {
+                console.warn("Video Error - Forcing Round Start");
                 startRoundTimer(15);
             }
         };
@@ -602,10 +603,10 @@
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('result-display').classList.add('hidden');
                 
-                // FORCE RESET VIDEO
-                videoEl.pause();
-                videoEl.removeAttribute('src'); // Clean source
-                videoEl.load();
+                // --- FIX IMPORTANT : On ne reset pas la source ici pour éviter l'erreur NotSupported ---
+                videoEl.pause(); 
+                // videoEl.removeAttribute('src'); // SUPPRIMÉ: C'est ça qui causait l'erreur
+                
                 console.log("Reset Round", gameState.currentRound);
             }
 
@@ -613,6 +614,16 @@
             
             lastPhase = gameState.phase;
             currentStartTime = gameState.startTime;
+            
+            // VERIFICATION SAFETY
+            if(gameState.songIndex === undefined || gameState.songIndex < 0 || gameState.songIndex >= OP_DATABASE.length) {
+                console.error("Index de chanson invalide ! Skip...");
+                 if (myTeamId === 1 && !roundTimer) {
+                    startRoundTimer(1); // Force skip rapide
+                }
+                return;
+            }
+            
             currentSongData = OP_DATABASE[gameState.songIndex];
 
             // NETTOYAGE TIMERS PRÉCÉDENTS
@@ -630,7 +641,13 @@
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 
                 // CHARGEMENT NOUVELLE VIDÉO
-                videoEl.src = currentSongData.url;
+                // On vérifie si on doit vraiment changer la source pour éviter les reload inutiles
+                if (videoEl.src !== currentSongData.url) {
+                    console.log("Chargement URL:", currentSongData.url);
+                    videoEl.src = currentSongData.url;
+                    videoEl.load(); // Important après changement de source
+                }
+                
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
@@ -651,6 +668,7 @@
                 };
 
                 // ECOUTEUR DE LECTURE STANDARD
+                // Use 'one' listener pattern by removing previous one if needed, but 'once: true' is cleaner
                 videoEl.addEventListener('playing', startTimerLogic, { once: true });
                 
                 // TENTATIVE DE LECTURE
