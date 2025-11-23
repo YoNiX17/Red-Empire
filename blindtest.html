@@ -84,8 +84,8 @@
         /* --- TIMER BAR --- */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--yellow); width: 100%; transition: width 0.1s linear; }
-        /* Animation gérée via JS pour la synchro */
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
+        .timer-running { animation: shrink linear forwards; }
 
         /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -332,12 +332,8 @@
             
             <!-- LOADER OVERLAY (Buffering) -->
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-                <div class="loader-ring mb-4"></div>
-                <p class="text-yellow-400 font-manga tracking-widest text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
-                <!-- Bouton de secours si autoplay bloqué -->
-                <button id="btn-force-play" class="hidden mt-4 btn-pop btn-red px-6 py-2 rounded" onclick="forcePlayVideo()">
-                    <i class="fa-solid fa-play"></i> LANCER LA MUSIQUE
-                </button>
+                <div class="loader-ring"></div>
+                <p class="text-yellow-400 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
             </div>
 
             <!-- Mode Vinyle (Devinette) -->
@@ -441,22 +437,11 @@
         let currentSongData = null;
         let currentSettings = { duration: 20, rounds: 10, suddenDeath: false, teamCount: 2 };
         let userVolume = 0.5;
-        let visualTimerInterval = null; // Nouveau: intervalle JS pour le timer
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Fonction de secours pour les autoplay bloqués
-        window.forcePlayVideo = () => {
-            if(videoEl) {
-                videoEl.play().then(() => {
-                    document.getElementById('btn-force-play').classList.add('hidden');
-                    document.getElementById('loader-overlay').classList.add('hidden');
-                }).catch(e => console.error("Force play fail", e));
-            }
-        };
-
-        // 1. CLEANUP SYSTEM
+        // 1. CLEANUP SYSTEM (Nettoyage salles > 24h)
         async function cleanOldRooms() {
             const roomsRef = ref(db, 'blindtest/rooms');
             try {
@@ -465,15 +450,19 @@
                 const rooms = snapshot.val();
                 const now = Date.now();
                 const ONE_DAY = 24 * 60 * 60 * 1000;
+
                 for (const [id, room] of Object.entries(rooms)) {
                     if (room.createdAt && (now - room.createdAt > ONE_DAY)) {
+                        console.log(`Nettoyage salle expirée: ${id}`);
                         remove(ref(db, `blindtest/rooms/${id}`));
                     }
                 }
-            } catch(e) {}
+            } catch(e) { console.log("Cleanup skip (permission)"); }
         }
+        // Lancer nettoyage au chargement
         cleanOldRooms();
 
+        // Initialiser le volume
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
@@ -500,6 +489,7 @@
             }
         });
 
+        // --- ALGORITHME DE MÉLANGE (Fisher-Yates) ---
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -510,6 +500,7 @@
             return array;
         }
 
+        // --- ALGO DE LEVENSHTEIN ---
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -536,6 +527,7 @@
             const normTarget = target.toLowerCase().trim();
             if (normInput === normTarget) return true;
             if (normTarget.includes(normInput) && normInput.length > 3) return true; 
+            
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
@@ -548,6 +540,7 @@
             const rounds = parseInt(document.getElementById('setting-rounds').value);
             const teamCount = parseInt(document.getElementById('setting-teamcount').value);
             const suddenDeath = document.getElementById('setting-suddendeath').checked;
+            
             update(ref(db, `blindtest/rooms/${currentRoomId}/settings`), { duration, rounds, teamCount, suddenDeath });
             document.getElementById('display-duration').innerText = duration + 's';
             document.getElementById('display-rounds').innerText = rounds;
@@ -565,6 +558,7 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
+        // MODIFICATION: NOUVEAU MÉLANGE À CHAQUE LANCEMENT
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -580,16 +574,18 @@
                 players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
+
             try {
                 await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
                 enterLobby(roomCode);
-            } catch(e) { alert("Erreur création."); }
+            } catch(e) { console.error(e); alert("Erreur création."); }
         };
 
         window.joinRoom = async () => {
             if (!currentUser) return;
             const code = document.getElementById('input-room-code').value.toUpperCase();
             if (code.length < 4) return alert("Code trop court");
+
             try {
                 const roomRef = ref(db, `blindtest/rooms/${code}`);
                 const snapshot = await get(roomRef);
@@ -642,11 +638,13 @@
                 if (data.status === 'lobby') {
                     document.getElementById('screen-game').classList.add('hidden');
                     document.getElementById('screen-lobby').classList.remove('hidden');
+                    
                     if(videoEl) {
                         videoEl.pause();
-                        videoEl.removeAttribute('src'); // Clean reset on lobby
+                        videoEl.src = "";
                         videoEl.load();
                     }
+                    animeFound = false; songFound = false; opFound = false;
                 }
                 else if (data.status === 'playing') {
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
@@ -661,12 +659,20 @@
         function renderLobbyTeams(players, teamCount) {
             const grid = document.getElementById('teams-grid');
             grid.innerHTML = '';
+            
+            if(teamCount > 2) {
+                grid.className = "flex-grow grid grid-cols-2 gap-4 p-4 relative bg-[#111] overflow-y-auto";
+            } else {
+                grid.className = "flex-grow grid grid-cols-2 gap-4 p-4 relative bg-[#111] overflow-y-auto";
+            }
+
             const teamSwitcher = document.getElementById('team-switcher');
             teamSwitcher.innerHTML = '';
 
             for (let i = 0; i < teamCount; i++) {
                 const conf = TEAM_CONFIG[i];
                 const teamId = i + 1;
+
                 const btn = document.createElement('button');
                 btn.className = `text-[10px] font-bold px-3 py-1 rounded border-2 transition-all uppercase hover:opacity-80 text-white ${conf.class} border-white`;
                 btn.innerText = conf.name;
@@ -675,10 +681,12 @@
 
                 const col = document.createElement('div');
                 col.className = `p-3 border rounded bg-opacity-20 ${conf.bgList} border-${conf.class.split('-')[1]}-500/50`;
+                
                 const title = document.createElement('div');
                 title.className = `font-bold text-xs mb-2 text-white border-b border-white/20 pb-1 uppercase`;
                 title.innerText = `ÉQUIPE ${conf.name}`;
                 col.appendChild(title);
+
                 const list = document.createElement('div');
                 list.className = "space-y-2";
 
@@ -704,24 +712,31 @@
         function renderScoreboard(players, teamCount) {
              const grid = document.getElementById('scoreboard-grid');
              grid.innerHTML = '';
+             
              for(let i = 0; i < teamCount; i++) {
                  const conf = TEAM_CONFIG[i];
                  const teamId = i + 1;
+                 
                  const col = document.createElement('div');
                  if(i < teamCount - 1) col.className = "border-r border-white/10 pr-4";
+                 
                  const title = document.createElement('h3');
                  title.className = `font-bold mb-4 border-b-2 inline-block text-2xl font-manga ${conf.text} border-${conf.class.split('-')[1]}-500`;
                  title.innerText = `ÉQUIPE ${conf.name}`;
                  col.appendChild(title);
+                 
                  const list = document.createElement('div');
                  list.className = "space-y-2";
+                 
                  const teamPlayers = Object.values(players).filter(p => p.team === teamId).sort((a,b) => b.score - a.score);
+                 
                  teamPlayers.forEach(p => {
                      const el = document.createElement('div');
                      el.className = "flex items-center gap-2 bg-[#222] border border-gray-600 p-2 rounded mb-2 shadow-sm";
                      el.innerHTML = `<img src="${p.avatar || 'https://ui-avatars.com/api/?name='+p.name}" class="w-8 h-8 rounded border-2 border-white bg-black"> <div class="flex-1 min-w-0"><div class="font-bold text-gray-200 text-sm truncate uppercase font-manga tracking-wider">${p.name}</div><div class="text-xs text-yellow-400 font-mono font-bold">${p.score} PTS</div></div>`;
                      list.appendChild(el);
                  });
+                 
                  col.appendChild(list);
                  grid.appendChild(col);
              }
@@ -729,12 +744,18 @@
 
         window.switchTeam = (teamId) => { update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { team: teamId }); };
 
+        // MODIFICATION: NOUVEAU MÉLANGE À CHAQUE LANCEMENT
         window.startGame = () => {
+            // 1. On génère un NOUVEAU deck mélangé pour cette nouvelle partie
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             const newDeck = shuffleArray(allIndices);
+            
+            // 2. On prend le premier son du nouveau deck
             const firstSongIndex = newDeck[0];
+            // MODIFICATION : Seek entre 40s et 50s (Range = 11)
             const randomSeek = Math.floor(Math.random() * 11) + 40;
 
+            // 3. On met à jour la DB avec ce nouveau deck
             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                 status: 'playing',
                 gameState: {
@@ -742,7 +763,7 @@
                     songIndex: firstSongIndex,
                     startTime: Date.now() + 3000,
                     phase: 'guessing',
-                    deck: newDeck, 
+                    deck: newDeck, // Le deck est remplacé ici
                     seekTime: randomSeek
                 }
             });
@@ -750,14 +771,12 @@
 
         let lastPhase = '';
         let lastStartTime = 0;
+        let onPlayListener = null; // Stockage pour nettoyage
 
         function handleGameSync(gameState, settings) {
-            // ANTI-REBOND
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
-            if (isHost) clearTimeout(roundTimer);
             
-            // Clear visual timer interval at state change
-            if (visualTimerInterval) clearInterval(visualTimerInterval);
+            if (isHost) clearTimeout(roundTimer);
 
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
@@ -778,93 +797,94 @@
             }
 
             if (gameState.phase === 'guessing') {
-                // --- PHASE GUESSING ---
                 animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
                 document.getElementById('status-op').classList.add('hidden');
+                
                 document.getElementById('result-display').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
-                document.getElementById('btn-force-play').classList.add('hidden'); // Cacher bouton urgence
 
-                // Reset bar
+                // RESET ET LOADER
                 const bar = document.getElementById('game-timer-bar');
-                bar.style.width = '100%'; 
+                bar.classList.remove('timer-running');
+                bar.style.width = '100%'; // Reset visual
                 
-                document.getElementById('loader-overlay').classList.remove('hidden'); 
-                diskEl.classList.add('disk-paused'); 
+                document.getElementById('loader-overlay').classList.remove('hidden'); // Affiche le loader
+                diskEl.classList.add('disk-paused'); // Disque arrêté pendant le chargement
 
-                // IMPORTANT : Vérif si l'URL a changé ou force reload
-                if (videoEl.src !== songData.url) {
-                    videoEl.src = songData.url;
-                    videoEl.load();
+                // Nettoyage ancien listener
+                if(onPlayListener) {
+                    videoEl.removeEventListener('playing', onPlayListener);
+                    onPlayListener = null;
                 }
+
+                videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume; 
                 
-                const handleVideoStart = () => {
-                    document.getElementById('loader-overlay').classList.add('hidden');
-                    diskEl.classList.remove('disk-paused');
+                // --- NOUVELLE LOGIQUE DE SYNCHRO TIMER ---
+                onPlayListener = () => {
+                    console.log("Lecture commencée - Lancement Timer");
                     
-                    // TIMER JS SYNCHRONISÉ (Pas de CSS)
-                    if (visualTimerInterval) clearInterval(visualTimerInterval);
-                    visualTimerInterval = setInterval(() => {
-                        const elapsed = Date.now() - gameState.startTime;
-                        const durationMs = settings.duration * 1000;
-                        const percent = Math.max(0, 100 - (elapsed / durationMs * 100));
-                        bar.style.width = percent + '%';
-                        
-                        if (percent <= 0) clearInterval(visualTimerInterval);
-                    }, 100);
+                    // 1. Cache le loader
+                    document.getElementById('loader-overlay').classList.add('hidden');
+                    
+                    // 2. Lance les animations
+                    diskEl.classList.remove('disk-paused');
+                    bar.style.animationDuration = settings.duration + 's';
+                    bar.classList.add('timer-running');
 
-                    // HOST LOGIC: Fin du round
+                    // 3. SI HÔTE : Lance le chrono de fin de round ICI
                     if (isHost) {
-                        const elapsed = Date.now() - gameState.startTime;
-                        const remaining = Math.max(0, (settings.duration * 1000) - elapsed);
                         clearTimeout(roundTimer);
                         roundTimer = setTimeout(() => {
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                        }, remaining);
+                        }, settings.duration * 1000);
                     }
                 };
 
-                // Tentative de lecture propre
-                videoEl.play().then(handleVideoStart).catch(e => {
-                    console.warn("Autoplay bloqué :", e);
-                    // C'est là que le bouton de secours apparaît si besoin
-                    document.getElementById('btn-force-play').classList.remove('hidden');
-                    // On laisse le loader visible car techniquement "ça charge" ou "ça attend"
-                });
+                // On attache l'écouteur (once: true pour éviter les bugs si buffering au milieu)
+                videoEl.addEventListener('playing', onPlayListener, { once: true });
+
+                // Lance la lecture (déclenchera 'playing' quand prêt)
+                videoEl.play().catch(e => console.log("Autoplay bloqué ou erreur:", e));
 
             } else if (gameState.phase === 'reveal') {
-                // --- PHASE REVEAL ---
-                videoEl.pause(); // Stop le son
-                
-                document.getElementById('loader-overlay').classList.add('hidden'); 
+                document.getElementById('loader-overlay').classList.add('hidden'); // Cache loader au cas où
                 document.getElementById('result-display').classList.remove('hidden');
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
                 document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
+                
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
+                
                 diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
+                    // MODIF: Temps d'attente 8 secondes
                     const delay = (gameState.currentRound % 5 === 0) ? 12000 : 8000;
+                    
                     setTimeout(() => {
                         if (gameState.currentRound >= settings.rounds) {
                             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                                 status: 'lobby',
-                                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: gameState.deck }
+                                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: gameState.deck } // Keep deck or reset?
                             });
                             return; 
                         }
+
+                        // On prend le SUIVANT dans le deck mélangé
                         const nextIndex = gameState.deck[gameState.currentRound]; 
+                        // (round 1 -> index 0, round 2 -> index 1...)
+                        
+                        // MODIFICATION : Seek entre 40s et 50s pour les rounds suivants aussi
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
 
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
@@ -889,6 +909,7 @@
             let feedback = "";
             let roundFinished = false;
 
+            // 1. VERIF ANIME (1pt)
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
                 if (!matchAnime && currentSongData.alt) {
@@ -896,6 +917,7 @@
                         if (isCloseMatch(guess, alias)) { matchAnime = true; break; }
                     }
                 }
+                
                 if (matchAnime) {
                     animeFound = true;
                     pointsEarned += 1;
@@ -904,6 +926,7 @@
                 }
             }
 
+            // 2. VERIF CHANSON (1pt)
             if (!songFound) {
                 if (isCloseMatch(guess, currentSongData.song)) {
                     songFound = true;
@@ -913,6 +936,7 @@
                 }
             }
 
+            // 3. VERIF NUMÉRO OP (0.5pt)
             if (!opFound && currentSongData.num) {
                 const inputNums = guess.match(/\d+/g);
                 if (inputNums && inputNums.includes(currentSongData.num.toString())) {
@@ -923,8 +947,12 @@
                 }
             }
 
-            if (currentSettings.suddenDeath && animeFound && opFound) {
-                roundFinished = true;
+            // LOGIQUE MORT SUBITE (MODIFIÉE)
+            if (currentSettings.suddenDeath) {
+                // Il faut AVOIR l'anime ET le numéro de l'opening pour finir
+                if (animeFound && opFound) {
+                    roundFinished = true;
+                }
             }
 
             if (pointsEarned > 0) {
@@ -937,7 +965,6 @@
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold';
                 popup.style.left = '50%';
                 popup.style.top = '50%';
-                popup.style.position = 'absolute'; // Fix popup pos
                 popup.innerText = `+${pointsEarned}`;
                 document.body.appendChild(popup);
                 setTimeout(() => popup.remove(), 1500);
@@ -949,10 +976,12 @@
                     });
                 }
             }
+
             input.value = "";
             input.placeholder = feedback || "NON...";
             setTimeout(() => input.placeholder = "Tapez votre réponse...", 1000);
         };
+
     </script>
 </body>
 </html>
