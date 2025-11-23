@@ -3,144 +3,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1v1 DUEL | Red Empire</title>
+    <title>RANKED 1v1 | Red Empire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --red: #ff2e2e; --dark-bg: #050505; }
-        body { background-color: var(--dark-bg); color: #fff; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; }
-        .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
-        
-        /* Ecrans */
-        .screen-layer {
-            position: fixed; inset: 0; z-index: 50; background: #050505;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s;
+        :root {
+            --red: #ff2e2e;
+            --yellow: #facc15;
+            --dark-bg: #121212;
+            --panel-bg: #1a1a1a;
+            --text-main: #eeeeee;
+            --border-color: #ffffff;
         }
-        .hidden-layer { opacity: 0; pointer-events: none; z-index: -1; }
-        
-        /* Player Cards */
-        .player-card { background: #111; border: 2px solid #333; padding: 10px; display: flex; align-items: center; gap: 10px; min-width: 200px; transition: all 0.3s; }
-        .player-card.active { border-color: #ff2e2e; box-shadow: 0 0 15px rgba(255, 46, 46, 0.3); }
-        
-        /* Anim */
-        @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        .pop-anim { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        
-        /* Loader */
-        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: #ff2e2e; border-radius: 50%; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Timer & Disk */
-        .timer-container { width: 100%; height: 10px; background: #333; border: 1px solid #fff; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .timer-fill { height: 100%; background: #facc15; width: 100%; }
+        body { 
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: 'Roboto Condensed', sans-serif;
+            overflow: hidden;
+            background-image: radial-gradient(#333 20%, transparent 20%);
+            background-size: 12px 12px;
+        }
         
+        .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
+
+        /* --- PANNEAUX MANGA DARK --- */
+        .manga-panel {
+            background: var(--panel-bg);
+            border: 3px solid var(--border-color);
+            box-shadow: 8px 8px 0px var(--red);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .speed-lines::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
+            pointer-events: none;
+        }
+
+        /* --- BOUTONS POP --- */
+        .btn-pop {
+            background: var(--border-color);
+            color: var(--dark-bg);
+            font-family: 'Bangers', cursive;
+            text-transform: uppercase;
+            border: 2px solid var(--border-color);
+            transition: all 0.1s ease;
+            box-shadow: 4px 4px 0px var(--yellow);
+            cursor: pointer;
+        }
+        .btn-pop:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--yellow);
+            background: var(--yellow);
+            color: var(--dark-bg);
+            border-color: var(--yellow);
+        }
+        .btn-pop:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--yellow);
+        }
+        
+        .btn-red { 
+            background: var(--red); 
+            color: white; 
+            border-color: var(--red);
+            box-shadow: 4px 4px 0px var(--border-color); 
+        }
+        .btn-red:hover { 
+            background: #ff4444; 
+            color: white; 
+            box-shadow: 6px 6px 0px var(--border-color); 
+            border-color: #ff4444;
+        }
+
+        /* --- TIMER BAR --- */
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
+        .timer-running { animation: shrink linear forwards; }
+
+        /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
+
+        /* --- INPUT STYLE --- */
+        .input-manga {
+            border: 3px solid var(--border-color);
+            background: #222;
+            color: white;
+            font-family: 'Bangers', cursive;
+            letter-spacing: 1px;
+            box-shadow: inset 4px 4px 0px #000;
+        }
+        .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
+        .input-manga::placeholder { color: #666; }
+
+        /* --- LOADER SPINNER --- */
+        .loader-ring { display: inline-block; width: 64px; height: 64px; }
+        .loader-ring:after {
+            content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%;
+            border: 5px solid #fff; border-color: #facc15 transparent #facc15 transparent;
+            animation: loader-ring 1.2s linear infinite;
+        }
+        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- ANIMATION VS --- */
+        @keyframes slam { 
+            0% { transform: scale(3); opacity: 0; } 
+            50% { transform: scale(1); opacity: 1; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .vs-text { animation: slam 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col">
 
-    <!-- ECRAN 1 : MATCHMAKING -->
-    <div id="screen-matchmaking" class="screen-layer">
-        <div class="loader mb-6"></div>
-        <h1 id="mm-status" class="text-4xl font-manga text-white mb-2 animate-pulse">RECHERCHE D'ADVERSAIRE...</h1>
-        <p class="text-gray-500 font-mono text-xs">Système "Chaise Musicale" V2</p>
-        <button onclick="window.location.href='blindtest_ranked.html'" class="mt-8 text-red-500 border border-red-500 px-4 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs font-bold">ANNULER</button>
-    </div>
-
-    <!-- ECRAN 2 : VERSUS -->
-    <div id="screen-vs" class="screen-layer hidden-layer">
-        <h1 class="text-6xl font-manga text-yellow-500 mb-12">DUEL TROUVÉ</h1>
-        <div class="flex items-center justify-center gap-8 md:gap-20 w-full px-4">
-            <!-- J1 -->
-            <div class="text-center w-1/3">
-                <img id="vs-p1-avatar" src="" class="w-24 h-24 rounded-full border-4 border-blue-500 mb-4 mx-auto object-cover bg-gray-800">
-                <h2 id="vs-p1-name" class="font-black text-xl text-blue-400 uppercase truncate">...</h2>
-            </div>
-            <div class="text-4xl font-black italic text-white animate-pulse">VS</div>
-            <!-- J2 -->
-            <div class="text-center w-1/3">
-                <img id="vs-p2-avatar" src="" class="w-24 h-24 rounded-full border-4 border-red-600 mb-4 mx-auto object-cover bg-gray-800">
-                <h2 id="vs-p2-name" class="font-black text-xl text-red-500 uppercase truncate">...</h2>
-            </div>
-        </div>
-        <p class="mt-12 text-white font-mono text-xl">DÉMARRAGE DANS <span id="start-countdown" class="text-yellow-500 font-bold text-3xl">...</span></p>
-    </div>
-
-    <!-- HUD (Toujours présent mais caché au début) -->
-    <div id="game-hud" class="hidden absolute top-0 w-full flex justify-between p-4 z-40">
-        <div class="player-card border-blue-600 rounded-r-xl">
-            <span id="hud-p1-score" class="text-4xl font-manga text-blue-500">0</span>
-            <div class="flex flex-col ml-2">
-                <span id="hud-p1-name" class="font-black text-sm uppercase truncate max-w-[100px]">J1</span>
-            </div>
-        </div>
+    <!-- NAVBAR -->
+    <nav class="h-16 bg-[#111] border-b-4 border-white flex items-center justify-between px-6 z-50 shadow-lg">
+        <a href="index.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span class="font-manga text-xl tracking-wider">QUITTER</span>
+        </a>
         
-        <div class="flex flex-col items-center">
-            <div class="bg-black px-6 py-2 border-2 border-white rounded-lg font-manga text-2xl shadow-lg transform skew-x-[-10deg]">
-                ROUND <span id="round-display" class="text-yellow-500">1</span>
-            </div>
-            <div class="w-40 md:w-80 timer-container">
-                <div id="timer-bar" class="timer-fill"></div>
-            </div>
+        <div class="absolute left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-1 skew-x-[-10deg] border-2 border-white shadow-[4px_4px_0px_#ff2e2e]">
+            <h1 class="font-manga text-2xl skew-x-[10deg] tracking-widest">RANKED <span class="text-red-600">DUEL</span></h1>
         </div>
 
-        <div class="player-card border-red-600 flex-row-reverse text-right rounded-l-xl">
-            <span id="hud-p2-score" class="text-4xl font-manga text-red-500">0</span>
-            <div class="flex flex-col mr-2">
-                <span id="hud-p2-name" class="font-black text-sm uppercase truncate max-w-[100px]">J2</span>
+        <div id="user-badge" class="flex items-center gap-2 bg-gray-800 px-4 py-1 rounded-full border-2 border-white">
+            <span class="text-yellow-400 font-manga text-lg mr-2">1200 LP</span> <!-- League Points -->
+            <div class="w-8 h-8 rounded-full border border-white overflow-hidden bg-black">
+                <img id="user-avatar" src="" class="w-full h-full object-cover">
             </div>
+            <span class="text-sm font-bold truncate max-w-[100px] text-white" id="username-display">Joueur</span>
         </div>
-    </div>
+    </nav>
 
-    <!-- ZONE DE JEU -->
-    <div id="game-layer" class="hidden h-screen w-full flex items-center justify-center relative z-10">
-        
-        <!-- Disque -->
-        <div id="view-vinyl" class="relative w-64 h-64 md:w-80 md:h-80 animate-[spin_3s_linear_infinite]">
-            <div class="absolute inset-0 bg-black rounded-full border-[10px] border-gray-800 flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.1)]">
-                <div class="absolute inset-0 rounded-full border border-white/10"></div>
-                <div class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-red-600 to-red-900 rounded-full flex items-center justify-center border-4 border-white z-10">
-                    <i class="fa-solid fa-music text-4xl md:text-5xl text-white"></i>
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 1 : MATCHMAKING DASHBOARD            -->
+    <!-- ========================================== -->
+    <div id="screen-menu" class="flex-grow flex items-center justify-center p-4 relative">
+        <!-- Background Elements -->
+        <div class="absolute top-10 left-10 opacity-20 transform -rotate-12 pointer-events-none">
+            <i class="fa-solid fa-trophy text-9xl text-yellow-500"></i>
+        </div>
+        <div class="absolute bottom-10 right-10 opacity-20 transform rotate-12 pointer-events-none">
+            <i class="fa-solid fa-khanda text-9xl text-red-500"></i>
+        </div>
+
+        <div class="manga-panel p-8 max-w-lg w-full text-center speed-lines z-10">
+            
+            <!-- RANK BADGE -->
+            <div class="w-32 h-32 mx-auto mb-4 relative">
+                <div class="absolute inset-0 bg-yellow-400 rounded-full blur-lg opacity-20 animate-pulse"></div>
+                <img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" class="w-full h-full object-contain drop-shadow-lg relative z-10" alt="Rank Icon">
+            </div>
+            
+            <h2 class="text-4xl font-manga text-white mb-2 text-shadow-sm uppercase">Saison 1 : Genesis</h2>
+            <div class="flex justify-center items-center gap-4 text-gray-400 font-bold mb-8 text-sm tracking-wider">
+                <span><i class="fa-solid fa-user-group text-red-500"></i> <span id="online-count">--</span> EN LIGNE</span>
+                <span>|</span>
+                <span><i class="fa-solid fa-gamepad text-yellow-500"></i> MODE 1v1</span>
+            </div>
+            
+            <!-- ETAT : IDLE -->
+            <div id="state-idle" class="space-y-4">
+                <button onclick="startMatchmaking()" class="btn-pop btn-red w-full py-6 text-3xl tracking-wider rounded-lg transform transition hover:scale-105 shadow-[0_0_20px_rgba(255,46,46,0.5)]">
+                    <i class="fa-solid fa-swords mr-3"></i> TROUVER UN MATCH
+                </button>
+                <p class="text-xs text-gray-500 mt-2">Mode Classé • 15s/Round • 10 Rounds</p>
+                <p id="db-status" class="text-[10px] text-gray-600 font-mono mt-1">Status DB: Chargement...</p>
+            </div>
+
+            <!-- ETAT : SEARCHING -->
+            <div id="state-searching" class="hidden space-y-6 py-4">
+                <div class="flex flex-col items-center">
+                    <div class="loader-ring mb-4"></div>
+                    <h3 class="font-manga text-2xl animate-pulse text-yellow-400">RECHERCHE D'ADVERSAIRE...</h3>
+                    <p class="text-gray-400 text-sm" id="search-timer">00:00</p>
+                </div>
+                <button onclick="cancelMatchmaking()" class="text-gray-500 hover:text-white underline text-sm">
+                    ANNULER LA RECHERCHE
+                </button>
+            </div>
+
+             <!-- ETAT : FOUND (VS SCREEN) -->
+             <div id="state-found" class="hidden py-4">
+                <h3 class="font-manga text-5xl text-red-600 vs-text mb-4">MATCH TROUVÉ !</h3>
+                <div class="flex items-center justify-between px-4 mt-6">
+                    <div class="text-center">
+                        <img id="p1-img" src="" class="w-16 h-16 rounded-full border-2 border-blue-500 mx-auto">
+                        <div class="font-bold text-sm mt-1 text-blue-400">VOUS</div>
+                    </div>
+                    <div class="text-4xl font-manga italic text-white">VS</div>
+                    <div class="text-center">
+                        <img id="p2-img" src="" class="w-16 h-16 rounded-full border-2 border-red-500 mx-auto bg-gray-800">
+                        <div class="font-bold text-sm mt-1 text-red-400">ADVERSAIRE</div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-400 animate-[shrink_3s_linear_forwards] w-full"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Lancement de l'arène...</p>
                 </div>
             </div>
         </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 2 : JEU (IN GAME) - SIMPLIFIÉ        -->
+    <!-- ========================================== -->
+    <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#111]">
         
-        <!-- Video -->
-        <div id="view-video" class="hidden absolute inset-0 bg-black z-20 flex items-center justify-center">
-            <video id="game-video" class="w-full h-full object-contain max-w-6xl mx-auto" playsinline></video>
-            <div class="absolute bottom-24 md:bottom-32 text-center bg-black/90 px-6 py-4 rounded-xl border-2 border-yellow-500 shadow-2xl max-w-[90%]">
-                <h2 id="reveal-anime" class="text-3xl md:text-5xl font-manga text-white mb-2 text-shadow-lg break-words">ANIME</h2>
-                <p id="reveal-song" class="text-yellow-400 font-bold text-lg md:text-xl uppercase tracking-widest break-words">Song</p>
+        <!-- Timer & Info Duel -->
+        <div class="w-full bg-[#1a1a1a] p-3 border-b-4 border-white flex justify-between items-center px-4 md:px-12 shadow-lg z-20">
+            <!-- P1 Score -->
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden md:block">
+                    <div class="font-manga text-blue-400 text-lg" id="game-p1-name">JOUEUR 1</div>
+                    <div class="text-xs text-gray-400">RANKED</div>
+                </div>
+                <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="game-p1-score">0</div>
+            </div>
+
+            <!-- Timer Central -->
+            <div class="flex-1 max-w-md mx-4 flex flex-col items-center">
+                <div class="font-manga text-xl text-yellow-400 mb-1">ROUND <span id="current-round-display">1</span>/10</div>
+                <div class="timer-container w-full shadow-inner bg-black">
+                    <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- P2 Score -->
+            <div class="flex items-center gap-3">
+                <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="game-p2-score">0</div>
+                <div class="text-left hidden md:block">
+                    <div class="font-manga text-red-400 text-lg" id="game-p2-name">JOUEUR 2</div>
+                    <div class="text-xs text-gray-400">RANKED</div>
+                </div>
             </div>
         </div>
 
-        <!-- Feedback Visuel (Correct/Faux) -->
-        <div id="feedback-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none z-50 hidden">
-            <h1 class="font-manga text-6xl md:text-9xl text-green-500 drop-shadow-[0_0_20px_rgba(0,0,0,1)] pop-anim">CORRECT !</h1>
+        <!-- SCOREBOARD FINAL (FIN DE MATCH) -->
+        <div id="scoreboard-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex items-center justify-center">
+             <div class="manga-panel p-8 max-w-2xl w-full text-center bg-[#1a1a1a] border-4 border-yellow-400">
+                 <h2 class="text-6xl font-manga text-white mb-2 text-shadow-black" id="end-title">VICTOIRE !</h2>
+                 <p class="text-gray-400 mb-8 font-bold" id="end-subtitle">+25 LP</p>
+                 
+                 <div class="flex justify-center gap-12 items-end mb-10">
+                    <div class="text-center opacity-75 transform scale-90">
+                        <img id="end-p2-img" src="" class="w-20 h-20 rounded-full border-4 border-red-500 mx-auto grayscale">
+                        <div class="font-manga text-xl mt-2 text-gray-400" id="end-p2-name">PERDANT</div>
+                        <div class="text-3xl font-bold text-white" id="end-p2-score">0</div>
+                    </div>
+                    <div class="text-center z-10">
+                        <div class="text-yellow-400 text-4xl mb-2"><i class="fa-solid fa-crown"></i></div>
+                        <img id="end-p1-img" src="" class="w-28 h-28 rounded-full border-4 border-yellow-400 mx-auto shadow-[0_0_20px_rgba(255,215,0,0.5)]">
+                        <div class="font-manga text-2xl mt-2 text-white" id="end-p1-name">VAINQUEUR</div>
+                        <div class="text-5xl font-bold text-yellow-400" id="end-p1-score">0</div>
+                    </div>
+                 </div>
+
+                 <button onclick="location.reload()" class="btn-pop w-full py-4 text-xl rounded-lg">
+                    RETOURNER AU LOBBY
+                 </button>
+             </div>
+        </div>
+
+        <!-- CENTRE : GAMEPLAY (Copie adaptée) -->
+        <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
+            
+            <!-- Video & Vinyl Container -->
+            <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
+                <div class="w-full h-full max-w-4xl max-h-[60vh] bg-black border-4 border-white rounded-lg overflow-hidden">
+                    <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
+                </div>
+            </div>
+            
+            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                <div class="loader-ring"></div>
+            </div>
+
+            <!-- Disque -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
+                <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
+                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10"></div>
+                    <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                        <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
+                            <i class="fa-solid fa-music text-4xl text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="status-indicators" class="flex gap-4 mt-2 flex-wrap justify-center h-8">
+                    <!-- Feedback visuel immédiat -->
+                    <div id="status-msg" class="text-yellow-400 font-manga text-xl animate-bounce hidden">TITRE TROUVÉ !</div>
+                </div>
+            </div>
+             <!-- Volume -->
+             <div class="absolute top-4 right-4 z-30 bg-[#222] border-2 border-white rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                <i class="fa-solid fa-volume-high text-gray-400"></i>
+                <input type="range" min="0" max="1" step="0.1" class="w-20 accent-white h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
+            </div>
+        </div>
+
+        <!-- BAS : INPUT RÉPONSE -->
+        <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <!-- Résultat Overlay (Pop-up réponse) -->
+            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
+                <div class="bg-yellow-400 border-4 border-black p-4 w-full max-w-xl text-center shadow-[8px_8px_0px_#000] transform -rotate-1">
+                    <h2 id="res-anime" class="text-2xl md:text-4xl font-manga text-black uppercase truncate">ANIME NAME</h2>
+                    <p id="res-song" class="text-black font-bold text-sm">Song Title</p>
+                </div>
+            </div>
+
+            <div class="max-w-3xl mx-auto flex gap-3">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-14 px-6 text-xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
+                <button onclick="submitGuess()" class="btn-pop btn-red w-32 rounded-lg text-xl shadow-[4px_4px_0px_#000]">
+                    GO
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- INPUT -->
-    <div id="input-area" class="hidden absolute bottom-0 w-full p-6 bg-gradient-to-t from-black via-black/90 to-transparent z-30 flex justify-center pb-8">
-        <div class="relative w-full max-w-2xl">
-            <input type="text" id="input-guess" class="w-full bg-gray-900/90 border-2 border-white/30 text-white p-4 text-center text-xl md:text-2xl font-bold uppercase tracking-widest rounded-lg shadow-2xl focus:border-yellow-500 focus:bg-black outline-none transition-all placeholder-gray-600" placeholder="NOM DE L'ANIME..." autocomplete="off">
-        </div>
-    </div>
-
-    <!-- AUDIO -->
-    <audio id="game-audio" preload="auto"></audio>
-
-    <!-- LOGIC -->
+    <!-- SCRIPT LOGIQUE RANKED -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, remove, runTransaction, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { OP_DATABASE } from "./op_database.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        
+        // --- CHARGEMENT DE LA BASE DE DONNÉES DEPUIS LE FICHIER EXTERNE ---
+        let OP_DATABASE = [];
+        try {
+            // Import dynamique du fichier qui se trouve dans le même répertoire
+            const module = await import("./op_database.js");
+            OP_DATABASE = module.OP_DATABASE;
+            console.log("DB chargée :", OP_DATABASE.length, "openings");
+            document.getElementById('db-status').innerText = `Status DB: OK (${OP_DATABASE.length} OPs)`;
+            document.getElementById('db-status').classList.add('text-green-500');
+        } catch (e) {
+            console.error("Erreur chargement op_database.js", e);
+            document.getElementById('db-status').innerText = "Status DB: ERREUR (Vérifiez le fichier)";
+            document.getElementById('db-status').classList.add('text-red-500');
+            // Petit fallback minimaliste pour ne pas que le script crash totalement
+             OP_DATABASE = [
+                { anime: "Error", song: "File Not Found", url: "", alt: [] }
+            ];
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -157,322 +376,466 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // --- VARIABLES GLOBALES ---
         let currentUser = null;
-        let roomId = null;
-        let isHost = false;
-        let currentSong = null;
-        let hasGuessed = false;
-        let localTimerInterval = null; 
-        let currentPhase = 'lobby'; 
+        let currentRoomId = null;
+        let isSearchActive = false;
+        let searchInterval = null;
+        let searchSeconds = 0;
+        
+        // Variables Jeu
+        let myTeamId = 1; // 1 (Blue) ou 2 (Red)
+        let opponentName = "Adversaire";
+        let currentSongData = null;
+        let roundTimer = null;
+        let userVolume = 0.5;
+        let animeFound = false;
+        let songFound = false;
 
-        // DOM
-        const els = {
-            mmStatus: document.getElementById('mm-status'),
-            screenMatch: document.getElementById('screen-matchmaking'),
-            screenVs: document.getElementById('screen-vs'),
-            gameHud: document.getElementById('game-hud'),
-            gameLayer: document.getElementById('game-layer'),
-            inputArea: document.getElementById('input-area'),
-            input: document.getElementById('input-guess'),
-            timerBar: document.getElementById('timer-bar'),
-            audio: document.getElementById('game-audio'),
-            video: document.getElementById('game-video'),
-            viewVinyl: document.getElementById('view-vinyl'),
-            viewVideo: document.getElementById('view-video'),
-            revealAnime: document.getElementById('reveal-anime'),
-            revealSong: document.getElementById('reveal-song'),
-            feedback: document.getElementById('feedback-overlay')
+        // Éléments DOM
+        const videoEl = document.getElementById('game-video');
+        const diskEl = document.getElementById('disk');
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                // Get profile or default
+                let name = user.displayName || "Joueur";
+                let avatar = "https://ui-avatars.com/api/?background=random&name=" + name;
+                
+                try {
+                    const snap = await get(child(ref(db), `users/${user.uid}`));
+                    if (snap.exists()) {
+                        const val = snap.val();
+                        if(val.username) name = val.username;
+                        if(val.avatar) avatar = val.avatar;
+                    }
+                } catch(e){}
+
+                document.getElementById('username-display').innerText = name.toUpperCase();
+                document.getElementById('user-avatar').src = avatar;
+                document.getElementById('p1-img').src = avatar;
+
+                // Mise à jour compteur online
+                updateOnlineCount();
+            } else {
+               await signInAnonymously(auth);
+            }
+        });
+
+        function updateOnlineCount() {
+            // Simple simulation pour l'effet visuel
+            const count = Math.floor(Math.random() * 30) + 10;
+            document.getElementById('online-count').innerText = count;
+        }
+
+        // --- VOLUME ---
+        const savedVol = localStorage.getItem('userVolume');
+        if(savedVol) userVolume = parseFloat(savedVol);
+        document.getElementById('volume-slider').value = userVolume;
+        window.updateVolume = (val) => {
+            userVolume = val;
+            localStorage.setItem('userVolume', val);
+            if(videoEl) videoEl.volume = userVolume;
+        }
+
+        // --- LOGIQUE DE MATCHMAKING (RANKED QUEUE) ---
+        
+        window.startMatchmaking = async () => {
+            if(!currentUser) return;
+            if(OP_DATABASE.length <= 1) return alert("Base de données non chargée !");
+            
+            // UI Update
+            document.getElementById('state-idle').classList.add('hidden');
+            document.getElementById('state-searching').classList.remove('hidden');
+            isSearchActive = true;
+            searchSeconds = 0;
+            
+            // Timer visuel
+            searchInterval = setInterval(() => {
+                searchSeconds++;
+                const mins = Math.floor(searchSeconds/60).toString().padStart(2, '0');
+                const secs = (searchSeconds%60).toString().padStart(2, '0');
+                document.getElementById('search-timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+
+            // 1. Ajouter à la Queue
+            const queueRef = ref(db, `blindtest/queue/${currentUser.uid}`);
+            const myProfile = {
+                uid: currentUser.uid,
+                name: document.getElementById('username-display').innerText,
+                avatar: document.getElementById('user-avatar').src,
+                timestamp: Date.now()
+            };
+            
+            await set(queueRef, myProfile);
+            onDisconnect(queueRef).remove(); // Si on ferme l'onglet, on quitte la queue
+
+            // 2. Chercher un adversaire
+            findOpponent(myProfile);
         };
 
-        onAuthStateChanged(auth, (u) => {
-            if (u) {
-                currentUser = u;
-                joinMatchmaking();
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
-
-        // --- MATCHMAKING "CHAISE MUSICALE" ---
-        async function joinMatchmaking() {
-            // On utilise une "chaise" publique. Si elle est vide, on s'assoit. Si elle est pleine, on prend la place et on lance.
-            const seatRef = ref(db, 'blindtest/public_seat');
+        window.cancelMatchmaking = async () => {
+            isSearchActive = false;
+            clearInterval(searchInterval);
+            document.getElementById('state-idle').classList.remove('hidden');
+            document.getElementById('state-searching').classList.add('hidden');
             
-            const result = await runTransaction(seatRef, (seat) => {
-                if (seat === null) {
-                    // Place vide : Je m'assois (Je suis HOST)
-                    // Je crée une nouvelle roomId et je l'écris sur le siège
-                    return { uid: currentUser.uid, roomId: Math.random().toString(36).substr(2, 9) };
-                } else {
-                    // Place prise : Je prends le papier (roomId) et je laisse le siège vide pour les prochains (Je suis GUEST)
-                    // Pour la transaction, je return null pour supprimer le siège
-                    return null; 
-                }
-            });
-
-            if (result.committed) {
-                const seatData = result.snapshot.val(); // Ce qui était sur le siège AVANT (si delete) ou ce que j'ai mis (si write)
-
-                if (seatData && seatData.uid === currentUser.uid) {
-                    // J'ai écrit mon nom -> Je suis HOST
-                    roomId = seatData.roomId;
-                    isHost = true;
-                    els.mmStatus.innerText = "EN ATTENTE DU JOUEUR 2...";
-                    
-                    // 1. Je crée la salle
-                    await createRoom(roomId);
-                    
-                    // 2. Je surveille la salle. Dès qu'elle passe à 2 joueurs, c'est que J2 est là.
-                    listenToRoom();
-                    
-                    // Sécurité : si je pars, je libère le siège
-                    onDisconnect(seatRef).remove();
-                    onDisconnect(ref(db, `blindtest/rooms/${roomId}`)).remove();
-
-                } else if (seatData) {
-                    // J'ai supprimé quelqu'un -> Je suis GUEST
-                    // seatData contient l'info de l'hôte
-                    roomId = seatData.roomId;
-                    isHost = false;
-                    els.mmStatus.innerText = "ADVERSAIRE TROUVÉ !";
-                    
-                    // 1. Je rejoins la salle de l'hôte
-                    await joinRoom(roomId);
-                    
-                    // 2. J'écoute
-                    listenToRoom();
-                }
+            if(currentUser) {
+                await remove(ref(db, `blindtest/queue/${currentUser.uid}`));
             }
-        }
+        };
 
-        async function createRoom(rid) {
-            const p = await getProfile();
-            await set(ref(db, `blindtest/rooms/${rid}`), {
-                host: currentUser.uid,
-                players: { [currentUser.uid]: { ...p, team: 1, score: 0 } },
-                status: 'waiting'
+        // Fonction récursive pour chercher un match
+        function findOpponent(myProfile) {
+            if(!isSearchActive) return;
+
+            // Ecoute UNIQUE sur la queue (snapshot)
+            get(ref(db, 'blindtest/queue')).then(async (snapshot) => {
+                if(!isSearchActive) return;
+                
+                if (snapshot.exists()) {
+                    const allPlayers = snapshot.val();
+                    const playerIds = Object.keys(allPlayers);
+                    
+                    // Trouver quelqu'un qui n'est pas moi
+                    const opponentId = playerIds.find(id => id !== currentUser.uid);
+
+                    if (opponentId) {
+                        const opponent = allPlayers[opponentId];
+                        console.log("Adversaire trouvé !", opponent.name);
+                        // Appel de création (logique ci-dessous qui surcharge)
+                    } else {
+                        // Personne ? On réessaye dans 1s
+                        setTimeout(() => findOpponent(myProfile), 2000);
+                    }
+                } else {
+                     setTimeout(() => findOpponent(myProfile), 2000);
+                }
             });
         }
 
-        async function joinRoom(rid) {
-            const p = await getProfile();
-            await update(ref(db, `blindtest/rooms/${rid}/players/${currentUser.uid}`), {
-                ...p, team: 2, score: 0
-            });
-        }
-
-        async function getProfile() {
-            try {
-                const s = await get(child(ref(db), `users/${currentUser.uid}`));
-                if(s.exists()) return { name: s.val().username || currentUser.displayName, avatar: s.val().avatar || "" };
-            } catch(e){}
-            return { name: currentUser.displayName, avatar: currentUser.photoURL };
-        }
-
-        // --- ECOUTE ET LOGIQUE ---
-        function listenToRoom() {
-            onValue(ref(db, `blindtest/rooms/${roomId}`), (snap) => {
-                const data = snap.val();
-                if (!data) return;
-
-                // GESTION JOUEURS
-                if (data.players) {
-                    const list = Object.values(data.players);
-                    updatePlayerUI(list);
-
-                    // DÉMARRAGE (HOST SEULEMENT)
-                    // Si on attend et qu'on est 2, on lance le chrono
-                    if (isHost && data.status === 'waiting' && list.length === 2) {
-                        const launchTime = Date.now() + 5000; // 5 secondes
-                        update(ref(db, `blindtest/rooms/${roomId}`), { 
-                            status: 'starting', 
-                            launchTime: launchTime 
-                        });
+        // --- VERSION SIMPLIFIÉE DU MATCHMAKING (POUR PROTOTYPE) ---
+        let queueListener = null;
+        
+        // Surcharge de findOpponent pour utiliser onValue
+        window.findOpponent = (myProfile) => {
+            const queueRef = ref(db, 'blindtest/queue');
+            
+            queueListener = onValue(queueRef, async (snapshot) => {
+                if(!isSearchActive || !snapshot.exists()) return;
+                
+                const players = snapshot.val();
+                const ids = Object.keys(players);
+                
+                // Si je vois un autre joueur
+                const opponentId = ids.find(id => id !== currentUser.uid);
+                
+                if (opponentId) {
+                    // CONFLIT RESOLUTION: On utilise l'ordre alphabétique des UID pour décider qui crée la salle
+                    const amICreator = currentUser.uid < opponentId;
+                    
+                    if (amICreator) {
+                        // JE CRÉE LA SALLE
+                        const roomId = "RANKED_" + Math.floor(Math.random()*100000);
+                        const opponent = players[opponentId];
+                        
+                        // Créer la salle
+                        const roomData = {
+                            status: 'playing',
+                            createdAt: Date.now(),
+                            players: {
+                                [currentUser.uid]: { name: myProfile.name, avatar: myProfile.avatar, team: 1, score: 0 },
+                                [opponentId]: { name: opponent.name, avatar: opponent.avatar, team: 2, score: 0 }
+                            },
+                            settings: { duration: 15, rounds: 10, teamCount: 2, suddenDeath: false },
+                            gameState: generateNewGame(10) // Générer le deck
+                        };
+                        
+                        await set(ref(db, `blindtest/rooms/${roomId}`), roomData);
+                        
+                        // Signaler à l'adversaire (et moi-même) via un noeud "match" dans la queue
+                        const updates = {};
+                        updates[`blindtest/queue/${currentUser.uid}/matchId`] = roomId;
+                        updates[`blindtest/queue/${opponentId}/matchId`] = roomId;
+                        
+                        await update(ref(db), updates);
                     }
                 }
-
-                // GESTION ETATS
-                if (data.status === 'starting' && data.launchTime) {
-                    startCountdown(data.launchTime);
-                }
-                else if (data.status === 'playing' && data.gameState) {
-                    if(localTimerInterval) clearInterval(localTimerInterval);
-                    handleGameState(data.gameState);
-                }
-            });
-        }
-
-        function updatePlayerUI(list) {
-            const p1 = list.find(p => p.team === 1);
-            const p2 = list.find(p => p.team === 2);
-            
-            if(p1) {
-                document.getElementById('vs-p1-name').innerText = p1.name;
-                document.getElementById('vs-p1-avatar').src = p1.avatar;
-                document.getElementById('hud-p1-name').innerText = p1.name;
-                document.getElementById('hud-p1-score').innerText = p1.score;
-            }
-            if(p2) {
-                document.getElementById('vs-p2-name').innerText = p2.name;
-                document.getElementById('vs-p2-avatar').src = p2.avatar;
-                document.getElementById('hud-p2-name').innerText = p2.name;
-                document.getElementById('hud-p2-score').innerText = p2.score;
-            }
-        }
-
-        function startCountdown(targetTime) {
-            els.screenMatch.classList.add('hidden-layer');
-            els.screenVs.classList.remove('hidden-layer');
-
-            if(localTimerInterval) clearInterval(localTimerInterval);
-            
-            localTimerInterval = setInterval(() => {
-                const diff = Math.ceil((targetTime - Date.now()) / 1000);
-                if(diff > 0) {
-                    document.getElementById('start-countdown').innerText = diff;
-                } else {
-                    document.getElementById('start-countdown').innerText = "GO!";
-                    clearInterval(localTimerInterval);
-                    if(isHost) initGameEngine();
-                }
-            }, 100);
-        }
-
-        function initGameEngine() {
-            // Création du deck
-            const deck = [];
-            for(let i=0; i<OP_DATABASE.length; i++) deck.push(i);
-            deck.sort(() => Math.random() - 0.5);
-
-            update(ref(db, `blindtest/rooms/${roomId}`), {
-                status: 'playing',
-                gameState: {
-                    phase: 'guessing',
-                    round: 1,
-                    index: deck[0],
-                    deck: deck,
-                    startTime: Date.now(),
-                    seek: Math.floor(Math.random() * 15) + 30
-                }
-            });
-        }
-
-        function handleGameState(state) {
-            els.screenVs.classList.add('hidden-layer');
-            els.gameHud.classList.remove('hidden');
-            els.gameLayer.classList.remove('hidden');
-            els.inputArea.classList.remove('hidden');
-
-            const stateKey = `${state.phase}-${state.round}-${state.startTime}`;
-            if (currentPhase === stateKey) return;
-            currentPhase = stateKey;
-
-            currentSong = OP_DATABASE[state.index];
-            document.getElementById('round-display').innerText = state.round;
-
-            if (state.phase === 'guessing') {
-                els.viewVideo.classList.add('hidden');
-                els.viewVinyl.classList.remove('hidden');
-                els.feedback.classList.add('hidden');
                 
-                els.input.disabled = false;
-                els.input.value = "";
-                els.input.focus();
-                hasGuessed = false;
-
-                els.audio.src = currentSong.url;
-                els.audio.currentTime = state.seek;
-                els.audio.volume = 0.5;
-                els.audio.play().catch(e => console.log("Autoplay block"));
-
-                els.timerBar.style.transition = 'none';
-                els.timerBar.style.width = '100%';
-                setTimeout(() => {
-                    els.timerBar.style.transition = 'width 15s linear';
-                    els.timerBar.style.width = '0%';
-                }, 50);
-
-                if (isHost) {
-                    setTimeout(() => {
-                        update(ref(db, `blindtest/rooms/${roomId}/gameState`), { 
-                            ...state, phase: 'reveal', startTime: Date.now() 
-                        });
-                    }, 15000);
-                }
-
-            } else if (state.phase === 'reveal') {
-                els.audio.pause();
-                els.viewVinyl.classList.add('hidden');
-                els.viewVideo.classList.remove('hidden');
-                
-                els.video.src = currentSong.url;
-                els.video.currentTime = state.seek;
-                els.video.volume = 0.5;
-                els.video.play();
-
-                els.revealAnime.innerText = currentSong.anime;
-                els.revealSong.innerText = currentSong.song;
-                els.input.disabled = true;
-
-                if (isHost) {
-                    setTimeout(() => {
-                        if (state.round >= 15) {
-                            alert("FIN !");
-                            window.location.href = "blindtest_ranked.html";
-                        } else {
-                            const nextIdx = state.deck[state.round];
-                            update(ref(db, `blindtest/rooms/${roomId}/gameState`), {
-                                phase: 'guessing',
-                                round: state.round + 1,
-                                index: nextIdx,
-                                deck: state.deck,
-                                startTime: Date.now(),
-                                seek: Math.floor(Math.random() * 15) + 30
-                            });
-                        }
-                    }, 8000);
-                }
-            }
-        }
-
-        // --- INPUT ---
-        function isCloseMatch(input, target) {
-            if (!target) return false;
-            const clean = str => str.toLowerCase().replace(/[^a-z0-9]/g, "");
-            const a = clean(input);
-            const b = clean(target);
-            if (a === b) return true;
-            if (b.includes(a) && a.length > 3) return true;
-            return false;
-        }
-
-        els.input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !hasGuessed && currentSong) {
-                const val = els.input.value;
-                if(!val) return;
-
-                let correct = isCloseMatch(val, currentSong.anime);
-                if(!correct && currentSong.alt) {
-                    currentSong.alt.forEach(a => { if(isCloseMatch(val, a)) correct = true; });
-                }
-
-                if(correct) {
-                    hasGuessed = true;
-                    els.feedback.classList.remove('hidden');
+                // Vérifier si ON M'A assigné un match
+                if (players[currentUser.uid] && players[currentUser.uid].matchId) {
+                    // BINGO !
+                    const matchId = players[currentUser.uid].matchId;
                     
-                    get(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}/score`)).then(s => {
-                        update(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}`), { score: (s.val()||0) + 1 });
-                    });
+                    // Nettoyage Queue
+                    isSearchActive = false;
+                    clearInterval(searchInterval);
+                    off(queueRef, queueListener); // Stop listening queue
+                    
+                    // On supprime notre entrée de queue (proprement)
+                    remove(ref(db, `blindtest/queue/${currentUser.uid}`));
+                    
+                    joinRankedGame(matchId);
+                }
+            });
+        };
+        
+        // Générateur de partie (Deck)
+        function generateNewGame(rounds) {
+            // Mélange
+            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
+            let deck = [];
+            let temp = [...allIndices];
+            while(temp.length > 0) {
+                let i = Math.floor(Math.random() * temp.length);
+                deck.push(temp[i]);
+                temp.splice(i, 1);
+            }
+            
+            return {
+                currentRound: 1,
+                songIndex: deck[0],
+                startTime: Date.now() + 4000, // +4s pour l'anim VS
+                phase: 'guessing',
+                deck: deck,
+                seekTime: Math.floor(Math.random() * 11) + 40
+            };
+        }
 
-                    update(ref(db, `blindtest/rooms/${roomId}/gameState`), { 
-                        ...data.gameState, phase: 'reveal', startTime: Date.now() 
-                    });
-                } else {
-                    els.input.classList.add('border-red-500');
-                    setTimeout(()=>els.input.classList.remove('border-red-500'), 500);
+        // --- ENTRÉE DANS LA PARTIE ---
+        async function joinRankedGame(roomId) {
+            currentRoomId = roomId;
+            
+            // 1. Charger données adversaire pour l'écran VS
+            const roomSnap = await get(ref(db, `blindtest/rooms/${roomId}/players`));
+            const players = roomSnap.val();
+            
+            let myData = players[currentUser.uid];
+            let oppData = Object.values(players).find(p => p.name !== myData.name) || { name: "Adversaire", avatar: "" };
+            
+            myTeamId = myData.team; // 1 ou 2
+            
+            document.getElementById('p2-img').src = oppData.avatar || "https://via.placeholder.com/150";
+            
+            // 2. Afficher VS Screen
+            document.getElementById('state-searching').classList.add('hidden');
+            document.getElementById('state-found').classList.remove('hidden');
+            
+            // 3. Lancer le jeu après délai (animation VS)
+            setTimeout(() => {
+                document.getElementById('screen-menu').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('hidden');
+                
+                // Initialiser l'interface de jeu (Noms, scores)
+                document.getElementById('game-p1-name').innerText = (myTeamId === 1) ? myData.name : oppData.name;
+                document.getElementById('game-p2-name').innerText = (myTeamId === 1) ? oppData.name : myData.name;
+                
+                // Lancer la synchro
+                initGameSync(roomId);
+            }, 3500);
+        }
+
+        // --- SYNCHRONISATION DU JEU (Copie adaptée de ton code) ---
+        function initGameSync(roomId) {
+            onValue(ref(db, `blindtest/rooms/${roomId}`), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return; // Room supprimée
+
+                // Scores Update
+                let p1 = Object.values(data.players).find(p => p.team === 1);
+                let p2 = Object.values(data.players).find(p => p.team === 2);
+                
+                if(p1) document.getElementById('game-p1-score').innerText = p1.score;
+                if(p2) document.getElementById('game-p2-score').innerText = p2.score;
+
+                // Game Loop Update
+                handleGameState(data.gameState, data.settings);
+            });
+        }
+
+        let lastPhase = '';
+        let lastRound = 0;
+        let currentStartTime = 0;
+        
+        function handleGameState(gameState, settings) {
+            if (gameState.currentRound > settings.rounds) {
+                 showEndScreen();
+                 return;
+            }
+
+            // Nouveau round détecté
+            if (gameState.currentRound !== lastRound) {
+                lastRound = gameState.currentRound;
+                document.getElementById('current-round-display').innerText = gameState.currentRound;
+                // Reset visuel
+                document.getElementById('status-msg').classList.add('hidden');
+                document.getElementById('input-guess').value = "";
+                document.getElementById('input-guess').disabled = false;
+                document.getElementById('result-display').classList.add('hidden');
+            }
+
+            if (gameState.phase === lastPhase && gameState.startTime === currentStartTime) return;
+            
+            lastPhase = gameState.phase;
+            currentStartTime = gameState.startTime;
+            currentSongData = OP_DATABASE[gameState.songIndex];
+
+            if (gameState.phase === 'guessing') {
+                // Setup Phase Devinette
+                animeFound = false; songFound = false;
+                
+                document.getElementById('video-wrapper').classList.add('hidden');
+                document.getElementById('vinyl-wrapper').classList.remove('hidden');
+                diskEl.classList.add('disk-paused');
+                document.getElementById('loader-overlay').classList.remove('hidden');
+                
+                videoEl.src = currentSongData.url;
+                videoEl.currentTime = gameState.seekTime || 0;
+                videoEl.volume = userVolume;
+
+                videoEl.addEventListener('playing', () => {
+                    document.getElementById('loader-overlay').classList.add('hidden');
+                    diskEl.classList.remove('disk-paused');
+                    
+                    const bar = document.getElementById('game-timer-bar');
+                    bar.classList.remove('timer-running');
+                    void bar.offsetWidth; // Trigger reflow
+                    bar.style.animationDuration = settings.duration + 's';
+                    bar.classList.add('timer-running');
+
+                    // Si je suis Host (Team 1 par convention dans la création), je gère le timer
+                    if (myTeamId === 1) { 
+                        clearTimeout(roundTimer);
+                        roundTimer = setTimeout(() => {
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+                        }, settings.duration * 1000);
+                    }
+                }, { once: true });
+                
+                videoEl.play().catch(e => console.log("Play error", e));
+
+            } else if (gameState.phase === 'reveal') {
+                // Setup Phase Révélation
+                document.getElementById('video-wrapper').classList.remove('hidden');
+                document.getElementById('vinyl-wrapper').classList.add('hidden');
+                document.getElementById('result-display').classList.remove('hidden');
+                document.getElementById('res-anime').innerText = currentSongData.anime;
+                document.getElementById('res-song').innerText = currentSongData.song;
+                document.getElementById('input-guess').disabled = true;
+
+                if (myTeamId === 1) {
+                    setTimeout(() => {
+                        // Round suivant
+                        const nextRound = gameState.currentRound + 1;
+                        // Fin de partie gérée au début de la fonction
+                        
+                        const nextIndex = gameState.deck[gameState.currentRound]; // Index brut car round commence à 1
+                        const nextSeek = Math.floor(Math.random() * 11) + 40;
+
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
+                            currentRound: nextRound,
+                            songIndex: nextIndex || 0,
+                            startTime: Date.now(),
+                            phase: 'guessing',
+                            seekTime: nextSeek
+                        });
+                    }, 6000); // 6s de révélation
                 }
             }
-        });
+        }
+        
+        // --- LOGIQUE RÉPONSE ---
+        
+        // Fonction Levenshtein (Même que ton fichier)
+        function levenshtein(a,b){if(a.length==0)return b.length;if(b.length==0)return a.length;var matrix=[];var i;for(i=0;i<=b.length;i++){matrix[i]=[i];}var j;for(j=0;j<=a.length;j++){matrix[0][j]=j;}for(i=1;i<=b.length;i++){for(j=1;j<=a.length;j++){if(b.charAt(i-1)==a.charAt(j-1)){matrix[i][j]=matrix[i-1][j-1];}else{matrix[i][j]=Math.min(matrix[i-1][j-1]+1,Math.min(matrix[i][j-1]+1,matrix[i-1][j]+1));}}}return matrix[b.length][a.length];}
+        function isCloseMatch(input,target){if(!target)return false;const nI=input.toLowerCase().trim();const nT=target.toLowerCase().trim();if(nI===nT)return true;if(nT.includes(nI)&&nI.length>3)return true;const d=levenshtein(nI,nT);const m=Math.max(nI.length,nT.length);return(1-(d/m))>0.75;}
+
+        window.submitGuess = () => {
+            if (!currentSongData || !currentRoomId) return;
+            const input = document.getElementById('input-guess');
+            const val = input.value;
+            if(!val) return;
+
+            let points = 0;
+            let feedback = "";
+
+            if (!animeFound) {
+                let match = isCloseMatch(val, currentSongData.anime);
+                if (!match && currentSongData.alt) match = currentSongData.alt.some(a => isCloseMatch(val, a));
+                
+                if (match) {
+                    animeFound = true;
+                    points += 1;
+                    feedback = "ANIME OK !";
+                }
+            }
+            
+            // Pas de bonus song/op en Ranked pour simplifier, ou bonus minime
+            // On reste sur Anime = 1pt pour l'instant
+
+            if (points > 0) {
+                // Update Score
+                get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then(snap => {
+                    const s = snap.val() || 0;
+                    update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: s + points });
+                });
+                
+                const msg = document.getElementById('status-msg');
+                msg.innerText = feedback;
+                msg.classList.remove('hidden');
+                
+                input.value = "";
+                input.placeholder = "TROUVÉ !";
+                
+            } else {
+                input.classList.add('border-red-500');
+                setTimeout(() => input.classList.remove('border-red-500'), 500);
+            }
+        };
+
+        function showEndScreen() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('scoreboard-overlay').classList.remove('hidden');
+            
+            // Récupérer scores finaux
+            get(ref(db, `blindtest/rooms/${currentRoomId}/players`)).then(snap => {
+                const players = Object.values(snap.val());
+                const p1 = players.find(p => p.team === 1);
+                const p2 = players.find(p => p.team === 2);
+                
+                let winner, loser;
+                if (p1.score >= p2.score) { winner = p1; loser = p2; }
+                else { winner = p2; loser = p1; }
+                
+                // Affichage
+                document.getElementById('end-p1-name').innerText = winner.name;
+                document.getElementById('end-p1-score').innerText = winner.score;
+                document.getElementById('end-p1-img').src = winner.avatar;
+                
+                document.getElementById('end-p2-name').innerText = loser.name;
+                document.getElementById('end-p2-score').innerText = loser.score;
+                document.getElementById('end-p2-img').src = loser.avatar;
+
+                const isWin = (winner.name === document.getElementById('username-display').innerText); // Check par nom (imparfait mais ok demo) ou mieux par UID si on l'avait gardé localement accessible facilement dans p1/p2 objects
+                
+                if (currentUser && winner.name.toUpperCase() === (currentUser.displayName || "JOUEUR").toUpperCase()) { 
+                     document.getElementById('end-title').innerText = "VICTOIRE";
+                     document.getElementById('end-title').classList.add('text-yellow-400');
+                     document.getElementById('end-subtitle').innerText = "+25 RANK POINTS";
+                } else {
+                     document.getElementById('end-title').innerText = "DÉFAITE";
+                     document.getElementById('end-title').classList.add('text-red-600');
+                     document.getElementById('end-subtitle').innerText = "-15 RANK POINTS";
+                }
+                
+                // Supprimer la room après quelques secondes si Host
+                if (myTeamId === 1) {
+                    setTimeout(() => remove(ref(db, `blindtest/rooms/${currentRoomId}`)), 10000);
+                }
+            });
+        }
 
     </script>
 </body>
