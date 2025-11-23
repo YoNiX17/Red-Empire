@@ -340,7 +340,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
         // --- CHARGEMENT DE LA BASE DE DONNÉES DEPUIS LE FICHIER EXTERNE ---
         let OP_DATABASE = [];
@@ -381,6 +381,7 @@
         let currentRoomId = null;
         let isSearchActive = false;
         let searchInterval = null;
+        let heartbeatInterval = null; // IMPORTANT: Pour le maintien de vie
         let searchSeconds = 0;
         
         // Variables Jeu
@@ -459,6 +460,13 @@
                 const secs = (searchSeconds%60).toString().padStart(2, '0');
                 document.getElementById('search-timer').innerText = `${mins}:${secs}`;
             }, 1000);
+            
+            // HEARTBEAT : Signaler qu'on est vivant toutes les 2 secondes
+            heartbeatInterval = setInterval(() => {
+                if(currentUser && isSearchActive) {
+                    update(ref(db, `blindtest/queue/${currentUser.uid}`), { timestamp: Date.now() });
+                }
+            }, 2000);
 
             // 1. Ajouter à la Queue
             const queueRef = ref(db, `blindtest/queue/${currentUser.uid}`);
@@ -466,7 +474,7 @@
                 uid: currentUser.uid,
                 name: document.getElementById('username-display').innerText,
                 avatar: document.getElementById('user-avatar').src,
-                timestamp: Date.now()
+                timestamp: Date.now() // Timestamp initial
             };
             
             await set(queueRef, myProfile);
@@ -479,6 +487,7 @@
         window.cancelMatchmaking = async () => {
             isSearchActive = false;
             clearInterval(searchInterval);
+            clearInterval(heartbeatInterval);
             document.getElementById('state-idle').classList.remove('hidden');
             document.getElementById('state-searching').classList.add('hidden');
             
@@ -487,39 +496,10 @@
             }
         };
 
-        // Fonction récursive pour chercher un match
-        function findOpponent(myProfile) {
-            if(!isSearchActive) return;
-
-            // Ecoute UNIQUE sur la queue (snapshot)
-            get(ref(db, 'blindtest/queue')).then(async (snapshot) => {
-                if(!isSearchActive) return;
-                
-                if (snapshot.exists()) {
-                    const allPlayers = snapshot.val();
-                    const playerIds = Object.keys(allPlayers);
-                    
-                    // Trouver quelqu'un qui n'est pas moi
-                    const opponentId = playerIds.find(id => id !== currentUser.uid);
-
-                    if (opponentId) {
-                        const opponent = allPlayers[opponentId];
-                        console.log("Adversaire trouvé !", opponent.name);
-                        // Appel de création (logique ci-dessous qui surcharge)
-                    } else {
-                        // Personne ? On réessaye dans 1s
-                        setTimeout(() => findOpponent(myProfile), 2000);
-                    }
-                } else {
-                     setTimeout(() => findOpponent(myProfile), 2000);
-                }
-            });
-        }
-
-        // --- VERSION SIMPLIFIÉE DU MATCHMAKING (POUR PROTOTYPE) ---
+        // --- VERSION CORRIGÉE : DETECTION JOUEURS FANTÔMES ---
         let queueListener = null;
         
-        // Surcharge de findOpponent pour utiliser onValue
+        // Surcharge de findOpponent pour utiliser onValue avec filtre de temps
         window.findOpponent = (myProfile) => {
             const queueRef = ref(db, 'blindtest/queue');
             
@@ -528,9 +508,22 @@
                 
                 const players = snapshot.val();
                 const ids = Object.keys(players);
+                const now = Date.now();
                 
-                // Si je vois un autre joueur
-                const opponentId = ids.find(id => id !== currentUser.uid);
+                // On cherche un adversaire valide (vivant)
+                const opponentId = ids.find(id => {
+                    // C'est moi, on skip
+                    if (id === currentUser.uid) return false;
+                    
+                    const p = players[id];
+                    // VÉRIFICATION VITALE : Si le timestamp est vieux de +10s, c'est un fantôme
+                    if (!p.timestamp || (now - p.timestamp > 10000)) {
+                        console.log(`Joueur fantôme détecté et supprimé : ${p.name}`);
+                        remove(ref(db, `blindtest/queue/${id}`)); // NETTOYAGE AUTO
+                        return false;
+                    }
+                    return true;
+                });
                 
                 if (opponentId) {
                     // CONFLIT RESOLUTION: On utilise l'ordre alphabétique des UID pour décider qui crée la salle
@@ -540,6 +533,7 @@
                         // JE CRÉE LA SALLE
                         const roomId = "RANKED_" + Math.floor(Math.random()*100000);
                         const opponent = players[opponentId];
+                        console.log("Création de la partie contre :", opponent.name);
                         
                         // Créer la salle
                         const roomData = {
@@ -561,6 +555,8 @@
                         updates[`blindtest/queue/${opponentId}/matchId`] = roomId;
                         
                         await update(ref(db), updates);
+                    } else {
+                        console.log("Attente que l'adversaire crée la salle...");
                     }
                 }
                 
@@ -568,10 +564,12 @@
                 if (players[currentUser.uid] && players[currentUser.uid].matchId) {
                     // BINGO !
                     const matchId = players[currentUser.uid].matchId;
+                    console.log("Match rejoint :", matchId);
                     
                     // Nettoyage Queue
                     isSearchActive = false;
                     clearInterval(searchInterval);
+                    clearInterval(heartbeatInterval);
                     off(queueRef, queueListener); // Stop listening queue
                     
                     // On supprime notre entrée de queue (proprement)
