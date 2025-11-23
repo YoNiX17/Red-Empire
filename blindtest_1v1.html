@@ -29,7 +29,6 @@
         
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* --- PANNEAUX MANGA DARK --- */
         .manga-panel {
             background: var(--panel-bg);
             border: 3px solid var(--border-color);
@@ -46,7 +45,6 @@
             pointer-events: none;
         }
 
-        /* --- BOUTONS POP --- */
         .btn-pop {
             background: var(--border-color);
             color: var(--dark-bg);
@@ -82,18 +80,15 @@
             border-color: #ff4444;
         }
 
-        /* --- TIMER BAR --- */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
         .timer-running { animation: shrink linear forwards; }
 
-        /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
 
-        /* --- INPUT STYLE --- */
         .input-manga {
             border: 3px solid var(--border-color);
             background: #222;
@@ -105,7 +100,6 @@
         .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
         .input-manga::placeholder { color: #666; }
 
-        /* --- LOADER SPINNER --- */
         .loader-ring { display: inline-block; width: 64px; height: 64px; }
         .loader-ring:after {
             content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%;
@@ -114,7 +108,6 @@
         }
         @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- ANIMATION VS --- */
         @keyframes slam { 
             0% { transform: scale(3); opacity: 0; } 
             50% { transform: scale(1); opacity: 1; }
@@ -138,7 +131,7 @@
         </div>
 
         <div id="user-badge" class="flex items-center gap-2 bg-gray-800 px-4 py-1 rounded-full border-2 border-white">
-            <span class="text-yellow-400 font-manga text-lg mr-2">1200 LP</span> <!-- League Points -->
+            <span class="text-yellow-400 font-manga text-lg mr-2">1200 LP</span>
             <div class="w-8 h-8 rounded-full border border-white overflow-hidden bg-black">
                 <img id="user-avatar" src="" class="w-full h-full object-cover">
             </div>
@@ -147,11 +140,8 @@
     </nav>
 
 
-    <!-- ========================================== -->
-    <!-- ÉCRAN 1 : MATCHMAKING DASHBOARD            -->
-    <!-- ========================================== -->
+    <!-- ÉCRAN 1 : MATCHMAKING DASHBOARD -->
     <div id="screen-menu" class="flex-grow flex items-center justify-center p-4 relative">
-        <!-- Background Elements -->
         <div class="absolute top-10 left-10 opacity-20 transform -rotate-12 pointer-events-none">
             <i class="fa-solid fa-trophy text-9xl text-yellow-500"></i>
         </div>
@@ -160,8 +150,6 @@
         </div>
 
         <div class="manga-panel p-8 max-w-lg w-full text-center speed-lines z-10">
-            
-            <!-- RANK BADGE -->
             <div class="w-32 h-32 mx-auto mb-4 relative">
                 <div class="absolute inset-0 bg-yellow-400 rounded-full blur-lg opacity-20 animate-pulse"></div>
                 <img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" class="w-full h-full object-contain drop-shadow-lg relative z-10" alt="Rank Icon">
@@ -174,7 +162,6 @@
                 <span><i class="fa-solid fa-gamepad text-yellow-500"></i> MODE 1v1</span>
             </div>
             
-            <!-- ETAT : IDLE -->
             <div id="state-idle" class="space-y-4">
                 <button onclick="startMatchmaking()" class="btn-pop btn-red w-full py-6 text-3xl tracking-wider rounded-lg transform transition hover:scale-105 shadow-[0_0_20px_rgba(255,46,46,0.5)]">
                     <i class="fa-solid fa-swords mr-3"></i> TROUVER UN MATCH
@@ -183,7 +170,6 @@
                 <p id="db-status" class="text-[10px] text-gray-600 font-mono mt-1">Status DB: Chargement...</p>
             </div>
 
-            <!-- ETAT : SEARCHING -->
             <div id="state-searching" class="hidden space-y-6 py-4">
                 <div class="flex flex-col items-center">
                     <div class="loader-ring mb-4"></div>
@@ -195,7 +181,6 @@
                 </button>
             </div>
 
-             <!-- ETAT : FOUND (VS SCREEN) -->
              <div id="state-found" class="hidden py-4">
                 <h3 class="font-manga text-5xl text-red-600 vs-text mb-4">MATCH TROUVÉ !</h3>
                 <div class="flex items-center justify-between px-4 mt-6">
@@ -220,14 +205,10 @@
     </div>
 
 
-    <!-- ========================================== -->
-    <!-- ÉCRAN 2 : JEU (IN GAME) - SIMPLIFIÉ        -->
-    <!-- ========================================== -->
+    <!-- ÉCRAN 2 : JEU (IN GAME) -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#111]">
         
-        <!-- Timer & Info Duel -->
         <div class="w-full bg-[#1a1a1a] p-3 border-b-4 border-white flex justify-between items-center px-4 md:px-12 shadow-lg z-20">
-            <!-- P1 Score -->
             <div class="flex items-center gap-3">
                 <div class="text-right hidden md:block">
                     <div class="font-manga text-blue-400 text-lg" id="game-p1-name">JOUEUR 1</div>
@@ -236,7 +217,6 @@
                 <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="game-p1-score">0</div>
             </div>
 
-            <!-- Timer Central -->
             <div class="flex-1 max-w-md mx-4 flex flex-col items-center">
                 <div class="font-manga text-xl text-yellow-400 mb-1">ROUND <span id="current-round-display">1</span>/10</div>
                 <div class="timer-container w-full shadow-inner bg-black">
@@ -244,7 +224,6 @@
                 </div>
             </div>
 
-            <!-- P2 Score -->
             <div class="flex items-center gap-3">
                 <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="game-p2-score">0</div>
                 <div class="text-left hidden md:block">
@@ -254,7 +233,6 @@
             </div>
         </div>
 
-        <!-- SCOREBOARD FINAL (FIN DE MATCH) -->
         <div id="scoreboard-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex items-center justify-center">
              <div class="manga-panel p-8 max-w-2xl w-full text-center bg-[#1a1a1a] border-4 border-yellow-400">
                  <h2 class="text-6xl font-manga text-white mb-2 text-shadow-black" id="end-title">VICTOIRE !</h2>
@@ -280,10 +258,8 @@
              </div>
         </div>
 
-        <!-- CENTRE : GAMEPLAY (Copie adaptée) -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- Video & Vinyl Container -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-4xl max-h-[60vh] bg-black border-4 border-white rounded-lg overflow-hidden">
                     <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
@@ -294,7 +270,6 @@
                 <div class="loader-ring"></div>
             </div>
 
-            <!-- Disque -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
                 <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
                     <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10"></div>
@@ -306,20 +281,16 @@
                 </div>
 
                 <div id="status-indicators" class="flex gap-4 mt-2 flex-wrap justify-center h-8">
-                    <!-- Feedback visuel immédiat -->
                     <div id="status-msg" class="text-yellow-400 font-manga text-xl animate-bounce hidden">TITRE TROUVÉ !</div>
                 </div>
             </div>
-             <!-- Volume -->
              <div class="absolute top-4 right-4 z-30 bg-[#222] border-2 border-white rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
                 <i class="fa-solid fa-volume-high text-gray-400"></i>
                 <input type="range" min="0" max="1" step="0.1" class="w-20 accent-white h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
         </div>
 
-        <!-- BAS : INPUT RÉPONSE -->
         <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-            <!-- Résultat Overlay (Pop-up réponse) -->
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
                 <div class="bg-yellow-400 border-4 border-black p-4 w-full max-w-xl text-center shadow-[8px_8px_0px_#000] transform -rotate-1">
                     <h2 id="res-anime" class="text-2xl md:text-4xl font-manga text-black uppercase truncate">ANIME NAME</h2>
@@ -342,10 +313,8 @@
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
-        // --- CHARGEMENT DE LA BASE DE DONNÉES DEPUIS LE FICHIER EXTERNE ---
         let OP_DATABASE = [];
         try {
-            // Import dynamique du fichier qui se trouve dans le même répertoire
             const module = await import("./op_database.js");
             OP_DATABASE = module.OP_DATABASE;
             console.log("DB chargée :", OP_DATABASE.length, "openings");
@@ -353,12 +322,9 @@
             document.getElementById('db-status').classList.add('text-green-500');
         } catch (e) {
             console.error("Erreur chargement op_database.js", e);
-            document.getElementById('db-status').innerText = "Status DB: ERREUR (Vérifiez le fichier)";
+            document.getElementById('db-status').innerText = "Status DB: ERREUR";
             document.getElementById('db-status').classList.add('text-red-500');
-            // Petit fallback minimaliste pour ne pas que le script crash totalement
-             OP_DATABASE = [
-                { anime: "Error", song: "File Not Found", url: "", alt: [] }
-            ];
+             OP_DATABASE = [ { anime: "Error", song: "File Not Found", url: "", alt: [] } ];
         }
 
         const firebaseConfig = {
@@ -381,27 +347,31 @@
         let currentRoomId = null;
         let isSearchActive = false;
         let searchInterval = null;
-        let heartbeatInterval = null; // IMPORTANT: Pour le maintien de vie
+        let heartbeatInterval = null;
         let searchSeconds = 0;
         
-        // Variables Jeu
-        let myTeamId = 1; // 1 (Blue) ou 2 (Red)
-        let opponentName = "Adversaire";
+        let myTeamId = 1; 
         let currentSongData = null;
         let roundTimer = null;
+        let fallbackTimer = null; // Important: Timer de secours
         let userVolume = 0.5;
         let animeFound = false;
-        let songFound = false;
 
-        // Éléments DOM
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // --- AUTH & INIT ---
+        // Gestion erreurs vidéo
+        videoEl.onerror = () => {
+            console.error("Erreur lecture vidéo !");
+            // Si la vidéo plante, on force le démarrage du timer si on est Host
+            if (myTeamId === 1 && !roundTimer) {
+                startRoundTimer(15);
+            }
+        };
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                // Get profile or default
                 let name = user.displayName || "Joueur";
                 let avatar = "https://ui-avatars.com/api/?background=random&name=" + name;
                 
@@ -417,8 +387,6 @@
                 document.getElementById('username-display').innerText = name.toUpperCase();
                 document.getElementById('user-avatar').src = avatar;
                 document.getElementById('p1-img').src = avatar;
-
-                // Mise à jour compteur online
                 updateOnlineCount();
             } else {
                await signInAnonymously(auth);
@@ -426,12 +394,10 @@
         });
 
         function updateOnlineCount() {
-            // Simple simulation pour l'effet visuel
             const count = Math.floor(Math.random() * 30) + 10;
             document.getElementById('online-count').innerText = count;
         }
 
-        // --- VOLUME ---
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
@@ -441,19 +407,15 @@
             if(videoEl) videoEl.volume = userVolume;
         }
 
-        // --- LOGIQUE DE MATCHMAKING (RANKED QUEUE) ---
-        
         window.startMatchmaking = async () => {
             if(!currentUser) return;
             if(OP_DATABASE.length <= 1) return alert("Base de données non chargée !");
             
-            // UI Update
             document.getElementById('state-idle').classList.add('hidden');
             document.getElementById('state-searching').classList.remove('hidden');
             isSearchActive = true;
             searchSeconds = 0;
             
-            // Timer visuel
             searchInterval = setInterval(() => {
                 searchSeconds++;
                 const mins = Math.floor(searchSeconds/60).toString().padStart(2, '0');
@@ -461,26 +423,23 @@
                 document.getElementById('search-timer').innerText = `${mins}:${secs}`;
             }, 1000);
             
-            // HEARTBEAT : Signaler qu'on est vivant toutes les 2 secondes
             heartbeatInterval = setInterval(() => {
                 if(currentUser && isSearchActive) {
                     update(ref(db, `blindtest/queue/${currentUser.uid}`), { timestamp: Date.now() });
                 }
             }, 2000);
 
-            // 1. Ajouter à la Queue
             const queueRef = ref(db, `blindtest/queue/${currentUser.uid}`);
             const myProfile = {
                 uid: currentUser.uid,
                 name: document.getElementById('username-display').innerText,
                 avatar: document.getElementById('user-avatar').src,
-                timestamp: Date.now() // Timestamp initial
+                timestamp: Date.now()
             };
             
             await set(queueRef, myProfile);
-            onDisconnect(queueRef).remove(); // Si on ferme l'onglet, on quitte la queue
+            onDisconnect(queueRef).remove();
 
-            // 2. Chercher un adversaire
             findOpponent(myProfile);
         };
 
@@ -496,10 +455,8 @@
             }
         };
 
-        // --- VERSION CORRIGÉE : DETECTION JOUEURS FANTÔMES ---
         let queueListener = null;
         
-        // Surcharge de findOpponent pour utiliser onValue avec filtre de temps
         window.findOpponent = (myProfile) => {
             const queueRef = ref(db, 'blindtest/queue');
             
@@ -510,32 +467,24 @@
                 const ids = Object.keys(players);
                 const now = Date.now();
                 
-                // On cherche un adversaire valide (vivant)
                 const opponentId = ids.find(id => {
-                    // C'est moi, on skip
                     if (id === currentUser.uid) return false;
-                    
                     const p = players[id];
-                    // VÉRIFICATION VITALE : Si le timestamp est vieux de +10s, c'est un fantôme
                     if (!p.timestamp || (now - p.timestamp > 10000)) {
-                        console.log(`Joueur fantôme détecté et supprimé : ${p.name}`);
-                        remove(ref(db, `blindtest/queue/${id}`)); // NETTOYAGE AUTO
+                        console.log(`Joueur fantôme supprimé : ${p.name}`);
+                        remove(ref(db, `blindtest/queue/${id}`));
                         return false;
                     }
                     return true;
                 });
                 
                 if (opponentId) {
-                    // CONFLIT RESOLUTION: On utilise l'ordre alphabétique des UID pour décider qui crée la salle
                     const amICreator = currentUser.uid < opponentId;
                     
                     if (amICreator) {
-                        // JE CRÉE LA SALLE
                         const roomId = "RANKED_" + Math.floor(Math.random()*100000);
                         const opponent = players[opponentId];
-                        console.log("Création de la partie contre :", opponent.name);
                         
-                        // Créer la salle
                         const roomData = {
                             status: 'playing',
                             createdAt: Date.now(),
@@ -544,45 +493,31 @@
                                 [opponentId]: { name: opponent.name, avatar: opponent.avatar, team: 2, score: 0 }
                             },
                             settings: { duration: 15, rounds: 10, teamCount: 2, suddenDeath: false },
-                            gameState: generateNewGame(10) // Générer le deck
+                            gameState: generateNewGame(10)
                         };
                         
                         await set(ref(db, `blindtest/rooms/${roomId}`), roomData);
                         
-                        // Signaler à l'adversaire (et moi-même) via un noeud "match" dans la queue
                         const updates = {};
                         updates[`blindtest/queue/${currentUser.uid}/matchId`] = roomId;
                         updates[`blindtest/queue/${opponentId}/matchId`] = roomId;
-                        
                         await update(ref(db), updates);
-                    } else {
-                        console.log("Attente que l'adversaire crée la salle...");
                     }
                 }
                 
-                // Vérifier si ON M'A assigné un match
                 if (players[currentUser.uid] && players[currentUser.uid].matchId) {
-                    // BINGO !
                     const matchId = players[currentUser.uid].matchId;
-                    console.log("Match rejoint :", matchId);
-                    
-                    // Nettoyage Queue
                     isSearchActive = false;
                     clearInterval(searchInterval);
                     clearInterval(heartbeatInterval);
-                    off(queueRef, queueListener); // Stop listening queue
-                    
-                    // On supprime notre entrée de queue (proprement)
+                    off(queueRef, queueListener);
                     remove(ref(db, `blindtest/queue/${currentUser.uid}`));
-                    
                     joinRankedGame(matchId);
                 }
             });
         };
         
-        // Générateur de partie (Deck)
         function generateNewGame(rounds) {
-            // Mélange
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             let deck = [];
             let temp = [...allIndices];
@@ -595,60 +530,55 @@
             return {
                 currentRound: 1,
                 songIndex: deck[0],
-                startTime: Date.now() + 4000, // +4s pour l'anim VS
+                startTime: Date.now() + 4000,
                 phase: 'guessing',
                 deck: deck,
                 seekTime: Math.floor(Math.random() * 11) + 40
             };
         }
 
-        // --- ENTRÉE DANS LA PARTIE ---
         async function joinRankedGame(roomId) {
             currentRoomId = roomId;
-            
-            // 1. Charger données adversaire pour l'écran VS
             const roomSnap = await get(ref(db, `blindtest/rooms/${roomId}/players`));
+            if(!roomSnap.exists()) return;
             const players = roomSnap.val();
             
             let myData = players[currentUser.uid];
+            // Safety Check
+            if(!myData) { console.error("Erreur Join"); return; }
+
             let oppData = Object.values(players).find(p => p.name !== myData.name) || { name: "Adversaire", avatar: "" };
             
-            myTeamId = myData.team; // 1 ou 2
+            myTeamId = myData.team; 
+            console.log("Ma Team ID:", myTeamId);
             
             document.getElementById('p2-img').src = oppData.avatar || "https://via.placeholder.com/150";
             
-            // 2. Afficher VS Screen
             document.getElementById('state-searching').classList.add('hidden');
             document.getElementById('state-found').classList.remove('hidden');
             
-            // 3. Lancer le jeu après délai (animation VS)
             setTimeout(() => {
                 document.getElementById('screen-menu').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
                 
-                // Initialiser l'interface de jeu (Noms, scores)
                 document.getElementById('game-p1-name').innerText = (myTeamId === 1) ? myData.name : oppData.name;
                 document.getElementById('game-p2-name').innerText = (myTeamId === 1) ? oppData.name : myData.name;
                 
-                // Lancer la synchro
                 initGameSync(roomId);
             }, 3500);
         }
 
-        // --- SYNCHRONISATION DU JEU (Copie adaptée de ton code) ---
         function initGameSync(roomId) {
             onValue(ref(db, `blindtest/rooms/${roomId}`), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return; // Room supprimée
+                if (!data) return;
 
-                // Scores Update
                 let p1 = Object.values(data.players).find(p => p.team === 1);
                 let p2 = Object.values(data.players).find(p => p.team === 2);
                 
                 if(p1) document.getElementById('game-p1-score').innerText = p1.score;
                 if(p2) document.getElementById('game-p2-score').innerText = p2.score;
 
-                // Game Loop Update
                 handleGameState(data.gameState, data.settings);
             });
         }
@@ -663,15 +593,20 @@
                  return;
             }
 
-            // Nouveau round détecté
+            // RESET COMPLET SI NOUVEAU ROUND
             if (gameState.currentRound !== lastRound) {
                 lastRound = gameState.currentRound;
                 document.getElementById('current-round-display').innerText = gameState.currentRound;
-                // Reset visuel
                 document.getElementById('status-msg').classList.add('hidden');
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('result-display').classList.add('hidden');
+                
+                // FORCE RESET VIDEO
+                videoEl.pause();
+                videoEl.removeAttribute('src'); // Clean source
+                videoEl.load();
+                console.log("Reset Round", gameState.currentRound);
             }
 
             if (gameState.phase === lastPhase && gameState.startTime === currentStartTime) return;
@@ -680,42 +615,70 @@
             currentStartTime = gameState.startTime;
             currentSongData = OP_DATABASE[gameState.songIndex];
 
+            // NETTOYAGE TIMERS PRÉCÉDENTS
+            if(roundTimer) clearTimeout(roundTimer);
+            if(fallbackTimer) clearTimeout(fallbackTimer);
+            roundTimer = null;
+            fallbackTimer = null;
+
             if (gameState.phase === 'guessing') {
-                // Setup Phase Devinette
-                animeFound = false; songFound = false;
+                animeFound = false;
                 
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
                 diskEl.classList.add('disk-paused');
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 
+                // CHARGEMENT NOUVELLE VIDÉO
                 videoEl.src = currentSongData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
-                videoEl.addEventListener('playing', () => {
+                // FONCTION QUI DÉMARRE LE TIMER (Centralisée)
+                const startTimerLogic = () => {
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
                     
                     const bar = document.getElementById('game-timer-bar');
                     bar.classList.remove('timer-running');
-                    void bar.offsetWidth; // Trigger reflow
+                    void bar.offsetWidth; 
                     bar.style.animationDuration = settings.duration + 's';
                     bar.classList.add('timer-running');
 
-                    // Si je suis Host (Team 1 par convention dans la création), je gère le timer
-                    if (myTeamId === 1) { 
-                        clearTimeout(roundTimer);
-                        roundTimer = setTimeout(() => {
-                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                        }, settings.duration * 1000);
+                    if (myTeamId === 1 && !roundTimer) {
+                         startRoundTimer(settings.duration);
                     }
-                }, { once: true });
+                };
+
+                // ECOUTEUR DE LECTURE STANDARD
+                videoEl.addEventListener('playing', startTimerLogic, { once: true });
                 
-                videoEl.play().catch(e => console.log("Play error", e));
+                // TENTATIVE DE LECTURE
+                var playPromise = videoEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Auto-play bloqué ou erreur :", error);
+                        // Même si ça bloque, on force l'affichage après un court délai pour que le joueur puisse interagir
+                        // Mais surtout, si on est HOST, on doit lancer le timer quand même sinon le jeu freeze !
+                        if(myTeamId === 1) {
+                            console.log("Host : Forçage du timer suite erreur lecture");
+                            startRoundTimer(settings.duration); 
+                        }
+                    });
+                }
+
+                // SÉCURITÉ HOST : Si après 5s rien ne s'est passé (lag, bug), on lance quand même
+                if (myTeamId === 1) {
+                    fallbackTimer = setTimeout(() => {
+                        if(!roundTimer) {
+                            console.warn("Host : Fallback Timer activé (Vidéo trop lente)");
+                            startTimerLogic(); // Force l'UI locale
+                            startRoundTimer(settings.duration); // Force la DB
+                        }
+                    }, 5000);
+                }
 
             } else if (gameState.phase === 'reveal') {
-                // Setup Phase Révélation
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
@@ -725,28 +688,39 @@
 
                 if (myTeamId === 1) {
                     setTimeout(() => {
-                        // Round suivant
                         const nextRound = gameState.currentRound + 1;
-                        // Fin de partie gérée au début de la fonction
-                        
-                        const nextIndex = gameState.deck[gameState.currentRound]; // Index brut car round commence à 1
+                        // Calcul du prochain index
+                        let nextIndex = 0;
+                        if (gameState.deck && gameState.deck[nextRound-1] !== undefined) {
+                             nextIndex = gameState.deck[nextRound-1]; // -1 car array 0-indexed
+                        } else {
+                             // Fallback si deck vide ou fin
+                             nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
+                        }
+
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
 
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: nextRound,
-                            songIndex: nextIndex || 0,
+                            songIndex: nextIndex,
                             startTime: Date.now(),
                             phase: 'guessing',
                             seekTime: nextSeek
                         });
-                    }, 6000); // 6s de révélation
+                    }, 6000); 
                 }
             }
         }
+
+        // Fonction séparée pour lancer le timer DB
+        function startRoundTimer(duration) {
+            if(roundTimer) clearTimeout(roundTimer);
+            console.log("Timer lancé pour", duration, "secondes");
+            roundTimer = setTimeout(() => {
+                update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+            }, duration * 1000);
+        }
         
-        // --- LOGIQUE RÉPONSE ---
-        
-        // Fonction Levenshtein (Même que ton fichier)
         function levenshtein(a,b){if(a.length==0)return b.length;if(b.length==0)return a.length;var matrix=[];var i;for(i=0;i<=b.length;i++){matrix[i]=[i];}var j;for(j=0;j<=a.length;j++){matrix[0][j]=j;}for(i=1;i<=b.length;i++){for(j=1;j<=a.length;j++){if(b.charAt(i-1)==a.charAt(j-1)){matrix[i][j]=matrix[i-1][j-1];}else{matrix[i][j]=Math.min(matrix[i-1][j-1]+1,Math.min(matrix[i][j-1]+1,matrix[i-1][j]+1));}}}return matrix[b.length][a.length];}
         function isCloseMatch(input,target){if(!target)return false;const nI=input.toLowerCase().trim();const nT=target.toLowerCase().trim();if(nI===nT)return true;if(nT.includes(nI)&&nI.length>3)return true;const d=levenshtein(nI,nT);const m=Math.max(nI.length,nT.length);return(1-(d/m))>0.75;}
 
@@ -769,12 +743,8 @@
                     feedback = "ANIME OK !";
                 }
             }
-            
-            // Pas de bonus song/op en Ranked pour simplifier, ou bonus minime
-            // On reste sur Anime = 1pt pour l'instant
 
             if (points > 0) {
-                // Update Score
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then(snap => {
                     const s = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: s + points });
@@ -797,7 +767,6 @@
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('scoreboard-overlay').classList.remove('hidden');
             
-            // Récupérer scores finaux
             get(ref(db, `blindtest/rooms/${currentRoomId}/players`)).then(snap => {
                 const players = Object.values(snap.val());
                 const p1 = players.find(p => p.team === 1);
@@ -807,7 +776,6 @@
                 if (p1.score >= p2.score) { winner = p1; loser = p2; }
                 else { winner = p2; loser = p1; }
                 
-                // Affichage
                 document.getElementById('end-p1-name').innerText = winner.name;
                 document.getElementById('end-p1-score').innerText = winner.score;
                 document.getElementById('end-p1-img').src = winner.avatar;
@@ -816,7 +784,7 @@
                 document.getElementById('end-p2-score').innerText = loser.score;
                 document.getElementById('end-p2-img').src = loser.avatar;
 
-                const isWin = (winner.name === document.getElementById('username-display').innerText); // Check par nom (imparfait mais ok demo) ou mieux par UID si on l'avait gardé localement accessible facilement dans p1/p2 objects
+                const isWin = (winner.name === document.getElementById('username-display').innerText); 
                 
                 if (currentUser && winner.name.toUpperCase() === (currentUser.displayName || "JOUEUR").toUpperCase()) { 
                      document.getElementById('end-title').innerText = "VICTOIRE";
@@ -828,7 +796,6 @@
                      document.getElementById('end-subtitle').innerText = "-15 RANK POINTS";
                 }
                 
-                // Supprimer la room après quelques secondes si Host
                 if (myTeamId === 1) {
                     setTimeout(() => remove(ref(db, `blindtest/rooms/${currentRoomId}`)), 10000);
                 }
