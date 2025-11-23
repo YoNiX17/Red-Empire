@@ -48,7 +48,7 @@
     <div id="screen-matchmaking" class="screen-layer">
         <div class="loader mb-6"></div>
         <h1 id="mm-status" class="text-4xl font-manga text-white mb-2 animate-pulse">RECHERCHE D'ADVERSAIRE...</h1>
-        <p class="text-gray-500 font-mono text-xs">Système de transaction actif</p>
+        <p class="text-gray-500 font-mono text-xs">Système "Chaise Musicale" V2</p>
         <button onclick="window.location.href='blindtest_ranked.html'" class="mt-8 text-red-500 border border-red-500 px-4 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs font-bold">ANNULER</button>
     </div>
 
@@ -142,7 +142,6 @@
         import { getDatabase, ref, set, get, onValue, update, remove, runTransaction, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // CONFIG PROJET
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -158,8 +157,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // ETAT GLOBAL
-        let user = null;
+        let currentUser = null;
         let roomId = null;
         let isHost = false;
         let currentSong = null;
@@ -186,64 +184,63 @@
             feedback: document.getElementById('feedback-overlay')
         };
 
-        // 1. AUTH
         onAuthStateChanged(auth, (u) => {
             if (u) {
-                user = u;
+                currentUser = u;
                 joinMatchmaking();
             } else {
                 window.location.href = 'index.html';
             }
         });
 
-        // 2. MATCHMAKING (Transaction)
-        // C'est ici que ça bloquait avant. Cette méthode est plus sûre.
+        // --- MATCHMAKING "CHAISE MUSICALE" ---
         async function joinMatchmaking() {
-            const queueRef = ref(db, 'blindtest/pending_match');
+            // On utilise une "chaise" publique. Si elle est vide, on s'assoit. Si elle est pleine, on prend la place et on lance.
+            const seatRef = ref(db, 'blindtest/public_seat');
             
-            // On utilise runTransaction pour éviter que 2 personnes prennent la même place
-            const result = await runTransaction(queueRef, (current) => {
-                if (current === null) {
-                    // Personne n'attend, je crée la place (je suis HOST)
-                    return { uid: user.uid, roomId: Math.random().toString(36).substr(2, 9) };
+            const result = await runTransaction(seatRef, (seat) => {
+                if (seat === null) {
+                    // Place vide : Je m'assois (Je suis HOST)
+                    // Je crée une nouvelle roomId et je l'écris sur le siège
+                    return { uid: currentUser.uid, roomId: Math.random().toString(36).substr(2, 9) };
                 } else {
-                    // Quelqu'un attend, je prends la place (je suis GUEST) et je supprime le node
-                    return null; // Supprimer = valider le match
+                    // Place prise : Je prends le papier (roomId) et je laisse le siège vide pour les prochains (Je suis GUEST)
+                    // Pour la transaction, je return null pour supprimer le siège
+                    return null; 
                 }
             });
 
             if (result.committed) {
-                // Si j'ai écrit (HOST)
-                if (result.snapshot.val() && result.snapshot.val().uid === user.uid) {
+                const seatData = result.snapshot.val(); // Ce qui était sur le siège AVANT (si delete) ou ce que j'ai mis (si write)
+
+                if (seatData && seatData.uid === currentUser.uid) {
+                    // J'ai écrit mon nom -> Je suis HOST
+                    roomId = seatData.roomId;
                     isHost = true;
-                    roomId = result.snapshot.val().roomId;
-                    els.mmStatus.innerText = "EN ATTENTE D'UN JOUEUR...";
+                    els.mmStatus.innerText = "EN ATTENTE DU JOUEUR 2...";
                     
-                    // Je crée la salle
+                    // 1. Je crée la salle
                     await createRoom(roomId);
                     
-                    // J'écoute la salle pour voir quand le guest arrive
+                    // 2. Je surveille la salle. Dès qu'elle passe à 2 joueurs, c'est que J2 est là.
                     listenToRoom();
                     
-                    // Nettoyage si je quitte avant
-                    onDisconnect(queueRef).remove();
+                    // Sécurité : si je pars, je libère le siège
+                    onDisconnect(seatRef).remove();
                     onDisconnect(ref(db, `blindtest/rooms/${roomId}`)).remove();
-                }
-                // Si j'ai supprimé (GUEST) -> J'ai matché avec celui qui était dans snapshot
-                else {
-                    const hostData = result.snapshot.val(); // Les données avant suppression
-                    if (hostData) {
-                        isHost = false;
-                        roomId = hostData.roomId;
-                        els.mmStatus.innerText = "ADVERSAIRE TROUVÉ !";
-                        
-                        // Je rejoins la salle de l'host
-                        await joinRoom(roomId);
-                        listenToRoom();
-                    } else {
-                        // Cas rare (conflit), on réessaie
-                        setTimeout(joinMatchmaking, 500);
-                    }
+
+                } else if (seatData) {
+                    // J'ai supprimé quelqu'un -> Je suis GUEST
+                    // seatData contient l'info de l'hôte
+                    roomId = seatData.roomId;
+                    isHost = false;
+                    els.mmStatus.innerText = "ADVERSAIRE TROUVÉ !";
+                    
+                    // 1. Je rejoins la salle de l'hôte
+                    await joinRoom(roomId);
+                    
+                    // 2. J'écoute
+                    listenToRoom();
                 }
             }
         }
@@ -251,41 +248,42 @@
         async function createRoom(rid) {
             const p = await getProfile();
             await set(ref(db, `blindtest/rooms/${rid}`), {
-                host: user.uid,
-                players: { [user.uid]: { ...p, team: 1, score: 0 } },
+                host: currentUser.uid,
+                players: { [currentUser.uid]: { ...p, team: 1, score: 0 } },
                 status: 'waiting'
             });
         }
 
         async function joinRoom(rid) {
             const p = await getProfile();
-            await update(ref(db, `blindtest/rooms/${rid}/players/${user.uid}`), {
+            await update(ref(db, `blindtest/rooms/${rid}/players/${currentUser.uid}`), {
                 ...p, team: 2, score: 0
             });
         }
 
         async function getProfile() {
             try {
-                const s = await get(child(ref(db), `users/${user.uid}`));
-                if(s.exists()) return { name: s.val().username || user.displayName, avatar: s.val().avatar || "" };
+                const s = await get(child(ref(db), `users/${currentUser.uid}`));
+                if(s.exists()) return { name: s.val().username || currentUser.displayName, avatar: s.val().avatar || "" };
             } catch(e){}
-            return { name: user.displayName, avatar: user.photoURL };
+            return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
-        // 3. ECOUTE SALLE & SYNCHRO
+        // --- ECOUTE ET LOGIQUE ---
         function listenToRoom() {
             onValue(ref(db, `blindtest/rooms/${roomId}`), (snap) => {
                 const data = snap.val();
                 if (!data) return;
 
-                // UI JOUEURS
+                // GESTION JOUEURS
                 if (data.players) {
                     const list = Object.values(data.players);
                     updatePlayerUI(list);
 
-                    // HOST : Si 2 joueurs, on lance le timer de départ
+                    // DÉMARRAGE (HOST SEULEMENT)
+                    // Si on attend et qu'on est 2, on lance le chrono
                     if (isHost && data.status === 'waiting' && list.length === 2) {
-                        const launchTime = Date.now() + 5000;
+                        const launchTime = Date.now() + 5000; // 5 secondes
                         update(ref(db, `blindtest/rooms/${roomId}`), { 
                             status: 'starting', 
                             launchTime: launchTime 
@@ -293,12 +291,12 @@
                     }
                 }
 
-                // ETATS
+                // GESTION ETATS
                 if (data.status === 'starting' && data.launchTime) {
                     startCountdown(data.launchTime);
                 }
                 else if (data.status === 'playing' && data.gameState) {
-                    if(localTimerInterval) clearInterval(localTimerInterval); // Stop countdown
+                    if(localTimerInterval) clearInterval(localTimerInterval);
                     handleGameState(data.gameState);
                 }
             });
@@ -335,18 +333,16 @@
                 } else {
                     document.getElementById('start-countdown').innerText = "GO!";
                     clearInterval(localTimerInterval);
-                    // HOST : Lance le jeu
                     if(isHost) initGameEngine();
                 }
             }, 100);
         }
 
-        // --- MOTEUR DE JEU ---
         function initGameEngine() {
-            // Génération Deck
+            // Création du deck
             const deck = [];
             for(let i=0; i<OP_DATABASE.length; i++) deck.push(i);
-            deck.sort(() => Math.random() - 0.5); // Shuffle
+            deck.sort(() => Math.random() - 0.5);
 
             update(ref(db, `blindtest/rooms/${roomId}`), {
                 status: 'playing',
@@ -362,13 +358,11 @@
         }
 
         function handleGameState(state) {
-            // Afficher le jeu
             els.screenVs.classList.add('hidden-layer');
             els.gameHud.classList.remove('hidden');
             els.gameLayer.classList.remove('hidden');
             els.inputArea.classList.remove('hidden');
 
-            // Check si état a changé
             const stateKey = `${state.phase}-${state.round}-${state.startTime}`;
             if (currentPhase === stateKey) return;
             currentPhase = stateKey;
@@ -377,7 +371,6 @@
             document.getElementById('round-display').innerText = state.round;
 
             if (state.phase === 'guessing') {
-                // MODE GUESS
                 els.viewVideo.classList.add('hidden');
                 els.viewVinyl.classList.remove('hidden');
                 els.feedback.classList.add('hidden');
@@ -387,13 +380,11 @@
                 els.input.focus();
                 hasGuessed = false;
 
-                // Audio
                 els.audio.src = currentSong.url;
                 els.audio.currentTime = state.seek;
                 els.audio.volume = 0.5;
-                els.audio.play().catch(e => console.log("Autoplay blocked"));
+                els.audio.play().catch(e => console.log("Autoplay block"));
 
-                // Timer
                 els.timerBar.style.transition = 'none';
                 els.timerBar.style.width = '100%';
                 setTimeout(() => {
@@ -401,16 +392,15 @@
                     els.timerBar.style.width = '0%';
                 }, 50);
 
-                // HOST Timeout
-                if(isHost) {
+                if (isHost) {
                     setTimeout(() => {
-                        // Vérif si toujours le même round (pas de mort subite déjà trigger)
-                        update(ref(db, `blindtest/rooms/${roomId}/gameState/phase`), 'reveal');
+                        update(ref(db, `blindtest/rooms/${roomId}/gameState`), { 
+                            ...state, phase: 'reveal', startTime: Date.now() 
+                        });
                     }, 15000);
                 }
 
             } else if (state.phase === 'reveal') {
-                // MODE REVEAL
                 els.audio.pause();
                 els.viewVinyl.classList.add('hidden');
                 els.viewVideo.classList.remove('hidden');
@@ -424,20 +414,19 @@
                 els.revealSong.innerText = currentSong.song;
                 els.input.disabled = true;
 
-                // HOST Next Round
-                if(isHost) {
+                if (isHost) {
                     setTimeout(() => {
-                        if(state.round >= 15) {
+                        if (state.round >= 15) {
                             alert("FIN !");
                             window.location.href = "blindtest_ranked.html";
                         } else {
-                            const nextIndex = state.deck[state.round];
+                            const nextIdx = state.deck[state.round];
                             update(ref(db, `blindtest/rooms/${roomId}/gameState`), {
                                 phase: 'guessing',
                                 round: state.round + 1,
-                                index: nextIndex,
+                                index: nextIdx,
+                                deck: state.deck,
                                 startTime: Date.now(),
-                                deck: state.deck, // Keep deck
                                 seek: Math.floor(Math.random() * 15) + 30
                             });
                         }
@@ -471,13 +460,13 @@
                     hasGuessed = true;
                     els.feedback.classList.remove('hidden');
                     
-                    // +1 Point
-                    get(ref(db, `blindtest/rooms/${roomId}/players/${user.uid}/score`)).then(s => {
-                        update(ref(db, `blindtest/rooms/${roomId}/players/${user.uid}`), { score: (s.val()||0) + 1 });
+                    get(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}/score`)).then(s => {
+                        update(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}`), { score: (s.val()||0) + 1 });
                     });
 
-                    // MORT SUBITE
-                    update(ref(db, `blindtest/rooms/${roomId}/gameState/phase`), 'reveal');
+                    update(ref(db, `blindtest/rooms/${roomId}/gameState`), { 
+                        ...data.gameState, phase: 'reveal', startTime: Date.now() 
+                    });
                 } else {
                     els.input.classList.add('border-red-500');
                     setTimeout(()=>els.input.classList.remove('border-red-500'), 500);
