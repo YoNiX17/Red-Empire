@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Ranked Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        gold: { 400: '#facc15', 500: '#eab308', 600: '#ca8a04' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: { 'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.4; }
+        
+        .glass-panel { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(234, 179, 8, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8); }
+        
+        .mode-card { 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative; 
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Carte Active (1v1) */
+        .mode-card.active:hover { 
+            transform: translateY(-10px) scale(1.02); 
+            box-shadow: 0 0 50px rgba(234, 179, 8, 0.2); 
+            border-color: #eab308; 
+        }
+        
+        /* Carte Verrouillée */
+        .locked-card { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; border-style: dashed; }
+        .locked-card:hover { transform: none; box-shadow: none; }
+
+        .gold-glow { text-shadow: 0 0 20px rgba(234, 179, 8, 0.6); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #ca8a04; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-gold-500 selection:text-black flex flex-col min-h-screen">
+
+    <!-- Backgrounds -->
+    <canvas id="canvas-container"></canvas>
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_10%,black_100%)] pointer-events-none z-[-1]"></div>
+    <div class="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-[-2]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-yellow-900/30 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-trophy text-gold-500 text-2xl"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">ARÈNE <span class="text-gold-500">CLASSÉE</span></span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="blindtest_hub.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> RETOUR AU HUB
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-12 text-center relative z-10 px-4">
+        <div data-aos="fade-down" class="inline-block mb-4 px-4 py-1 border border-gold-500/30 rounded-full bg-gold-900/10 backdrop-blur-sm">
+            <span class="text-xs font-mono font-bold tracking-[0.2em] text-gold-400 uppercase">COMPÉTITION SAISON 1</span>
+        </div>
+        <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+            FORMAT DE <span class="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 via-white to-gold-600 gold-glow">COMBAT</span>
+        </h1>
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto">Choisissez votre discipline. Gagnez du MMR. Devenez une légende.</p>
+    </section>
+
+    <!-- SELECTION GRID -->
+    <section class="flex-grow max-w-7xl mx-auto px-6 lg:px-8 pb-24 w-full relative z-10 flex flex-col justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            
+            <!-- CARD 1: DUEL (1v1) - ACTIF -->
+            <div class="mode-card active glass-panel rounded-2xl h-full flex flex-col group" data-aos="fade-up" data-aos-delay="0">
+                <div class="absolute top-0 right-0 px-4 py-1 bg-gold-500 text-black text-xs font-bold font-mono rounded-bl-xl z-20">POPULAIRE</div>
+                
+                <div class="h-56 bg-gradient-to-b from-gold-900/40 to-black relative overflow-hidden flex items-center justify-center">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+                    <!-- VS Icon -->
+                    <div class="relative z-10 flex items-center gap-4 scale-110 group-hover:scale-125 transition-transform duration-500">
+                        <i class="fa-solid fa-user text-4xl text-gray-400"></i>
+                        <span class="font-display font-black text-3xl text-gold-500 italic">VS</span>
+                        <i class="fa-solid fa-user text-4xl text-white"></i>
+                    </div>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
+                    <h2 class="font-display text-3xl font-bold text-white mb-2 group-hover:text-gold-400 transition-colors">DUEL</h2>
+                    <span class="text-xs font-mono text-gold-600 uppercase tracking-widest mb-4 block">1 CONTRE 1</span>
+                    
+                    <p class="text-gray-400 text-sm mb-8 flex-grow leading-relaxed">
+                        Le test ultime de compétence individuelle. Pas d'excuses, pas de coéquipiers. Juste vous et votre savoir.
+                    </p>
+                    
+                    <a href="blindtest.html" class="w-full py-4 bg-white text-black hover:bg-gold-400 font-black font-display uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] transition-all transform hover:-translate-y-1 block">
+                        COMBATTRE
+                    </a>
+                </div>
+            </div>
+
+            <!-- CARD 2: DUO (2v2) - LOCKED -->
+            <div class="mode-card locked-card glass-panel rounded-2xl h-full flex flex-col relative" data-aos="fade-up" data-aos-delay="150">
+                <div class="absolute top-4 right-4 text-gray-600 z-20"><i class="fa-solid fa-lock text-2xl"></i></div>
+                
+                <div class="h-56 bg-gray-900/30 flex items-center justify-center">
+                    <div class="flex gap-2 opacity-30">
+                        <i class="fa-solid fa-user-group text-5xl"></i>
+                    </div>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
+                    <h2 class="font-display text-3xl font-bold text-gray-600 mb-2">DUO</h2>
+                    <span class="text-xs font-mono text-gray-700 uppercase tracking-widest mb-4 block">2 CONTRE 2</span>
+                    
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">
+                        La synergie parfaite. Trouvez votre binôme et grimpez le classement ensemble.
+                    </p>
+                    
+                    <div class="mt-auto py-3 bg-gray-900 rounded border border-white/5 text-gray-600 text-xs font-mono uppercase font-bold">
+                        BIENTÔT DISPONIBLE
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: SQUAD (5v5) - LOCKED -->
+            <div class="mode-card locked-card glass-panel rounded-2xl h-full flex flex-col relative" data-aos="fade-up" data-aos-delay="300">
+                <div class="absolute top-4 right-4 text-gray-600 z-20"><i class="fa-solid fa-lock text-2xl"></i></div>
+                
+                <div class="h-56 bg-gray-900/30 flex items-center justify-center">
+                    <div class="flex gap-2 opacity-30">
+                        <i class="fa-solid fa-users text-5xl"></i>
+                    </div>
+                </div>
+                
+                <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
+                    <h2 class="font-display text-3xl font-bold text-gray-600 mb-2">SQUAD</h2>
+                    <span class="text-xs font-mono text-gray-700 uppercase tracking-widest mb-4 block">5 CONTRE 5</span>
+                    
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">
+                        Guerre totale. Stratégie d'équipe et rôles définis pour dominer l'arène.
+                    </p>
+                    
+                    <div class="mt-auto py-3 bg-gray-900 rounded border border-white/5 text-gray-600 text-xs font-mono uppercase font-bold">
+                        SAISON 2
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-yellow-900/20 bg-black py-8 mt-auto relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            © 2024 Red Empire Systems. Ranked Division.
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        // Particles (Gold Theme for Ranked)
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        
+        class Particle {
+            constructor(x, y, dx, dy, size, color) {
+                this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.size = size; this.color = color;
+            }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+                if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+                this.x += this.dx; this.y += this.dy; this.draw();
+            }
+        }
+        
+        function init() {
+            particlesArray = [];
+            for(let i=0; i<60; i++) {
+                let size = Math.random() * 2;
+                let x = Math.random() * innerWidth; let y = Math.random() * innerHeight;
+                let dx = (Math.random() - 0.5) * 0.2; let dy = (Math.random() - 0.5) * 0.2;
+                // Particules Or/Jaune
+                let color = Math.random() > 0.5 ? '#eab308' : '#a16207';
+                particlesArray.push(new Particle(x, y, dx, dy, size, color));
+            }
+        }
+        
+        function animate() { requestAnimationFrame(animate); ctx.clearRect(0,0,innerWidth, innerHeight); particlesArray.forEach(p => p.update()); }
+        window.addEventListener('resize', ()=>{ canvas.width=innerWidth; canvas.height=innerHeight; init(); });
+        init(); animate();
+    </script>
+    
+    <script type="module" src="auth.js"></script>
+</body>
+</html>
