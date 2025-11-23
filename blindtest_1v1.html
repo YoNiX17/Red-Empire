@@ -338,7 +338,7 @@
                 const module = await import("./op_database.js");
                 const rawDB = module.OP_DATABASE;
                 
-                if (rawDB && rawDB.length > 50) { // On vérifie qu'on a bien chargé le gros fichier
+                if (rawDB && rawDB.length > 50) { 
                     OP_DATABASE = rawDB;
                     dbLoaded = true;
                     console.log("DB chargée avec succès :", OP_DATABASE.length, "openings");
@@ -346,12 +346,11 @@
                     document.getElementById('db-status').classList.remove('animate-pulse');
                     document.getElementById('btn-search').classList.remove('btn-disabled');
                 } else {
-                    throw new Error("Base de données trop petite (Fichier fallback détecté)");
+                    throw new Error("Base de données trop petite");
                 }
             } catch (e) {
                 console.error("ERREUR CRITIQUE DB:", e);
-                document.getElementById('db-status').innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ERREUR : FICHIER DB MANQUANT<br>Le matchmaking est bloqué.</span>`;
-                // Désactivation du bouton
+                document.getElementById('db-status').innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ERREUR : FICHIER DB MANQUANT</span>`;
                 document.getElementById('btn-search').classList.add('btn-disabled');
                 document.getElementById('btn-search').innerText = "ERREUR SYNC";
                 OP_DATABASE = []; 
@@ -359,7 +358,7 @@
             }
         }
         
-        loadDatabase(); // Lancement immédiat
+        loadDatabase(); 
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -388,8 +387,10 @@
         let currentSongData = null;
         let roundTimer = null;
         let fallbackTimer = null; 
+        let guestSafetyTimer = null;
         let userVolume = 0.5;
         let animeFound = false;
+        let opFound = false; // Ajout du flag pour l'OP
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
@@ -627,8 +628,6 @@
                  return;
             }
 
-            // --- MISE À JOUR DEBUG VISUEL ---
-            // Affiche la taille de la DB et l'index actuel pour comparer avec l'ami
             document.getElementById('debug-info').innerText = `DB: ${OP_DATABASE.length} | IDX: ${gameState.songIndex} | TEAM: ${myTeamId}`;
 
             // RESET COMPLET SI NOUVEAU ROUND
@@ -640,6 +639,7 @@
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('result-display').classList.add('hidden');
                 
+                // IMPORTANT: Mise en pause pour reset les buffers
                 videoEl.pause(); 
                 console.log("Reset Round", gameState.currentRound);
             }
@@ -649,16 +649,10 @@
             lastPhase = gameState.phase;
             currentStartTime = gameState.startTime;
             
-            // VERIFICATION SAFETY INDEX
             if(gameState.songIndex === undefined || gameState.songIndex < 0 || gameState.songIndex >= OP_DATABASE.length) {
                 console.error("Index de chanson invalide !");
-                // Message d'erreur critique pour l'utilisateur
-                document.getElementById('status-msg').innerText = "ERREUR SYNC DONNÉES";
-                document.getElementById('status-msg').classList.remove('hidden');
-                document.getElementById('status-msg').classList.add('text-red-600');
-                
                  if (myTeamId === 1 && !roundTimer) {
-                    startRoundTimer(1); // Force skip rapide si Host
+                    startRoundTimer(1); 
                 }
                 return;
             }
@@ -668,21 +662,23 @@
             // NETTOYAGE TIMERS PRÉCÉDENTS
             if(roundTimer) clearTimeout(roundTimer);
             if(fallbackTimer) clearTimeout(fallbackTimer);
+            if(guestSafetyTimer) clearTimeout(guestSafetyTimer);
             roundTimer = null;
             fallbackTimer = null;
+            guestSafetyTimer = null;
 
             if (gameState.phase === 'guessing') {
                 animeFound = false;
+                opFound = false; // Reset OP found
                 
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
                 diskEl.classList.add('disk-paused');
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 
-                if (videoEl.src !== currentSongData.url) {
-                    videoEl.src = currentSongData.url;
-                    videoEl.load(); 
-                }
+                // FORCER L'UPDATE DE LA SOURCE
+                videoEl.src = currentSongData.url;
+                videoEl.load(); // INDISPENSABLE POUR LE ROUND SUIVANT
                 
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
@@ -708,6 +704,7 @@
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
                         console.log("Auto-play bloqué :", error);
+                        // Même si ça bloque, on force l'affichage
                         if(myTeamId === 1) {
                             console.log("Host : Forçage timer");
                             startRoundTimer(settings.duration); 
@@ -715,14 +712,30 @@
                     });
                 }
 
+                // SÉCURITÉ HOST: Réduit à 3s pour plus de fluidité
                 if (myTeamId === 1) {
                     fallbackTimer = setTimeout(() => {
                         if(!roundTimer) {
-                            console.warn("Host : Fallback Timer");
+                            console.warn("Host : Fallback Timer (3s)");
                             startTimerLogic(); 
                             startRoundTimer(settings.duration); 
                         }
-                    }, 5000);
+                    }, 3000);
+                }
+
+                // SÉCURITÉ GUEST (NOUVEAU): Si la vidéo plante chez l'invité, on affiche quand même l'UI
+                if (myTeamId !== 1) {
+                    guestSafetyTimer = setTimeout(() => {
+                         // On enlève le loader pour ne pas bloquer le joueur
+                         document.getElementById('loader-overlay').classList.add('hidden');
+                         // On lance l'anim CSS manuellement
+                         const bar = document.getElementById('game-timer-bar');
+                         bar.classList.remove('timer-running');
+                         void bar.offsetWidth; 
+                         bar.style.animationDuration = settings.duration + 's';
+                         bar.classList.add('timer-running');
+                         console.warn("Guest : Safety Fallback activated");
+                    }, 4000);
                 }
 
             } else if (gameState.phase === 'reveal') {
@@ -768,13 +781,7 @@
         function isCloseMatch(input,target){if(!target)return false;const nI=input.toLowerCase().trim();const nT=target.toLowerCase().trim();if(nI===nT)return true;if(nT.includes(nI)&&nI.length>3)return true;const d=levenshtein(nI,nT);const m=Math.max(nI.length,nT.length);return(1-(d/m))>0.75;}
 
         window.submitGuess = () => {
-            // FIX CRASH "ON PEUT PAS GUESS"
-            if (!currentRoomId) return;
-            if (!currentSongData) {
-                console.error("Impossible de deviner: Pas de données chanson");
-                return;
-            }
-            
+            if (!currentRoomId || !currentSongData) return;
             const input = document.getElementById('input-guess');
             const val = input.value;
             if(!val) return;
@@ -782,6 +789,7 @@
             let points = 0;
             let feedback = "";
 
+            // 1. VERIF ANIME (1pt)
             if (!animeFound) {
                 let match = isCloseMatch(val, currentSongData.anime);
                 if (!match && currentSongData.alt) match = currentSongData.alt.some(a => isCloseMatch(val, a));
@@ -789,7 +797,18 @@
                 if (match) {
                     animeFound = true;
                     points += 1;
-                    feedback = "ANIME OK !";
+                    feedback = "ANIME OK (+1) !";
+                }
+            }
+
+            // 2. VERIF NUMÉRO OP (0.5pt) - RÉACTIVÉ
+            if (!opFound && currentSongData.num) {
+                // On cherche des chiffres dans l'input
+                const inputNums = val.match(/\d+/g);
+                if (inputNums && inputNums.includes(currentSongData.num.toString())) {
+                    opFound = true;
+                    points += 0.5;
+                    feedback = feedback ? "DOUBLE COMBO !" : "OP NUMÉRO OK (+0.5) !";
                 }
             }
 
@@ -802,11 +821,10 @@
                 const msg = document.getElementById('status-msg');
                 msg.innerText = feedback;
                 msg.classList.remove('hidden');
-                msg.classList.remove('text-red-600'); // Reset couleur erreur
+                msg.classList.remove('text-red-600'); 
                 
                 input.value = "";
                 input.placeholder = "TROUVÉ !";
-                
             } else {
                 input.classList.add('border-red-500');
                 setTimeout(() => input.classList.remove('border-red-500'), 500);
