@@ -9,121 +9,169 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --red: #ff2e2e; --dark-bg: #050505; }
-        body { background-color: var(--dark-bg); color: #fff; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; }
-        .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
-        
-        /* VS Screen Overlay */
-        #vs-screen {
-            position: fixed; inset: 0; z-index: 100; background: #000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.7, 0, 0.3, 1);
+        :root {
+            --red: #ff2e2e;
+            --yellow: #facc15;
+            --dark-bg: #121212;
+            --panel-bg: #1a1a1a;
+            --border-color: #ffffff;
         }
-        .vs-slide-up { transform: translateY(-100%); }
-        
-        /* Player Cards */
-        .player-card { background: #111; border: 2px solid #333; padding: 10px; display: flex; align-items: center; gap: 10px; min-width: 200px; transition: all 0.3s; }
-        .player-card.active { border-color: #ff2e2e; box-shadow: 0 0 15px rgba(255, 46, 46, 0.3); }
-        
-        /* Result Pop */
-        @keyframes pop-in { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .pop-anim { animation: pop-in 0.4s ease-out forwards; }
 
-        /* Loading Spinner */
-        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: #ff2e2e; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        body { 
+            background-color: var(--dark-bg);
+            color: #eeeeee;
+            font-family: 'Roboto Condensed', sans-serif;
+            overflow: hidden;
+            background-image: radial-gradient(#333 20%, transparent 20%);
+            background-size: 12px 12px;
+        }
+        
+        .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
+
+        /* --- BOUTONS POP --- */
+        .btn-pop {
+            background: var(--border-color);
+            color: var(--dark-bg);
+            font-family: 'Bangers', cursive;
+            text-transform: uppercase;
+            border: 2px solid var(--border-color);
+            transition: all 0.1s ease;
+            box-shadow: 4px 4px 0px var(--yellow);
+            cursor: pointer;
+        }
+        .btn-pop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--yellow); background: var(--yellow); }
+        .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--yellow); }
+        
+        .btn-red { background: var(--red); color: white; border-color: var(--red); box-shadow: 4px 4px 0px var(--border-color); }
+        .btn-red:hover { background: #ff4444; box-shadow: 6px 6px 0px var(--border-color); }
+
+        /* --- JEU --- */
+        .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; transition: width 1s linear; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .disk-spin { animation: spin 3s linear infinite; }
+        .disk-paused { animation-play-state: paused !important; }
+
+        .input-manga {
+            border: 3px solid var(--border-color);
+            background: #222; color: white;
+            font-family: 'Bangers', cursive; letter-spacing: 1px;
+            box-shadow: inset 4px 4px 0px #000;
+        }
+        .input-manga:focus { outline: none; border-color: var(--yellow); color: var(--yellow); }
+
+        /* LOADING OVERLAY */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 100; background: #050505;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loader { width: 60px; height: 60px; border: 6px solid #fff; border-bottom-color: #ff2e2e; border-radius: 50%; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col">
 
-    <!-- ECRAN DE MATCHMAKING / VS -->
-    <div id="vs-screen">
-        <!-- ETAPE 1 : RECHERCHE -->
-        <div id="matchmaking-ui" class="text-center">
-            <div class="loader mb-6"></div>
-            <h1 class="text-4xl font-manga text-white mb-2 animate-pulse">RECHERCHE D'ADVERSAIRE...</h1>
-            <p class="text-gray-500 font-mono text-sm">NE QUITTEZ PAS LA PAGE</p>
-            <button onclick="window.location.href='blindtest_ranked.html'" class="mt-8 text-red-500 border border-red-500 px-4 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs font-bold">ANNULER</button>
-        </div>
-
-        <!-- ETAPE 2 : VERSUS (Données chargées) -->
-        <div id="game-ready-ui" class="hidden text-center w-full max-w-4xl">
-            <h1 class="text-6xl font-manga text-yellow-500 mb-12">DUEL TROUVÉ</h1>
-            <div class="flex items-center justify-center gap-12 md:gap-32">
-                <!-- J1 -->
-                <div class="text-center transform transition hover:scale-110">
-                    <img id="p1-avatar" src="" class="w-32 h-32 rounded-full border-4 border-blue-500 mb-4 shadow-[0_0_30px_#3b82f6] object-cover bg-gray-900">
-                    <h2 id="p1-name" class="font-black text-2xl text-blue-400 uppercase">...</h2>
-                </div>
-                <div class="text-6xl font-black italic text-white animate-pulse">VS</div>
-                <!-- J2 -->
-                <div class="text-center transform transition hover:scale-110">
-                    <img id="p2-avatar" src="" class="w-32 h-32 rounded-full border-4 border-red-600 mb-4 shadow-[0_0_30px_#dc2626] object-cover bg-gray-900">
-                    <h2 id="p2-name" class="font-black text-2xl text-red-500 uppercase">...</h2>
-                </div>
-            </div>
-            <p id="countdown-text" class="mt-12 text-white font-mono text-xl">DÉMARRAGE DANS <span id="start-timer" class="text-yellow-500 font-bold text-3xl">...</span></p>
-        </div>
+    <!-- ECRAN DE CHARGEMENT / MATCHMAKING -->
+    <div id="loading-screen">
+        <div class="loader mb-8"></div>
+        <h2 id="loading-text" class="text-4xl font-manga text-white animate-pulse text-center">RECHERCHE D'ADVERSAIRE...</h2>
+        <p class="text-gray-500 font-mono mt-2 text-sm">NE QUITTEZ PAS LA PAGE</p>
+        <button onclick="window.location.href='blindtest_ranked.html'" class="mt-8 text-red-500 font-bold border border-red-500 px-4 py-1 rounded hover:bg-red-500 hover:text-white transition text-xs">ANNULER</button>
     </div>
 
-    <!-- HUD JEU -->
-    <div class="absolute top-0 w-full flex justify-between p-4 z-20">
-        <div id="hud-p1" class="player-card border-blue-600 rounded-r-xl">
-            <span id="score-p1" class="text-4xl font-manga text-blue-500">0</span>
-            <div class="flex flex-col">
-                <span class="font-black text-sm uppercase" id="name-p1">J1</span>
-                <span class="text-[10px] text-gray-500">CHALLENGER</span>
-            </div>
+    <!-- NAVBAR -->
+    <nav class="h-16 bg-[#111] border-b-4 border-white flex items-center justify-between px-6 z-50 shadow-lg">
+        <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white">
+            <i class="fa-solid fa-chevron-left"></i> <span class="font-manga text-xl">QUITTER</span>
+        </a>
+        <div class="absolute left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-1 skew-x-[-10deg] border-2 border-white shadow-[4px_4px_0px_#ff2e2e]">
+            <h1 class="font-manga text-2xl skew-x-[10deg] tracking-widest">DUEL <span class="text-red-600">1v1</span></h1>
         </div>
+        <div class="w-20"></div> <!-- Spacer -->
+    </nav>
+
+    <!-- ECRAN JEU -->
+    <div id="screen-game" class="flex-grow flex flex-col bg-[#111] relative hidden">
         
-        <div class="flex flex-col items-center">
-            <div class="bg-black px-6 py-2 border-2 border-white rounded-lg font-manga text-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transform skew-x-[-10deg]">
-                ROUND <span id="round-display" class="text-yellow-500">1</span> / 15
+        <!-- Top Bar -->
+        <div class="w-full bg-[#1a1a1a] p-4 border-b-4 border-white flex justify-between items-center shadow-lg z-20">
+            <!-- Score J1 -->
+            <div class="flex items-center gap-3">
+                <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-blue-500 bg-black">
+                <div>
+                    <div id="p1-name" class="font-bold text-blue-400 text-sm uppercase">JOUEUR 1</div>
+                    <div id="p1-score" class="font-manga text-2xl text-white">0 PTS</div>
+                </div>
             </div>
-            <div class="w-80 h-3 bg-gray-800 mt-2 rounded-full overflow-hidden border border-gray-600">
-                <div id="timer-fill" class="h-full bg-gradient-to-r from-green-500 to-red-500 w-full"></div>
-            </div>
-        </div>
 
-        <div id="hud-p2" class="player-card border-red-600 flex-row-reverse text-right rounded-l-xl">
-            <span id="score-p2" class="text-4xl font-manga text-red-500">0</span>
-            <div class="flex flex-col">
-                <span class="font-black text-sm uppercase" id="name-p2">J2</span>
-                <span class="text-[10px] text-gray-500">CHALLENGER</span>
+            <!-- Timer -->
+            <div class="flex flex-col items-center w-1/3">
+                <div class="bg-black border-2 border-white px-4 py-1 rounded-full shadow-lg mb-1 transform -skew-x-12">
+                    <span class="font-manga text-xl text-white skew-x-12">
+                        ROUND <span id="round-display" class="text-yellow-400">1</span>
+                    </span>
+                </div>
+                <div class="timer-container">
+                    <div id="game-timer-bar" class="timer-fill"></div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ZONE VINYLE -->
-    <div class="h-screen flex items-center justify-center relative">
-        <div id="vinyl-container" class="relative w-80 h-80 animate-spin-slow transition-all duration-500">
-            <div class="absolute inset-0 bg-black rounded-full border-[10px] border-gray-800 flex items-center justify-center shadow-[0_0_80px_rgba(255,255,255,0.1)]">
-                <div class="absolute inset-0 rounded-full border border-white/10"></div>
-                <div class="w-32 h-32 bg-gradient-to-br from-red-600 to-red-900 rounded-full flex items-center justify-center border-4 border-white z-10">
-                    <i class="fa-solid fa-music text-5xl text-white drop-shadow-md"></i>
+            <!-- Score J2 -->
+            <div class="flex items-center gap-3 text-right flex-row-reverse">
+                <img id="p2-avatar" src="" class="w-12 h-12 rounded border-2 border-red-500 bg-black">
+                <div>
+                    <div id="p2-name" class="font-bold text-red-400 text-sm uppercase">JOUEUR 2</div>
+                    <div id="p2-score" class="font-manga text-2xl text-white">0 PTS</div>
                 </div>
             </div>
         </div>
-        
-        <div id="video-container" class="absolute inset-0 bg-black z-10 hidden flex items-center justify-center">
-            <video id="game-video" class="w-full h-full object-contain max-w-5xl"></video>
-            <div class="absolute bottom-32 text-center bg-black/90 px-10 py-6 rounded-xl border-2 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.4)]">
-                <h2 id="reveal-anime" class="text-5xl font-manga text-white mb-2 text-shadow-lg">ANIME</h2>
-                <p id="reveal-song" class="text-yellow-400 font-bold text-xl uppercase tracking-widest">Song</p>
+
+        <!-- Centre : Disque / Vidéo -->
+        <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
+            
+            <!-- Video Player (Révélation) -->
+            <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
+                <div class="w-full h-full max-w-4xl max-h-[60vh] bg-black border-4 border-white rounded-lg shadow-[0_0_50px_rgba(255,255,255,0.1)] overflow-hidden relative">
+                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <div class="absolute bottom-0 w-full bg-black/80 p-4 text-center border-t border-white">
+                        <h3 id="res-anime" class="text-2xl font-manga text-yellow-400">ANIME</h3>
+                        <p id="res-song" class="text-white font-bold">Titre</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Vinyle (Devinette) -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300">
+                <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
+                    <div class="absolute inset-0 bg-white rounded-full blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                    <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-white shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                        <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
+                        <div class="absolute inset-10 rounded-full border-[20px] border-[#222] opacity-60"></div>
+                        <div class="absolute w-28 h-28 bg-red-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
+                            <i class="fa-solid fa-music text-4xl text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center bg-white px-8 py-2 border-4 border-black rounded-full shadow-[4px_4px_0px_#000] transform -rotate-2">
+                    <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">ÉCOUTEZ !</h2>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- INPUT -->
-    <div class="absolute bottom-0 w-full p-8 bg-gradient-to-t from-black via-black/90 to-transparent z-30 flex justify-center pb-12">
-        <div class="relative w-full max-w-2xl">
-            <input type="text" id="input-guess" class="w-full bg-gray-900/80 border-2 border-white/30 text-white p-5 text-center text-2xl font-bold uppercase tracking-widest rounded-lg shadow-2xl focus:border-yellow-500 focus:bg-black outline-none transition-all" placeholder="ÉCOUTEZ ET DEVINEZ..." autocomplete="off" autofocus>
-            <div id="feedback-msg" class="absolute -top-24 left-0 right-0 text-center font-manga text-6xl text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)] pop-anim hidden">CORRECT !</div>
+        <!-- Input Zone -->
+        <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <div class="max-w-3xl mx-auto flex gap-3">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg shadow-[4px_4px_0px_#000]" autocomplete="off">
+                <button onclick="submitGuess()" class="btn-pop btn-red w-40 rounded-lg text-2xl shadow-[4px_4px_0px_#000]">
+                    ENVOYER
+                </button>
+            </div>
+            <div id="feedback-msg" class="text-center mt-2 font-bold text-green-500 hidden">CORRECT !</div>
         </div>
     </div>
 
-    <audio id="game-audio" style="display:none;"></audio>
-
+    <!-- SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -145,15 +193,145 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // VARS
         let currentUser = null;
         let roomId = null;
         let isHost = false;
         let currentSong = null;
         let roundTimer = null;
         let hasGuessed = false;
-        let countdownInterval = null;
+        let currentPhase = '';
 
-        // --- UTILS ---
+        const videoEl = document.getElementById('game-video');
+        const diskEl = document.getElementById('disk');
+        const inputEl = document.getElementById('input-guess');
+
+        // 1. AUTH & MATCHMAKING
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                startMatchmaking();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        async function startMatchmaking() {
+            const queueRef = ref(db, 'blindtest/queue_1v1');
+            
+            // Transaction simple pour trouver une place
+            const result = await runTransaction(queueRef, (currentData) => {
+                if (currentData === null) {
+                    // Personne -> Je crée la file
+                    return { uid: currentUser.uid, roomId: Math.random().toString(36).substr(2, 9) };
+                } else if (currentData.uid !== currentUser.uid) {
+                    // Quelqu'un est là -> Je prends sa place (return null pour delete)
+                    return null; 
+                }
+                return currentData; // C'est moi, je reste
+            });
+
+            if (result.committed) {
+                const val = result.snapshot.val();
+
+                if (val && val.uid === currentUser.uid) {
+                    // HOST (J1)
+                    roomId = val.roomId;
+                    isHost = true;
+                    document.getElementById('loading-text').innerText = "EN ATTENTE D'UN JOUEUR...";
+                    
+                    // Clean si déco
+                    onDisconnect(queueRef).remove();
+                    onDisconnect(ref(db, `blindtest/rooms/${roomId}`)).remove();
+
+                    // Créer la salle
+                    await createRoom(roomId);
+
+                    // Écouter si J2 arrive (quand la queue est supprimée ou quand la room change)
+                    listenToRoom();
+
+                } else if (val) {
+                    // GUEST (J2)
+                    roomId = val.roomId;
+                    isHost = false;
+                    document.getElementById('loading-text').innerText = "PARTIE TROUVÉE !";
+                    
+                    // Je supprime la file pour dire "c'est pris" (si transaction n'a pas suffi)
+                    await remove(queueRef);
+                    
+                    // Je rejoins
+                    await joinRoom(roomId);
+                    listenToRoom();
+                }
+            }
+        }
+
+        async function createRoom(rid) {
+            const profile = await getProfile();
+            // Structure simple comme blindtest.html
+            await set(ref(db, `blindtest/rooms/${rid}`), {
+                host: currentUser.uid,
+                players: { [currentUser.uid]: { ...profile, score: 0 } },
+                status: 'waiting',
+                gameState: { round: 0 }
+            });
+        }
+
+        async function joinRoom(rid) {
+            const profile = await getProfile();
+            await update(ref(db, `blindtest/rooms/${rid}/players/${currentUser.uid}`), {
+                ...profile, score: 0
+            });
+        }
+
+        async function getProfile() {
+            try {
+                const s = await get(child(ref(db), `users/${currentUser.uid}`));
+                if(s.exists()) return { name: s.val().username || "Joueur", avatar: s.val().avatar || "" };
+            } catch(e){}
+            return { name: currentUser.displayName, avatar: currentUser.photoURL };
+        }
+
+        // 2. ECOUTE SALLE & JEU
+        function listenToRoom() {
+            onValue(ref(db, `blindtest/rooms/${roomId}`), (snap) => {
+                const data = snap.val();
+                if (!data) return;
+
+                // GESTION JOUEURS
+                if (data.players) {
+                    const pList = Object.values(data.players);
+                    
+                    // Update UI Scores
+                    if(pList[0]) {
+                        document.getElementById('p1-name').innerText = pList[0].name;
+                        document.getElementById('p1-score').innerText = pList[0].score + " PTS";
+                        document.getElementById('p1-avatar').src = pList[0].avatar || 'https://ui-avatars.com/api/?name='+pList[0].name;
+                    }
+                    if(pList[1]) {
+                        document.getElementById('p2-name').innerText = pList[1].name;
+                        document.getElementById('p2-score').innerText = pList[1].score + " PTS";
+                        document.getElementById('p2-avatar').src = pList[1].avatar || 'https://ui-avatars.com/api/?name='+pList[1].name;
+                    }
+
+                    // DÉMARRAGE AUTO (Host)
+                    if (isHost && data.status === 'waiting' && pList.length === 2) {
+                        startGame();
+                    }
+                }
+
+                // SYNC JEU
+                if (data.status === 'playing' && data.gameState) {
+                    // Cacher loading si pas fait
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    
+                    handleGameState(data.gameState);
+                }
+            });
+        }
+
+        // --- UTILS JEU ---
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -162,6 +340,106 @@
             return array;
         }
 
+        function startGame() {
+            const deck = shuffleArray(Array.from({length: OP_DATABASE.length}, (_, i) => i));
+            update(ref(db, `blindtest/rooms/${roomId}`), {
+                status: 'playing',
+                gameState: {
+                    phase: 'guessing',
+                    round: 1,
+                    index: deck[0],
+                    deck: deck,
+                    startTime: Date.now(),
+                    seek: Math.floor(Math.random() * 15) + 30
+                }
+            });
+        }
+
+        function handleGameState(state) {
+            // Eviter re-render boucle
+            const stateID = `${state.phase}-${state.round}-${state.startTime}`;
+            if (currentPhase === stateID) return;
+            currentPhase = stateID;
+
+            currentSong = OP_DATABASE[state.index];
+            document.getElementById('round-display').innerText = state.round;
+
+            const timerBar = document.getElementById('game-timer-bar');
+
+            if (state.phase === 'guessing') {
+                // --- PHASE GUESS ---
+                document.getElementById('video-wrapper').classList.add('hidden');
+                document.getElementById('vinyl-wrapper').classList.remove('hidden');
+                document.getElementById('feedback-msg').classList.add('hidden');
+                
+                inputEl.disabled = false;
+                inputEl.value = "";
+                inputEl.focus();
+                hasGuessed = false;
+                diskEl.classList.remove('disk-paused');
+
+                // Video en fond (son uniquement)
+                videoEl.src = currentSong.url;
+                videoEl.currentTime = state.seek;
+                videoEl.volume = 0.5;
+                videoEl.style.opacity = 0; // Caché mais joue
+                videoEl.play().catch(e => console.log("Autoplay blocked"));
+
+                // Timer Visuel
+                timerBar.style.transition = 'none';
+                timerBar.style.width = '100%';
+                setTimeout(() => {
+                    timerBar.style.transition = 'width 15s linear';
+                    timerBar.style.width = '0%';
+                }, 50);
+
+                // HOST TIMER
+                if (isHost) {
+                    clearTimeout(roundTimer);
+                    roundTimer = setTimeout(() => {
+                        update(ref(db, `blindtest/rooms/${roomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+                    }, 15000);
+                }
+
+            } else if (state.phase === 'reveal') {
+                // --- PHASE REVEAL ---
+                document.getElementById('vinyl-wrapper').classList.add('hidden');
+                document.getElementById('video-wrapper').classList.remove('hidden');
+                
+                // On montre la vidéo
+                videoEl.style.opacity = 1;
+                videoEl.currentTime = state.seek;
+                videoEl.play();
+
+                document.getElementById('res-anime').innerText = currentSong.anime;
+                document.getElementById('res-song').innerText = currentSong.song;
+                inputEl.disabled = true;
+
+                // HOST NEXT ROUND
+                if (isHost) {
+                    clearTimeout(roundTimer);
+                    setTimeout(() => {
+                        if (state.round >= 15) {
+                            alert("FIN DU MATCH !");
+                            window.location.href = "blindtest_ranked.html";
+                        } else {
+                            const nextIdx = state.deck[state.round];
+                            update(ref(db, `blindtest/rooms/${roomId}/gameState`), {
+                                phase: 'guessing',
+                                round: state.round + 1,
+                                index: nextIdx,
+                                deck: state.deck,
+                                startTime: Date.now(),
+                                seek: Math.floor(Math.random() * 15) + 30
+                            });
+                        }
+                    }, 5000); // 5s de reveal
+                }
+            }
+        }
+
+        // --- INPUT ---
+        // Levenshtein simple
         function isCloseMatch(input, target) {
             if (!target) return false;
             const clean = str => str.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -172,290 +450,35 @@
             return false;
         }
 
-        // --- MATCHMAKING ---
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) return window.location.href = 'index.html';
-            currentUser = user;
-            startMatchmaking();
-        });
+        window.submitGuess = () => {
+            if (hasGuessed || !currentSong) return;
+            const val = inputEl.value;
+            if (!val) return;
 
-        async function startMatchmaking() {
-            const queueRef = ref(db, 'blindtest/queue_1v1');
-            
-            const result = await runTransaction(queueRef, (currentData) => {
-                if (currentData === null) {
-                    // Personne ? On s'inscrit (On devient J1)
-                    return { uid: currentUser.uid, roomId: Math.random().toString(36).substr(2, 9) };
-                } else if (currentData.uid !== currentUser.uid) {
-                    // Quelqu'un est là ? On ne touche pas, on lira les infos après
-                    return currentData;
-                }
-                return currentData;
-            });
-
-            if (result.committed) {
-                const val = result.snapshot.val();
-
-                if (val && val.uid === currentUser.uid) {
-                    // --- ON EST J1 (HOST) ---
-                    roomId = val.roomId;
-                    isHost = true;
-                    
-                    onDisconnect(queueRef).remove();
-                    onDisconnect(ref(db, `blindtest/rooms/${roomId}`)).remove();
-
-                    await createRoom(roomId);
-
-                    // Écouter la suppression de la queue (J2 a rejoint)
-                    onValue(queueRef, (snap) => {
-                        if (snap.val() === null) {
-                            // Queue supprimée = J2 est entré
-                            // On attend juste un peu que les infos de J2 soient dans la room
-                            // L'écouteur de room s'occupera de l'affichage
-                        }
-                    });
-                    listenToRoom();
-
-                } else if (val) {
-                    // --- ON EST J2 (GUEST) ---
-                    roomId = val.roomId;
-                    isHost = false;
-
-                    // On supprime la file pour dire "Match Complet"
-                    await remove(queueRef); 
-
-                    await joinRoom(roomId);
-                    listenToRoom();
-                }
+            let correct = isCloseMatch(val, currentSong.anime);
+            if (!correct && currentSong.alt) {
+                currentSong.alt.forEach(alt => { if(isCloseMatch(val, alt)) correct = true; });
             }
-        }
 
-        async function createRoom(id) {
-            const profile = await getUserProfile(currentUser.uid);
-            await set(ref(db, `blindtest/rooms/${id}`), {
-                host: currentUser.uid,
-                players: { [currentUser.uid]: { ...profile, team: 1, score: 0 } },
-                status: 'waiting',
-                settings: { rounds: 15, duration: 15 }
-            });
-        }
-
-        async function joinRoom(id) {
-            const profile = await getUserProfile(currentUser.uid);
-            await update(ref(db, `blindtest/rooms/${id}/players/${currentUser.uid}`), {
-                ...profile, team: 2, score: 0
-            });
-        }
-
-        async function getUserProfile(uid) {
-            try {
-                const s = await get(child(ref(db), `users/${uid}`));
-                if(s.exists()) return { name: s.val().username || "Joueur", avatar: s.val().avatar || "" };
-            } catch(e){}
-            return { name: currentUser.displayName, avatar: currentUser.photoURL };
-        }
-
-        // --- SYNCHRONISATION DE LA SALLE ---
-        function listenToRoom() {
-            const roomRef = ref(db, `blindtest/rooms/${roomId}`);
-            
-            onValue(roomRef, (snap) => {
-                const data = snap.val();
-                if (!data) return; 
-
-                // 1. JOUEURS
-                if (data.players) {
-                    const players = Object.values(data.players);
-                    
-                    if (players.length === 2) {
-                        const p1 = players.find(p => p.team === 1);
-                        const p2 = players.find(p => p.team === 2);
-                        
-                        if (p1 && p2) {
-                            document.getElementById('matchmaking-ui').classList.add('hidden');
-                            document.getElementById('game-ready-ui').classList.remove('hidden');
-                            
-                            document.getElementById('p1-name').innerText = p1.name;
-                            document.getElementById('p1-avatar').src = p1.avatar || 'https://ui-avatars.com/api/?name='+p1.name;
-                            document.getElementById('p2-name').innerText = p2.name;
-                            document.getElementById('p2-avatar').src = p2.avatar || 'https://ui-avatars.com/api/?name='+p2.name;
-                            
-                            document.getElementById('name-p1').innerText = p1.name;
-                            document.getElementById('score-p1').innerText = p1.score;
-                            document.getElementById('name-p2').innerText = p2.name;
-                            document.getElementById('score-p2').innerText = p2.score;
-
-                            // HOTE : Lance le compte à rebours
-                            if (isHost && data.status === 'waiting') {
-                                const launchTime = Date.now() + 5000; 
-                                update(ref(db, `blindtest/rooms/${roomId}`), {
-                                    status: 'starting',
-                                    launchTime: launchTime
-                                });
-                            }
-                        }
-                    }
-                }
-
-                // 2. COMPTE A REBOURS LOCAL (CORRECTION ICI)
-                if (data.status === 'starting' && data.launchTime) {
-                    // On lance une boucle locale pour update l'UI
-                    if (!countdownInterval) {
-                        countdownInterval = setInterval(() => {
-                            const now = Date.now();
-                            const diff = Math.ceil((data.launchTime - now) / 1000);
-                            
-                            if (diff > 0) {
-                                document.getElementById('start-timer').innerText = diff;
-                            } else {
-                                document.getElementById('start-timer').innerText = "GO !";
-                                clearInterval(countdownInterval);
-                                countdownInterval = null;
-                                
-                                // FIN DU COMPTEUR -> START GAME (Host only)
-                                if (isHost && !data.gameState) {
-                                    const deck = shuffleArray(Array.from({length: OP_DATABASE.length}, (_, i) => i));
-                                    update(ref(db, `blindtest/rooms/${roomId}`), {
-                                        status: 'playing',
-                                        gameState: {
-                                            phase: 'guessing',
-                                            currentRound: 1,
-                                            songIndex: deck[0],
-                                            startTime: Date.now(),
-                                            deck: deck,
-                                            seekTime: Math.floor(Math.random() * 11) + 40
-                                        }
-                                    });
-                                }
-                            }
-                        }, 100);
-                    }
-                }
-
-                // 3. JEU
-                if (data.status === 'playing' && data.gameState) {
-                    // Nettoyage sécu
-                    if(countdownInterval) clearInterval(countdownInterval);
-                    handleGameState(data.gameState);
-                }
-            });
-        }
-
-        // --- BOUCLE DE JEU ---
-        let lastPhase = '';
-        let lastTime = 0;
-
-        function handleGameState(state) {
-            document.getElementById('vs-screen').classList.add('vs-slide-up');
-
-            if(state.phase === lastPhase && state.startTime === lastTime) return;
-            lastPhase = state.phase;
-            lastTime = state.startTime;
-
-            currentSong = OP_DATABASE[state.songIndex];
-            document.getElementById('round-display').innerText = state.currentRound;
-
-            const audio = document.getElementById('game-audio');
-            const video = document.getElementById('game-video');
-            const input = document.getElementById('input-guess');
-            const timerBar = document.getElementById('timer-fill');
-
-            if (state.phase === 'guessing') {
-                document.getElementById('video-container').classList.add('hidden');
-                document.getElementById('vinyl-container').classList.remove('hidden');
+            if (correct) {
+                hasGuessed = true;
+                document.getElementById('feedback-msg').classList.remove('hidden');
                 
-                input.disabled = false;
-                input.value = "";
-                input.focus();
-                hasGuessed = false;
-                document.getElementById('feedback-msg').classList.add('hidden');
+                // Score Update
+                get(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}/score`)).then(s => {
+                    update(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}`), { score: (s.val()||0) + 1 });
+                });
 
-                audio.src = currentSong.url;
-                audio.currentTime = state.seekTime;
-                audio.volume = 0.5;
-                
-                const elapsed = (Date.now() - state.startTime) / 1000;
-                if (elapsed > 0) audio.currentTime += elapsed;
-                
-                audio.play().catch(e => console.log("Autoplay blocked"));
-
-                timerBar.style.transition = 'none';
-                timerBar.style.width = '100%';
-                setTimeout(() => {
-                    const remaining = Math.max(0, 15 - elapsed);
-                    timerBar.style.transition = `width ${remaining}s linear`;
-                    timerBar.style.width = '0%';
-                }, 50);
-
-                if (isHost) {
-                    clearTimeout(roundTimer);
-                    const remainingMs = Math.max(0, 15000 - (Date.now() - state.startTime));
-                    roundTimer = setTimeout(() => {
-                        update(ref(db, `blindtest/rooms/${roomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                    }, remainingMs);
-                }
-
-            } else if (state.phase === 'reveal') {
-                audio.pause();
-                document.getElementById('vinyl-container').classList.add('hidden');
-                document.getElementById('video-container').classList.remove('hidden');
-                
-                video.src = currentSong.url;
-                video.currentTime = state.seekTime;
-                video.volume = 0.5;
-                video.play();
-
-                document.getElementById('reveal-anime').innerText = currentSong.anime;
-                document.getElementById('reveal-song').innerText = currentSong.song;
-                input.disabled = true;
-
-                if (isHost) {
-                    clearTimeout(roundTimer);
-                    setTimeout(() => {
-                        if (state.currentRound >= 15) {
-                            alert("Match terminé !");
-                            window.location.href = "blindtest_ranked.html";
-                        } else {
-                            const nextIdx = state.deck[state.currentRound];
-                            update(ref(db, `blindtest/rooms/${roomId}/gameState`), {
-                                phase: 'guessing',
-                                currentRound: state.currentRound + 1,
-                                songIndex: nextIdx,
-                                startTime: Date.now(),
-                                seekTime: Math.floor(Math.random() * 11) + 40
-                            });
-                        }
-                    }, 8000);
-                }
+                // MORT SUBITE (Trigger Reveal)
+                update(ref(db, `blindtest/rooms/${roomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+            } else {
+                inputEl.classList.add('border-red-500');
+                setTimeout(() => inputEl.classList.remove('border-red-500'), 500);
             }
-        }
+        };
 
-        // --- INPUT ---
-        document.getElementById('input-guess').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !hasGuessed) {
-                const val = e.target.value;
-                if (!val) return;
-
-                let correct = isCloseMatch(val, currentSong.anime);
-                if (!correct && currentSong.alt) {
-                    currentSong.alt.forEach(a => { if (isCloseMatch(val, a)) correct = true; });
-                }
-
-                if (correct) {
-                    hasGuessed = true;
-                    document.getElementById('feedback-msg').classList.remove('hidden');
-                    
-                    get(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}/score`)).then(s => {
-                        update(ref(db, `blindtest/rooms/${roomId}/players/${currentUser.uid}`), { score: (s.val()||0) + 1 });
-                    });
-
-                    // MORT SUBITE
-                    update(ref(db, `blindtest/rooms/${roomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                } else {
-                    e.target.classList.add('border-red-500');
-                    setTimeout(() => e.target.classList.remove('border-red-500'), 500);
-                }
-            }
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitGuess();
         });
 
     </script>
