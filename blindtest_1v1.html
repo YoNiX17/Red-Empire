@@ -88,11 +88,12 @@
             border-color: #ff4444;
         }
 
-        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        /* Timer Bar */
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid var(--border-color); border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--yellow); width: 100%; }
-        .timer-running { animation: shrink linear forwards; }
-
+        .timer-fill { height: 100%; background: var(--yellow); width: 100%; transform-origin: left; }
+        
+        /* Animation manuelle via JS pour meilleure synchro */
+        
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
@@ -175,7 +176,6 @@
                     <i class="fa-solid fa-swords mr-3"></i> TROUVER UN MATCH
                 </button>
                 <p class="text-xs text-gray-500 mt-2">Mode Classé • 15s/Round • 10 Rounds</p>
-                <!-- STATUS DE CHARGEMENT DE LA DB -->
                 <div id="db-status-container" class="mt-4 p-2 bg-black rounded border border-gray-700">
                      <p id="db-status" class="text-xs font-mono animate-pulse text-yellow-500">
                         <i class="fa-solid fa-database mr-1"></i> Chargement des données...
@@ -233,6 +233,7 @@
             <div class="flex-1 max-w-md mx-4 flex flex-col items-center">
                 <div class="font-manga text-xl text-yellow-400 mb-1">ROUND <span id="current-round-display">1</span>/10</div>
                 <div class="timer-container w-full shadow-inner bg-black">
+                    <!-- On utilise style.width directement pour la synchro précise -->
                     <div id="game-timer-bar" class="timer-fill" style="width: 100%;"></div>
                 </div>
             </div>
@@ -281,6 +282,10 @@
             
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
                 <div class="loader-ring"></div>
+                <!-- BOUTON DE SECOURS MANUEL -->
+                <button id="manual-unlock-btn" onclick="forceUnlock()" class="hidden mt-6 btn-pop btn-red px-4 py-2 rounded text-sm">
+                    🆘 DÉBLOQUER LE JEU
+                </button>
             </div>
 
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
@@ -304,7 +309,7 @@
         </div>
 
         <div class="bg-[#1a1a1a] border-t-4 border-white p-6 relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-             <!-- DEBUG INFO (Discret) -->
+             <!-- DEBUG INFO -->
              <div id="debug-info" class="absolute bottom-2 right-2 text-[10px] text-gray-600 font-mono z-50 pointer-events-none"></div>
 
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
@@ -330,14 +335,12 @@
         import { getDatabase, ref, set, get, onValue, update, remove, push, child, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
         let OP_DATABASE = [];
-        let dbLoaded = false; // Flag pour savoir si la DB est saine
+        let dbLoaded = false;
 
-        // CHARGEMENT DB AVEC RETRY ET VERIFICATION
         async function loadDatabase() {
             try {
                 const module = await import("./op_database.js");
                 const rawDB = module.OP_DATABASE;
-                
                 if (rawDB && rawDB.length > 50) { 
                     OP_DATABASE = rawDB;
                     dbLoaded = true;
@@ -357,7 +360,6 @@
                 dbLoaded = false;
             }
         }
-        
         loadDatabase(); 
 
         const firebaseConfig = {
@@ -375,7 +377,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- VARIABLES GLOBALES ---
         let currentUser = null;
         let currentRoomId = null;
         let isSearchActive = false;
@@ -388,14 +389,26 @@
         let roundTimer = null;
         let fallbackTimer = null; 
         let guestSafetyTimer = null;
+        let visualTimerInterval = null;
         let userVolume = 0.5;
         let animeFound = false;
-        let opFound = false; // Ajout du flag pour l'OP
+        let opFound = false;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Gestion erreurs vidéo
+        // FONCTION DE SECOURS MANUELLE
+        window.forceUnlock = () => {
+            console.warn("Manual Unlock Triggered");
+            const overlay = document.getElementById('loader-overlay');
+            if(!overlay.classList.contains('hidden')) {
+                overlay.classList.add('hidden');
+                diskEl.classList.remove('disk-paused');
+                document.getElementById('input-guess').disabled = false;
+                document.getElementById('input-guess').focus();
+            }
+        };
+
         videoEl.onerror = () => {
             console.error("Erreur lecture vidéo !");
             if (myTeamId === 1 && !roundTimer) {
@@ -409,7 +422,6 @@
                 currentUser = user;
                 let name = user.displayName || "Joueur";
                 let avatar = "https://ui-avatars.com/api/?background=random&name=" + name;
-                
                 try {
                     const snap = await get(child(ref(db), `users/${user.uid}`));
                     if (snap.exists()) {
@@ -418,7 +430,6 @@
                         if(val.avatar) avatar = val.avatar;
                     }
                 } catch(e){}
-
                 document.getElementById('username-display').innerText = name.toUpperCase();
                 document.getElementById('user-avatar').src = avatar;
                 document.getElementById('p1-img').src = avatar;
@@ -444,37 +455,26 @@
 
         window.startMatchmaking = async () => {
             if(!currentUser) return;
-            if(!dbLoaded) return alert("Erreur: La base de données musicale n'est pas chargée. Vérifiez votre connexion ou les fichiers.");
-            
+            if(!dbLoaded) return alert("Base de données non chargée.");
             document.getElementById('state-idle').classList.add('hidden');
             document.getElementById('state-searching').classList.remove('hidden');
             isSearchActive = true;
             searchSeconds = 0;
-            
             searchInterval = setInterval(() => {
                 searchSeconds++;
                 const mins = Math.floor(searchSeconds/60).toString().padStart(2, '0');
                 const secs = (searchSeconds%60).toString().padStart(2, '0');
                 document.getElementById('search-timer').innerText = `${mins}:${secs}`;
             }, 1000);
-            
             heartbeatInterval = setInterval(() => {
                 if(currentUser && isSearchActive) {
                     update(ref(db, `blindtest/queue/${currentUser.uid}`), { timestamp: Date.now() });
                 }
             }, 2000);
-
             const queueRef = ref(db, `blindtest/queue/${currentUser.uid}`);
-            const myProfile = {
-                uid: currentUser.uid,
-                name: document.getElementById('username-display').innerText,
-                avatar: document.getElementById('user-avatar').src,
-                timestamp: Date.now()
-            };
-            
+            const myProfile = { uid: currentUser.uid, name: document.getElementById('username-display').innerText, avatar: document.getElementById('user-avatar').src, timestamp: Date.now() };
             await set(queueRef, myProfile);
             onDisconnect(queueRef).remove();
-
             findOpponent(myProfile);
         };
 
@@ -484,62 +484,44 @@
             clearInterval(heartbeatInterval);
             document.getElementById('state-idle').classList.remove('hidden');
             document.getElementById('state-searching').classList.add('hidden');
-            
-            if(currentUser) {
-                await remove(ref(db, `blindtest/queue/${currentUser.uid}`));
-            }
+            if(currentUser) await remove(ref(db, `blindtest/queue/${currentUser.uid}`));
         };
 
         let queueListener = null;
-        
         window.findOpponent = (myProfile) => {
             const queueRef = ref(db, 'blindtest/queue');
-            
             queueListener = onValue(queueRef, async (snapshot) => {
                 if(!isSearchActive || !snapshot.exists()) return;
-                
                 const players = snapshot.val();
                 const ids = Object.keys(players);
                 const now = Date.now();
-                
                 const opponentId = ids.find(id => {
                     if (id === currentUser.uid) return false;
                     const p = players[id];
                     if (!p.timestamp || (now - p.timestamp > 10000)) {
-                        console.log(`Joueur fantôme supprimé : ${p.name}`);
                         remove(ref(db, `blindtest/queue/${id}`));
                         return false;
                     }
                     return true;
                 });
-                
                 if (opponentId) {
                     const amICreator = currentUser.uid < opponentId;
-                    
                     if (amICreator) {
                         const roomId = "RANKED_" + Math.floor(Math.random()*100000);
                         const opponent = players[opponentId];
-                        
                         const roomData = {
-                            status: 'playing',
-                            createdAt: Date.now(),
-                            players: {
-                                [currentUser.uid]: { name: myProfile.name, avatar: myProfile.avatar, team: 1, score: 0 },
-                                [opponentId]: { name: opponent.name, avatar: opponent.avatar, team: 2, score: 0 }
-                            },
+                            status: 'playing', createdAt: Date.now(),
+                            players: { [currentUser.uid]: { name: myProfile.name, avatar: myProfile.avatar, team: 1, score: 0 }, [opponentId]: { name: opponent.name, avatar: opponent.avatar, team: 2, score: 0 } },
                             settings: { duration: 15, rounds: 10, teamCount: 2, suddenDeath: false },
                             gameState: generateNewGame(10)
                         };
-                        
                         await set(ref(db, `blindtest/rooms/${roomId}`), roomData);
-                        
                         const updates = {};
                         updates[`blindtest/queue/${currentUser.uid}/matchId`] = roomId;
                         updates[`blindtest/queue/${opponentId}/matchId`] = roomId;
                         await update(ref(db), updates);
                     }
                 }
-                
                 if (players[currentUser.uid] && players[currentUser.uid].matchId) {
                     const matchId = players[currentUser.uid].matchId;
                     isSearchActive = false;
@@ -561,14 +543,8 @@
                 deck.push(temp[i]);
                 temp.splice(i, 1);
             }
-            
             return {
-                currentRound: 1,
-                songIndex: deck[0],
-                startTime: Date.now() + 4000,
-                phase: 'guessing',
-                deck: deck,
-                seekTime: Math.floor(Math.random() * 11) + 40
+                currentRound: 1, songIndex: deck[0], startTime: Date.now() + 4000, phase: 'guessing', deck: deck, seekTime: Math.floor(Math.random() * 11) + 40
             };
         }
 
@@ -577,28 +553,18 @@
             const roomSnap = await get(ref(db, `blindtest/rooms/${roomId}/players`));
             if(!roomSnap.exists()) return;
             const players = roomSnap.val();
-            
             let myData = players[currentUser.uid];
-            // Safety Check
-            if(!myData) { console.error("Erreur Join"); return; }
-
+            if(!myData) return;
             let oppData = Object.values(players).find(p => p.name !== myData.name) || { name: "Adversaire", avatar: "" };
-            
             myTeamId = myData.team; 
-            console.log("Ma Team ID:", myTeamId);
-            
             document.getElementById('p2-img').src = oppData.avatar || "https://via.placeholder.com/150";
-            
             document.getElementById('state-searching').classList.add('hidden');
             document.getElementById('state-found').classList.remove('hidden');
-            
             setTimeout(() => {
                 document.getElementById('screen-menu').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
-                
                 document.getElementById('game-p1-name').innerText = (myTeamId === 1) ? myData.name : oppData.name;
                 document.getElementById('game-p2-name').innerText = (myTeamId === 1) ? oppData.name : myData.name;
-                
                 initGameSync(roomId);
             }, 3500);
         }
@@ -607,13 +573,10 @@
             onValue(ref(db, `blindtest/rooms/${roomId}`), (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
-
                 let p1 = Object.values(data.players).find(p => p.team === 1);
                 let p2 = Object.values(data.players).find(p => p.team === 2);
-                
                 if(p1) document.getElementById('game-p1-score').innerText = p1.score;
                 if(p2) document.getElementById('game-p2-score').innerText = p2.score;
-
                 handleGameState(data.gameState, data.settings);
             });
         }
@@ -630,7 +593,7 @@
 
             document.getElementById('debug-info').innerText = `DB: ${OP_DATABASE.length} | IDX: ${gameState.songIndex} | TEAM: ${myTeamId}`;
 
-            // RESET COMPLET SI NOUVEAU ROUND
+            // RESET ROUND
             if (gameState.currentRound !== lastRound) {
                 lastRound = gameState.currentRound;
                 document.getElementById('current-round-display').innerText = gameState.currentRound;
@@ -638,10 +601,9 @@
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('result-display').classList.add('hidden');
-                
-                // IMPORTANT: Mise en pause pour reset les buffers
                 videoEl.pause(); 
-                console.log("Reset Round", gameState.currentRound);
+                document.getElementById('game-timer-bar').style.width = '100%'; // Reset visuel
+                document.getElementById('manual-unlock-btn').classList.add('hidden'); // Reset bouton secours
             }
 
             if (gameState.phase === lastPhase && gameState.startTime === currentStartTime) return;
@@ -650,91 +612,92 @@
             currentStartTime = gameState.startTime;
             
             if(gameState.songIndex === undefined || gameState.songIndex < 0 || gameState.songIndex >= OP_DATABASE.length) {
-                console.error("Index de chanson invalide !");
-                 if (myTeamId === 1 && !roundTimer) {
-                    startRoundTimer(1); 
-                }
+                 if (myTeamId === 1 && !roundTimer) startRoundTimer(1); 
                 return;
             }
             
             currentSongData = OP_DATABASE[gameState.songIndex];
 
-            // NETTOYAGE TIMERS PRÉCÉDENTS
+            // CLEANUP
             if(roundTimer) clearTimeout(roundTimer);
             if(fallbackTimer) clearTimeout(fallbackTimer);
             if(guestSafetyTimer) clearTimeout(guestSafetyTimer);
+            if(visualTimerInterval) clearInterval(visualTimerInterval);
+            
             roundTimer = null;
             fallbackTimer = null;
             guestSafetyTimer = null;
 
             if (gameState.phase === 'guessing') {
                 animeFound = false;
-                opFound = false; // Reset OP found
+                opFound = false;
                 
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
                 diskEl.classList.add('disk-paused');
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 
-                // FORCER L'UPDATE DE LA SOURCE
                 videoEl.src = currentSongData.url;
-                videoEl.load(); // INDISPENSABLE POUR LE ROUND SUIVANT
-                
+                videoEl.load(); 
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
-                const startTimerLogic = () => {
+                // FONCTION UNIFIÉE DE DÉMARRAGE (UI + SYNC)
+                const startUnlockSequence = () => {
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
+                    document.getElementById('input-guess').disabled = false;
+                    document.getElementById('input-guess').focus(); // Focus auto
                     
-                    const bar = document.getElementById('game-timer-bar');
-                    bar.classList.remove('timer-running');
-                    void bar.offsetWidth; 
-                    bar.style.animationDuration = settings.duration + 's';
-                    bar.classList.add('timer-running');
+                    // SYNC VISUELLE INTELLIGENTE : On se base sur le temps serveur (startTime)
+                    // et non sur l'instant T, pour que les barres soient identiques chez Host et Guest.
+                    if(visualTimerInterval) clearInterval(visualTimerInterval);
+                    visualTimerInterval = setInterval(() => {
+                        const elapsed = (Date.now() - gameState.startTime) / 1000;
+                        const remaining = Math.max(0, settings.duration - elapsed);
+                        const percent = (remaining / settings.duration) * 100;
+                        document.getElementById('game-timer-bar').style.width = percent + '%';
+                        
+                        if(remaining <= 0) clearInterval(visualTimerInterval);
+                    }, 100);
 
+                    // HOST SEULEMENT: Lance la fin du round dans la DB
                     if (myTeamId === 1 && !roundTimer) {
-                         startRoundTimer(settings.duration);
+                         // On calcule le temps restant exact pour être ultra précis
+                         const elapsed = (Date.now() - gameState.startTime);
+                         const remainingMs = Math.max(0, (settings.duration * 1000) - elapsed);
+                         startRoundTimer(remainingMs / 1000);
                     }
                 };
 
-                videoEl.addEventListener('playing', startTimerLogic, { once: true });
+                videoEl.addEventListener('playing', startUnlockSequence, { once: true });
                 
+                // TENTATIVE LECTURE
                 var playPromise = videoEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
                         console.log("Auto-play bloqué :", error);
-                        // Même si ça bloque, on force l'affichage
-                        if(myTeamId === 1) {
-                            console.log("Host : Forçage timer");
-                            startRoundTimer(settings.duration); 
-                        }
+                        // Si bloqué, on force quand même l'unlock visuel
+                        startUnlockSequence();
                     });
                 }
 
-                // SÉCURITÉ HOST: Réduit à 3s pour plus de fluidité
+                // FALLBACK HOST (3s)
                 if (myTeamId === 1) {
                     fallbackTimer = setTimeout(() => {
                         if(!roundTimer) {
-                            console.warn("Host : Fallback Timer (3s)");
-                            startTimerLogic(); 
-                            startRoundTimer(settings.duration); 
+                            console.warn("Host: Fallback");
+                            startUnlockSequence(); 
                         }
                     }, 3000);
                 }
 
-                // SÉCURITÉ GUEST (NOUVEAU): Si la vidéo plante chez l'invité, on affiche quand même l'UI
+                // FALLBACK GUEST (4s) + BOUTON SECOURS
                 if (myTeamId !== 1) {
                     guestSafetyTimer = setTimeout(() => {
-                         // On enlève le loader pour ne pas bloquer le joueur
-                         document.getElementById('loader-overlay').classList.add('hidden');
-                         // On lance l'anim CSS manuellement
-                         const bar = document.getElementById('game-timer-bar');
-                         bar.classList.remove('timer-running');
-                         void bar.offsetWidth; 
-                         bar.style.animationDuration = settings.duration + 's';
-                         bar.classList.add('timer-running');
-                         console.warn("Guest : Safety Fallback activated");
+                         console.warn("Guest: Safety");
+                         startUnlockSequence();
+                         document.getElementById('manual-unlock-btn').classList.remove('hidden');
                     }, 4000);
                 }
 
@@ -745,6 +708,7 @@
                 document.getElementById('res-anime').innerText = currentSongData.anime;
                 document.getElementById('res-song').innerText = currentSongData.song;
                 document.getElementById('input-guess').disabled = true;
+                if(visualTimerInterval) clearInterval(visualTimerInterval);
 
                 if (myTeamId === 1) {
                     setTimeout(() => {
@@ -755,15 +719,9 @@
                         } else {
                              nextIndex = Math.floor(Math.random() * OP_DATABASE.length);
                         }
-
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
-
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
-                            currentRound: nextRound,
-                            songIndex: nextIndex,
-                            startTime: Date.now(),
-                            phase: 'guessing',
-                            seekTime: nextSeek
+                            currentRound: nextRound, songIndex: nextIndex, startTime: Date.now(), phase: 'guessing', seekTime: nextSeek
                         });
                     }, 6000); 
                 }
@@ -789,7 +747,7 @@
             let points = 0;
             let feedback = "";
 
-            // 1. VERIF ANIME (1pt)
+            // 1. ANIME
             if (!animeFound) {
                 let match = isCloseMatch(val, currentSongData.anime);
                 if (!match && currentSongData.alt) match = currentSongData.alt.some(a => isCloseMatch(val, a));
@@ -801,9 +759,8 @@
                 }
             }
 
-            // 2. VERIF NUMÉRO OP (0.5pt) - RÉACTIVÉ
+            // 2. NUMERO OP
             if (!opFound && currentSongData.num) {
-                // On cherche des chiffres dans l'input
                 const inputNums = val.match(/\d+/g);
                 if (inputNums && inputNums.includes(currentSongData.num.toString())) {
                     opFound = true;
@@ -817,12 +774,10 @@
                     const s = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: s + points });
                 });
-                
                 const msg = document.getElementById('status-msg');
                 msg.innerText = feedback;
                 msg.classList.remove('hidden');
                 msg.classList.remove('text-red-600'); 
-                
                 input.value = "";
                 input.placeholder = "TROUVÉ !";
             } else {
@@ -834,26 +789,20 @@
         function showEndScreen() {
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('scoreboard-overlay').classList.remove('hidden');
-            
             get(ref(db, `blindtest/rooms/${currentRoomId}/players`)).then(snap => {
                 const players = Object.values(snap.val());
                 const p1 = players.find(p => p.team === 1);
                 const p2 = players.find(p => p.team === 2);
-                
                 let winner, loser;
                 if (p1.score >= p2.score) { winner = p1; loser = p2; }
                 else { winner = p2; loser = p1; }
-                
                 document.getElementById('end-p1-name').innerText = winner.name;
                 document.getElementById('end-p1-score').innerText = winner.score;
                 document.getElementById('end-p1-img').src = winner.avatar;
-                
                 document.getElementById('end-p2-name').innerText = loser.name;
                 document.getElementById('end-p2-score').innerText = loser.score;
                 document.getElementById('end-p2-img').src = loser.avatar;
-
                 const isWin = (winner.name === document.getElementById('username-display').innerText); 
-                
                 if (currentUser && winner.name.toUpperCase() === (currentUser.displayName || "JOUEUR").toUpperCase()) { 
                      document.getElementById('end-title').innerText = "VICTOIRE";
                      document.getElementById('end-title').classList.add('text-yellow-400');
@@ -863,13 +812,11 @@
                      document.getElementById('end-title').classList.add('text-red-600');
                      document.getElementById('end-subtitle').innerText = "-15 RANK POINTS";
                 }
-                
                 if (myTeamId === 1) {
                     setTimeout(() => remove(ref(db, `blindtest/rooms/${currentRoomId}`)), 10000);
                 }
             });
         }
-
     </script>
 </body>
 </html>
