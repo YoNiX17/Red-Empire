@@ -367,7 +367,9 @@
             <!-- LOADER OVERLAY (Buffering) -->
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
                 <div class="loader-ring"></div>
-                <p class="text-yellow-400 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
+                <div id="loader-message-container" class="text-center">
+                    <p class="text-yellow-400 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
+                </div>
             </div>
 
             <!-- Mode Vinyle (Devinette) -->
@@ -466,6 +468,15 @@
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
+
+        // Gestion erreurs vidéo
+        videoEl.onerror = () => {
+            console.error("Erreur de chargement vidéo:", videoEl.error);
+            const msgContainer = document.getElementById('loader-message-container');
+            if(msgContainer) {
+                msgContainer.innerHTML = `<p class='text-red-500 font-bold bg-black p-2 border border-red-500 rounded'>ERREUR VIDÉO (Source invalide)</p>`;
+            }
+        };
 
         // 1. CLEANUP SYSTEM (Nettoyage salles > 24h)
         async function cleanOldRooms() {
@@ -816,6 +827,9 @@
                 bar.style.width = '100%';
                 
                 document.getElementById('loader-overlay').classList.remove('hidden');
+                if(document.getElementById('loader-message-container')) {
+                     document.getElementById('loader-message-container').innerHTML = '<p class="text-yellow-400 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L\'OP...</p>';
+                }
                 diskEl.classList.add('disk-paused');
 
                 if(onPlayListener) {
@@ -823,7 +837,14 @@
                     onPlayListener = null;
                 }
 
-                videoEl.src = songData.url;
+                // FIX: Remplacement automatique des URL v.animethemes.moe
+                let safeUrl = songData.url;
+                if (safeUrl.includes("v.animethemes.moe")) {
+                    safeUrl = safeUrl.replace("v.animethemes.moe", "animethemes.moe/video");
+                    console.log("Auto-fix URL:", safeUrl);
+                }
+
+                videoEl.src = safeUrl;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume; 
                 
@@ -842,7 +863,15 @@
                 };
 
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
-                videoEl.play().catch(e => console.log("Autoplay bloqué ou erreur:", e));
+                
+                const playPromise = videoEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Autoplay prevent/error:", error);
+                        // Ne pas bloquer l'interface si autoplay échoue, montrer un bouton
+                        // Mais ici c'est souvent dû à l'erreur de source (réparée ci-dessus)
+                    });
+                }
 
             } else if (gameState.phase === 'reveal') {
                 document.getElementById('loader-overlay').classList.add('hidden');
