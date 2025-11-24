@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranked Duel 1v1 | Red Empire (SYNC FIX)</title>
+    <title>Ranked Duel 1v1 | Red Empire</title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
     
-    <!-- Tailwind Configuration JIT pour éviter les warnings -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -33,37 +32,30 @@
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0 0 0; }
         .btn-pop:disabled { opacity: 0.5; filter: grayscale(1); }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.1s linear; }
+        .timer-fill { height: 100%; background: var(--gold); width: 100%; }
+        .timer-running { animation: shrink linear forwards; }
         
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         .input-manga { border: 3px solid var(--gold); background: #222; color: white; font-family: 'Bangers'; letter-spacing: 1px; }
         .input-manga:focus { outline: none; border-color: white; }
-        
-        #debug-console {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 150px;
-            background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; font-size: 10px;
-            overflow-y: auto; z-index: 9999; padding: 10px; border-top: 2px solid #00ff00;
-            pointer-events: none; opacity: 0.8;
-        }
-        .log-entry { margin-bottom: 2px; border-bottom: 1px solid #003300; }
-        .log-time { color: #888; margin-right: 5px; }
-        .log-warn { color: yellow; }
-        .log-err { color: red; font-weight: bold; }
+        .loader-ring { display: inline-block; width: 64px; height: 64px; }
+        .loader-ring:after { content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%; border: 5px solid #fff; border-color: var(--gold) transparent var(--gold) transparent; animation: loader-ring 1.2s linear infinite; }
+        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .vs-text { text-shadow: 4px 4px 0px #000; animation: pulse-vs 1s infinite alternate; }
+        @keyframes pulse-vs { from { transform: scale(1); } to { transform: scale(1.1); } }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <div id="debug-console">
-        <div class="log-entry">--- DEBUG LOG (TIME SYNC VERSION) ---</div>
-    </div>
-
+    <!-- NAVBAR -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
-        <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white">
+        <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
             <i class="fa-solid fa-chevron-left"></i> <span class="font-manga text-xl">QUITTER</span>
         </a>
-        <div class="absolute left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-8 py-1 skew-x-[-15deg] border-2 border-white">
+        <div class="absolute left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-8 py-1 skew-x-[-15deg] border-2 border-white shadow-[0px_0px_15px_#fbbf24]">
             <h1 class="font-manga text-2xl skew-x-[15deg]">RANKED <span class="text-white drop-shadow-md">DUEL</span></h1>
         </div>
         <div id="user-badge" class="flex items-center gap-2 bg-gray-900 px-4 py-1 rounded-full border border-yellow-500/50">
@@ -74,10 +66,14 @@
 
     <!-- MENU -->
     <div id="screen-menu" class="flex-grow flex items-center justify-center p-4 relative">
-        <div class="manga-panel p-8 max-w-md w-full text-center z-10">
-            <h2 class="text-5xl font-manga text-white mb-2">DUEL 1v1</h2>
+        <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+        <div class="manga-panel p-8 max-w-md w-full text-center speed-lines z-10">
+            <div class="w-24 h-24 bg-yellow-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-black shadow-[0px_0px_30px_rgba(251,191,36,0.6)]">
+                <i class="fa-solid fa-swords text-5xl text-black"></i>
+            </div>
+            <h2 class="text-5xl font-manga text-white mb-2">DUEL 1 CONTRE 1</h2>
             <div class="space-y-4 mt-8">
-                <button onclick="createRoom()" class="btn-pop w-full py-4 text-2xl rounded-lg bg-yellow-600 text-black border-black">CRÉER</button>
+                <button onclick="createRoom()" class="btn-pop w-full py-4 text-2xl bg-yellow-600 text-black border-black">CRÉER</button>
                 <div class="flex gap-3">
                     <input type="text" id="input-room-code" placeholder="CODE" class="input-manga w-32 text-center text-2xl rounded-lg text-yellow-500">
                     <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl border-gray-500 text-gray-300">REJOINDRE</button>
@@ -91,94 +87,106 @@
         <div class="bg-black/50 p-4 rounded border border-yellow-500/30 text-center">
             <span class="bg-yellow-500 text-black px-4 py-2 font-manga text-2xl rounded">CODE: <span id="lobby-code">----</span></span>
         </div>
-        <div class="flex-grow flex items-center justify-center relative gap-8">
-            <!-- P1 -->
+        <div class="flex-grow flex items-center justify-center relative">
             <div id="slot-p1" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-blue-900/10 border-blue-500">
-                <div class="text-blue-500 font-manga text-2xl mb-4">P1 (HÔTE)</div>
-                <h2 id="p1-name" class="text-3xl font-manga text-white">...</h2>
+                <div class="text-blue-500 font-manga text-2xl mb-4">CHALLENGER (VOUS)</div>
+                <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-blue-500 bg-black overflow-hidden relative mb-4 shadow-lg">
+                    <img id="p1-avatar" src="" class="w-full h-full object-cover opacity-50">
+                    <div class="absolute inset-0 flex items-center justify-center"><i id="p1-icon" class="fa-solid fa-user text-4xl text-blue-500"></i></div>
+                </div>
+                <h2 id="p1-name" class="text-3xl font-manga text-white text-center">...</h2>
             </div>
-            <div class="text-7xl font-manga text-yellow-500">VS</div>
-            <!-- P2 -->
+            <div class="absolute z-20"><h1 class="text-7xl md:text-9xl font-black italic text-yellow-500 vs-text font-manga">VS</h1></div>
             <div id="slot-p2" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-red-900/10 border-red-500 opacity-50">
-                <div class="text-red-500 font-manga text-2xl mb-4">P2 (INVITÉ)</div>
-                <h2 id="p2-name" class="text-3xl font-manga text-white">RECHERCHE...</h2>
+                <div class="text-red-500 font-manga text-2xl mb-4">OPPOSANT</div>
+                <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-red-500 bg-black overflow-hidden relative mb-4 shadow-lg">
+                    <img id="p2-avatar" src="" class="w-full h-full object-cover opacity-50">
+                    <div class="absolute inset-0 flex items-center justify-center"><i id="p2-spinner" class="fa-solid fa-spinner animate-spin text-4xl text-red-500"></i></div>
+                </div>
+                <h2 id="p2-name" class="text-3xl font-manga text-white text-center">RECHERCHE...</h2>
             </div>
         </div>
         <div class="h-20 flex items-center justify-center">
             <div id="host-controls" class="hidden w-full max-w-lg">
                 <button id="btn-start" onclick="startGame()" disabled class="btn-pop w-full py-4 text-2xl rounded-lg bg-green-600 text-white">EN ATTENTE...</button>
             </div>
-            <div id="guest-controls" class="hidden"><p class="text-yellow-500 font-manga text-xl animate-pulse">PRÊT AU COMBAT...</p></div>
+            <div id="guest-controls" class="hidden"><p class="text-yellow-500 font-manga text-xl animate-pulse">L'HÔTE VA LANCER LE DUEL...</p></div>
         </div>
     </div>
 
     <!-- GAME -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
         <div class="bg-black border-b-4 border-yellow-500 p-2 flex justify-between items-center px-4 relative z-30">
-            <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p1">0</div>
+            <div class="flex items-center gap-4 w-1/3">
+                <div class="text-right flex-1 hidden md:block"><div id="game-p1-name" class="font-bold text-blue-400">JOUEUR 1</div></div>
+                <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p1">0</div>
+            </div>
             <div class="flex flex-col items-center w-1/3">
                  <div class="bg-yellow-500 text-black font-bold px-3 rounded-full text-xs mb-1">ROUND <span id="current-round-display">1</span>/15</div>
-                 <div class="timer-container w-full max-w-[200px]"><div id="game-timer-bar" class="timer-fill" style="width: 100%"></div></div>
+                 <div class="timer-container w-full max-w-[200px]"><div id="game-timer-bar" class="timer-fill"></div></div>
             </div>
-            <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p2">0</div>
+            <div class="flex items-center gap-4 w-1/3 justify-end">
+                <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p2">0</div>
+                <div class="text-left flex-1 hidden md:block"><div id="game-p2-name" class="font-bold text-red-400">JOUEUR 2</div></div>
+            </div>
         </div>
 
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
-            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90">
-                <div class="loader-ring"></div>
-                <p class="text-yellow-500 font-manga mt-4 text-xl" id="loader-text">CHARGEMENT...</p>
-                <p class="text-gray-500 text-sm mt-2 font-mono" id="loader-subtext">Calibrage temporel...</p>
-            </div>
-
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
-                <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
-            </div>
-
-            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
-                <div class="w-64 h-64 rounded-full bg-[#111] border-[6px] border-yellow-500 shadow-2xl flex items-center justify-center disk-spin disk-paused" id="disk">
-                    <div class="absolute w-28 h-28 bg-yellow-600 rounded-full border-4 border-white flex items-center justify-center">
-                        <i class="fa-solid fa-music text-black text-4xl"></i>
-                    </div>
+                <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-yellow-500 rounded-lg overflow-hidden">
+                    <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 </div>
-                <div id="status-indicators" class="flex gap-2 mt-8">
+            </div>
+            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+                <div class="loader-ring"></div>
+                <p class="text-yellow-500 font-manga tracking-widest mt-4 text-xl animate-pulse">CHARGEMENT DE L'OP...</p>
+            </div>
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 scale-110">
+                <div class="w-64 h-64 rounded-full bg-[#111] border-[6px] border-yellow-500 shadow-2xl flex items-center justify-center disk-spin disk-paused" id="disk">
+                    <div class="absolute w-28 h-28 bg-yellow-600 rounded-full border-4 border-white flex items-center justify-center"><i class="fa-solid fa-music text-4xl text-black"></i></div>
+                </div>
+                <div class="text-center bg-yellow-500 px-8 py-2 border-4 border-black rounded-full mt-8">
+                    <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">DUEL EN COURS</h2>
+                </div>
+                <div id="status-indicators" class="flex gap-4 mt-4 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">ANIME OK</div>
                     <div id="status-song" class="hidden bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">TITRE OK</div>
                 </div>
+            </div>
+            <div class="absolute top-4 right-4 z-30 bg-[#222] border border-gray-600 rounded-full px-4 py-2 flex items-center gap-3">
+                <i class="fa-solid fa-volume-high text-yellow-500"></i>
+                <input type="range" min="0" max="1" step="0.1" class="w-20 accent-yellow-500 h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
         </div>
 
         <div class="bg-[#141414] border-t-4 border-yellow-500 p-6 relative z-30">
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
-                <div class="bg-yellow-500 border-4 border-white p-4 max-w-xl w-full text-center shadow-lg rotate-1">
-                    <h2 id="res-anime" class="text-3xl font-manga text-black mb-1">ANIME</h2>
-                    <p id="res-song" class="text-white bg-black text-lg font-bold inline-block px-2">SONG</p>
+                <div class="bg-yellow-500 border-4 border-white p-8 max-w-2xl w-full text-center shadow-lg rotate-1">
+                    <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block">C'ÉTAIT L'OPENING DE</h3>
+                    <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-black mb-1">ANIME</h2>
+                    <p id="res-song" class="text-white bg-black text-xl font-bold italic inline-block px-4 py-1 border-2 border-white">"SONG"</p>
                 </div>
             </div>
-
             <div class="max-w-3xl mx-auto flex gap-3">
-                <input type="text" id="input-guess" placeholder="RÉPONSE..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="btn-pop w-32 rounded-lg text-xl bg-yellow-600 text-black">GO</button>
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg" onkeydown="if(event.key === 'Enter') submitGuess()">
+                <button onclick="submitGuess()" class="btn-pop w-40 rounded-lg text-2xl bg-yellow-600 text-black">ENVOYER</button>
             </div>
         </div>
     </div>
+    
+    <div id="screen-end" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+        <div class="text-center">
+            <h1 id="end-title" class="text-6xl font-manga text-yellow-500 mb-4 animate-bounce">FIN DE PARTIE</h1>
+            <p id="end-score" class="text-white text-2xl font-mono mb-8">SCORE: 0 - 0</p>
+            <button onclick="location.reload()" class="btn-pop px-8 py-4 text-xl rounded bg-white text-black">RETOUR</button>
+        </div>
+    </div>
 
-    <!-- Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
-
-        function logDebug(msg, type="info") {
-            const consoleDiv = document.getElementById('debug-console');
-            const entry = document.createElement('div');
-            entry.className = "log-entry " + (type === "error" ? "log-err" : type === "warn" ? "log-warn" : "");
-            const time = new Date().toLocaleTimeString().split(' ')[0];
-            entry.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
-            consoleDiv.appendChild(entry);
-            consoleDiv.scrollTop = consoleDiv.scrollHeight;
-            console.log(`[DEBUG] ${msg}`);
-        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -198,292 +206,43 @@
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
-        let roundInterval = null;
+        let roundTimer = null;
         
         let animeFound = false, songFound = false, opFound = false;
         let currentSongData = null;
-        let localPhase = '';
-        let localStartTime = 0;
-        let videoReady = false;
-        
-        // --- TIME SYNC VARS ---
-        let serverTimeOffset = 0;
+        let lastPhase = '';
+        let lastStartTime = 0;
+        let onPlayListener = null;
+        let userVolume = 0.5;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // 1. CALCUL DU DÉCALAGE TEMPOREL (CRUCIAL)
-        const offsetRef = ref(db, ".info/serverTimeOffset");
-        onValue(offsetRef, (snap) => {
-            serverTimeOffset = snap.val();
-            logDebug(`Time Offset calculated: ${serverTimeOffset}ms`);
-        });
+        // INITIALISATION VOLUME
+        const savedVol = localStorage.getItem('userVolume');
+        if(savedVol) userVolume = parseFloat(savedVol);
+        document.getElementById('volume-slider').value = userVolume;
 
-        // Helper pour avoir l'heure serveur estimée
-        function getServerTime() {
-            return Date.now() + serverTimeOffset;
+        window.updateVolume = (val) => {
+            userVolume = val;
+            localStorage.setItem('userVolume', val);
+            if(videoEl) videoEl.volume = userVolume;
         }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                logDebug("Logged in: " + user.uid);
-                document.querySelector('#user-badge span:last-child').innerText = user.displayName;
-            } else {
-                window.location.href = "index.html";
-            }
-        });
-
-        window.createRoom = async () => {
-            const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-            currentRoomId = roomCode;
-            isHost = true;
-            
-            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
-            const deck = shuffleArray(allIndices);
-            logDebug(`Creating Room ${roomCode}`);
-
-            const roomData = {
-                host: currentUser.uid,
-                createdAt: getServerTime(),
-                status: 'lobby',
-                type: 'ranked_1v1',
-                settings: RANKED_SETTINGS,
-                players: { [currentUser.uid]: { name: currentUser.displayName, team: 1, score: 0 } },
-                gameState: { 
-                    currentRound: 0, 
-                    songIndex: 0, 
-                    startTime: 0, 
-                    phase: 'lobby', 
-                    deck: deck, 
-                    seekTime: 0 
-                }
-            };
-            await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
-            enterLobby(roomCode);
-        };
-
-        window.joinRoom = async () => {
-            const code = document.getElementById('input-room-code').value.toUpperCase();
-            const roomRef = ref(db, `blindtest/rooms/${code}`);
-            const snapshot = await get(roomRef);
-            if (snapshot.exists()) {
-                currentRoomId = code;
-                isHost = false;
-                await update(ref(db, `blindtest/rooms/${code}/players/${currentUser.uid}`), { name: currentUser.displayName, team: 2, score: 0 });
-                enterLobby(code);
-            } else { alert("Salle introuvable"); }
-        };
-
-        function enterLobby(code) {
-            document.getElementById('screen-menu').classList.add('hidden');
-            document.getElementById('screen-lobby').classList.remove('hidden');
-            document.getElementById('lobby-code').innerText = code;
-
-            if(isHost) {
-                document.getElementById('host-controls').classList.remove('hidden');
-                document.getElementById('guest-controls').classList.add('hidden');
-            } else {
-                document.getElementById('host-controls').classList.add('hidden');
-                document.getElementById('guest-controls').classList.remove('hidden');
-            }
-
-            onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                updateLobbyUI(data.players);
-
-                if (data.status === 'playing') {
-                    if (document.getElementById('screen-game').classList.contains('hidden')) {
-                        document.getElementById('screen-lobby').classList.add('hidden');
-                        document.getElementById('screen-game').classList.remove('hidden');
-                    }
-                    handleGameSync(data.gameState, data.players);
-                }
-            });
-        }
-
-        function updateLobbyUI(players) {
-            const p2Slot = document.getElementById('slot-p2');
-            const p2Name = document.getElementById('p2-name');
-            let p1 = Object.values(players).find(p => p.team === 1);
-            let p2 = Object.values(players).find(p => p.team === 2);
-
-            if(p1) document.getElementById('p1-name').innerText = p1.name;
-            
-            if(p2) {
-                p2Slot.classList.remove('opacity-50');
-                p2Name.innerText = p2.name;
-                if(isHost) {
-                    document.getElementById('btn-start').disabled = false;
-                    document.getElementById('btn-start').innerText = "LANCER LE DUEL";
-                }
-            } else {
-                p2Slot.classList.add('opacity-50');
-                p2Name.innerText = "RECHERCHE...";
-            }
-        }
-
-        window.startGame = () => {
-            get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
-                const deck = snap.val();
-                if(!deck) return logDebug("Error: No Deck", "error");
-                
-                const firstIndex = deck[0];
-                const seek = Math.floor(Math.random() * 11) + 40;
-                
-                // Utilisation de l'heure SERVEUR pour la synchro
-                const serverNow = getServerTime();
-
-                update(ref(db, `blindtest/rooms/${currentRoomId}`), {
-                    status: 'playing',
-                    gameState: {
-                        currentRound: 1,
-                        songIndex: firstIndex,
-                        startTime: serverNow + 5000, // Buffer 5s basé sur l'heure serveur
-                        phase: 'guessing',
-                        deck: deck, 
-                        seekTime: seek
+                get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
+                    if (snapshot.exists() && snapshot.val().username) {
+                        document.querySelector('#user-badge span:last-child').innerText = snapshot.val().username;
+                    } else {
+                        document.querySelector('#user-badge span:last-child').innerText = user.displayName;
                     }
                 });
-            });
-        };
+            } else { window.location.href = "index.html"; }
+        });
 
-        function handleGameSync(gameState, players) {
-            let p1 = Object.values(players).find(p => p.team === 1);
-            let p2 = Object.values(players).find(p => p.team === 2);
-            if(p1) document.getElementById('score-p1').innerText = p1.score;
-            if(p2) document.getElementById('score-p2').innerText = p2.score;
-
-            if (gameState.phase === localPhase && gameState.startTime === localStartTime) return;
-            
-            clearInterval(roundInterval);
-            localPhase = gameState.phase;
-            localStartTime = gameState.startTime;
-            
-            document.getElementById('current-round-display').innerText = gameState.currentRound;
-            currentSongData = OP_DATABASE[gameState.songIndex];
-
-            if (gameState.phase === 'guessing') {
-                startGuessingPhase(gameState);
-            } else if (gameState.phase === 'reveal') {
-                startRevealPhase(gameState);
-            }
-        }
-
-        function startGuessingPhase(gameState) {
-            resetUI();
-            document.getElementById('loader-overlay').classList.remove('hidden');
-            videoReady = false;
-            
-            const targetSeek = gameState.seekTime || 0;
-            
-            // Reset & Load
-            videoEl.oncanplay = null;
-            videoEl.onloadedmetadata = null;
-            videoEl.onerror = null;
-            videoEl.pause();
-            videoEl.removeAttribute('src');
-            videoEl.load();
-
-            // Setup listeners BEFORE src
-            videoEl.onerror = (e) => {
-                logDebug("VIDEO ERROR (404/Format). Forcing Timer start.", "error");
-                document.getElementById('loader-subtext').innerText = "Erreur vidéo - Le jeu continue...";
-                videoReady = true; 
-            };
-
-            videoEl.onloadedmetadata = () => {
-                videoEl.currentTime = targetSeek;
-            };
-
-            videoEl.oncanplay = () => {
-                videoReady = true;
-            };
-
-            videoEl.src = currentSongData.url;
-            videoEl.volume = 0.5;
-
-            // Boucle de synchro basée sur le TEMPS SERVEUR
-            roundInterval = setInterval(() => {
-                const now = getServerTime(); // Heure "absolue"
-                const timeLeft = (gameState.startTime - now) / 1000;
-
-                if (timeLeft > 0) {
-                    document.getElementById('loader-text').innerText = `DÉPART DANS ${Math.ceil(timeLeft)}s`;
-                } else {
-                    document.getElementById('loader-overlay').classList.add('hidden');
-                    diskEl.classList.remove('disk-paused');
-                    
-                    if (videoEl.paused && !videoEl.error && videoReady) {
-                        videoEl.play().catch(e => {});
-                    }
-
-                    // Sync Timer Visuel
-                    const elapsed = (now - gameState.startTime) / 1000;
-                    const duration = RANKED_SETTINGS.duration;
-                    const percent = Math.max(0, 100 - ((elapsed / duration) * 100));
-                    document.getElementById('game-timer-bar').style.width = percent + "%";
-
-                    // Fin du round (Hôte Only trigger)
-                    if (isHost && elapsed >= duration) {
-                        clearInterval(roundInterval);
-                        // IMPORTANT: Utiliser l'heure serveur pour le prochain état aussi
-                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
-                            phase: 'reveal', 
-                            startTime: getServerTime() 
-                        });
-                    }
-                }
-            }, 100);
-        }
-
-        function startRevealPhase(gameState) {
-            document.getElementById('loader-overlay').classList.add('hidden');
-            document.getElementById('video-wrapper').classList.remove('hidden');
-            document.getElementById('vinyl-wrapper').classList.add('hidden');
-            document.getElementById('result-display').classList.remove('hidden');
-            
-            document.getElementById('res-anime').innerText = currentSongData.anime;
-            document.getElementById('res-song').innerText = currentSongData.song;
-            
-            document.getElementById('input-guess').disabled = true;
-            diskEl.classList.add('disk-paused');
-            videoEl.volume = 1.0; 
-
-            if (isHost) {
-                setTimeout(() => {
-                    const nextRound = gameState.currentRound + 1;
-                    if (nextRound > RANKED_SETTINGS.rounds) { return; } // End game logic TODO
-
-                    const nextSongIndex = gameState.deck[nextRound - 1]; 
-                    const nextSeek = Math.floor(Math.random() * 11) + 40;
-
-                    update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
-                        currentRound: nextRound,
-                        songIndex: nextSongIndex,
-                        startTime: getServerTime() + 5000, // 5s buffer based on Server Time
-                        phase: 'guessing',
-                        seekTime: nextSeek
-                    });
-
-                }, 8000);
-            }
-        }
-
-        function resetUI() {
-            animeFound = false; songFound = false; opFound = false;
-            document.getElementById('status-anime').classList.add('hidden');
-            document.getElementById('status-song').classList.add('hidden');
-            document.getElementById('video-wrapper').classList.add('hidden');
-            document.getElementById('vinyl-wrapper').classList.remove('hidden');
-            document.getElementById('result-display').classList.add('hidden');
-            document.getElementById('input-guess').value = "";
-            document.getElementById('input-guess').disabled = false;
-            document.getElementById('game-timer-bar').style.width = "100%";
-        }
-
+        // --- UTILITAIRES ---
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -521,6 +280,279 @@
             return similarity > 0.75; 
         }
 
+        async function getUserProfile(uid) {
+            try {
+                const snap = await get(child(ref(db), `users/${uid}`));
+                if (snap.exists()) {
+                    const val = snap.val();
+                    return { name: val.username || currentUser.displayName, avatar: val.avatar || currentUser.photoURL };
+                }
+            } catch(e) { console.error(e); }
+            return { name: currentUser.displayName, avatar: currentUser.photoURL };
+        }
+
+        // --- LOGIQUE SALLE ---
+        window.createRoom = async () => {
+            if (!currentUser) return;
+            const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            currentRoomId = roomCode;
+            isHost = true;
+            const profile = await getUserProfile(currentUser.uid);
+            
+            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
+            const deck = shuffleArray(allIndices);
+
+            const roomData = {
+                host: currentUser.uid,
+                createdAt: Date.now(),
+                status: 'lobby',
+                type: 'ranked_1v1',
+                settings: RANKED_SETTINGS,
+                players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: deck, seekTime: 0 }
+            };
+            await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
+            enterLobby(roomCode);
+        };
+
+        window.joinRoom = async () => {
+            if (!currentUser) return;
+            const code = document.getElementById('input-room-code').value.toUpperCase();
+            const roomRef = ref(db, `blindtest/rooms/${code}`);
+            const snapshot = await get(roomRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (Object.keys(data.players || {}).length >= 2) { return alert("⚠️ Salle pleine."); }
+                currentRoomId = code;
+                isHost = false;
+                const profile = await getUserProfile(currentUser.uid);
+                const updates = {};
+                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { name: profile.name, team: 2, score: 0, avatar: profile.avatar };
+                await update(ref(db), updates);
+                enterLobby(code);
+            } else { alert("Salle introuvable."); }
+        };
+
+        function enterLobby(code) {
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-lobby').classList.remove('hidden');
+            document.getElementById('lobby-code').innerText = code;
+            if (isHost) {
+                document.getElementById('host-controls').classList.remove('hidden');
+                document.getElementById('guest-controls').classList.add('hidden');
+            } else {
+                document.getElementById('host-controls').classList.add('hidden');
+                document.getElementById('guest-controls').classList.remove('hidden');
+            }
+            onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                updateLobbySlots(data.players);
+                if (data.status === 'lobby') {
+                    document.getElementById('screen-game').classList.add('hidden');
+                    document.getElementById('screen-lobby').classList.remove('hidden');
+                    if(isHost) {
+                        const btnStart = document.getElementById('btn-start');
+                        const pCount = Object.keys(data.players || {}).length;
+                        btnStart.disabled = pCount < 2;
+                        btnStart.innerText = pCount === 2 ? "LANCER LE DUEL !" : "EN ATTENTE DE L'ADVERSAIRE...";
+                    }
+                } else if (data.status === 'playing') {
+                    if (document.getElementById('screen-game').classList.contains('hidden')) {
+                        document.getElementById('screen-lobby').classList.add('hidden');
+                        document.getElementById('screen-game').classList.remove('hidden');
+                    }
+                    handleGameSync(data.gameState, data.players);
+                }
+            });
+        }
+
+        function updateLobbySlots(players) {
+            const p2Slot = document.getElementById('slot-p2');
+            const p2Name = document.getElementById('p2-name');
+            const p2Avatar = document.getElementById('p2-avatar');
+            
+            p2Slot.classList.add('opacity-50');
+            p2Name.innerText = "RECHERCHE...";
+            p2Avatar.src = ""; p2Avatar.classList.add('opacity-50');
+
+            Object.values(players).forEach(p => {
+                if (p.team === 1) {
+                    document.getElementById('p1-name').innerText = p.name;
+                    if(p.avatar) {
+                        document.getElementById('p1-avatar').src = p.avatar;
+                        document.getElementById('p1-avatar').classList.remove('opacity-50');
+                        document.getElementById('p1-icon').classList.add('hidden');
+                    }
+                    document.getElementById('game-p1-name').innerText = p.name;
+                    document.getElementById('score-p1').innerText = p.score;
+                } else if (p.team === 2) {
+                    p2Slot.classList.remove('opacity-50');
+                    p2Name.innerText = p.name;
+                    document.getElementById('p2-spinner').classList.add('hidden');
+                    if(p.avatar) {
+                        p2Avatar.src = p.avatar;
+                        p2Avatar.classList.remove('opacity-50');
+                    }
+                    document.getElementById('game-p2-name').innerText = p.name;
+                    document.getElementById('score-p2').innerText = p.score;
+                }
+            });
+        }
+
+        window.startGame = () => {
+            // DECK DEJA GÉNÉRÉ À LA CRÉATION
+            get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
+                const deck = snap.val();
+                if(!deck) return;
+                
+                const firstIndex = deck[0];
+                const seek = Math.floor(Math.random() * 11) + 40;
+
+                update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                    status: 'playing',
+                    gameState: {
+                        currentRound: 1,
+                        songIndex: firstIndex,
+                        startTime: Date.now() + 3000,
+                        phase: 'guessing',
+                        deck: deck,
+                        seekTime: seek
+                    }
+                });
+            });
+        };
+
+        // --- MOTEUR DE JEU (COPIÉ DE BLINDTEST.HTML) ---
+        function handleGameSync(gameState, players) {
+            // Update scores
+            Object.values(players).forEach(p => {
+                if (p.team === 1) document.getElementById('score-p1').innerText = p.score;
+                if (p.team === 2) document.getElementById('score-p2').innerText = p.score;
+            });
+
+            if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
+            
+            if (isHost) clearTimeout(roundTimer);
+            lastPhase = gameState.phase;
+            lastStartTime = gameState.startTime;
+            
+            const songData = OP_DATABASE[gameState.songIndex];
+            currentSongData = songData;
+            document.getElementById('current-round-display').innerText = gameState.currentRound;
+
+            if (gameState.phase === 'guessing') {
+                // RESET UI
+                animeFound = false; songFound = false; opFound = false;
+                document.getElementById('status-anime').classList.add('hidden');
+                document.getElementById('status-song').classList.add('hidden');
+                document.getElementById('result-display').classList.add('hidden');
+                document.getElementById('video-wrapper').classList.add('hidden');
+                document.getElementById('vinyl-wrapper').classList.remove('hidden');
+                document.getElementById('input-guess').value = "";
+                document.getElementById('input-guess').disabled = false;
+                document.getElementById('input-guess').focus();
+
+                const bar = document.getElementById('game-timer-bar');
+                bar.classList.remove('timer-running');
+                bar.style.width = '100%';
+                
+                document.getElementById('loader-overlay').classList.remove('hidden'); 
+                diskEl.classList.add('disk-paused'); 
+
+                if(onPlayListener) {
+                    videoEl.removeEventListener('playing', onPlayListener);
+                    onPlayListener = null;
+                }
+
+                // CHARGEMENT "NAIF" (Comme blindtest.html)
+                videoEl.src = songData.url;
+                videoEl.currentTime = gameState.seekTime || 0;
+                videoEl.volume = userVolume;
+
+                // Listener de démarrage
+                onPlayListener = () => {
+                    // 1. Cache loader
+                    document.getElementById('loader-overlay').classList.add('hidden');
+                    
+                    // 2. Lance anims
+                    diskEl.classList.remove('disk-paused');
+                    bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
+                    bar.classList.add('timer-running');
+
+                    // 3. SI HÔTE : Lance chrono
+                    if (isHost) {
+                        clearTimeout(roundTimer);
+                        roundTimer = setTimeout(() => {
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                                phase: 'reveal', 
+                                startTime: Date.now() 
+                            });
+                        }, RANKED_SETTINGS.duration * 1000);
+                    }
+                };
+
+                videoEl.addEventListener('playing', onPlayListener, { once: true });
+                videoEl.play().catch(e => console.log("Autoplay blocked"));
+                
+                // SÉCURITÉ ANTI-CRASH (Si vidéo hôte plante, on force le timer)
+                if(isHost) {
+                    videoEl.onerror = () => {
+                        console.log("Video Error - Force Start Timer");
+                        onPlayListener(); // On simule le départ
+                    };
+                }
+
+            } else if (gameState.phase === 'reveal') {
+                document.getElementById('loader-overlay').classList.add('hidden');
+                document.getElementById('result-display').classList.remove('hidden');
+                document.getElementById('res-anime').innerText = songData.anime;
+                document.getElementById('res-song').innerText = songData.song;
+                document.getElementById('video-wrapper').classList.remove('hidden');
+                document.getElementById('vinyl-wrapper').classList.add('hidden');
+                diskEl.classList.add('disk-paused');
+                document.getElementById('input-guess').disabled = true;
+
+                if (isHost) {
+                    setTimeout(() => {
+                        if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
+                            return; 
+                        }
+                        const nextIndex = gameState.deck[gameState.currentRound]; // currentRound = index suivant car commence à 1
+                        const nextSeek = Math.floor(Math.random() * 11) + 40;
+
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
+                            currentRound: gameState.currentRound + 1,
+                            songIndex: nextIndex,
+                            startTime: Date.now(),
+                            phase: 'guessing',
+                            seekTime: nextSeek
+                        });
+                    }, 8000);
+                }
+            } else if (gameState.phase === 'finished') {
+                document.getElementById('screen-game').classList.add('blur-md');
+                document.getElementById('screen-end').classList.remove('hidden');
+                
+                let p1Score = 0, p2Score = 0;
+                Object.values(players).forEach(p => {
+                    if (p.team === 1) p1Score = p.score;
+                    if (p.team === 2) p2Score = p.score;
+                });
+                document.getElementById('end-score').innerText = `SCORE: ${p1Score} - ${p2Score}`;
+                
+                const title = document.getElementById('end-title');
+                const myTeam = Object.values(players).find(p => p.name === (currentUser.displayName || "Joueur"))?.team;
+                const myScore = myTeam === 1 ? p1Score : p2Score;
+                const oppScore = myTeam === 1 ? p2Score : p1Score;
+                
+                if(myScore > oppScore) { title.innerText = "VICTOIRE !"; title.className = "text-6xl font-manga text-green-500 mb-4 animate-bounce"; }
+                else if(myScore < oppScore) { title.innerText = "DÉFAITE..."; title.className = "text-6xl font-manga text-red-500 mb-4"; }
+                else { title.innerText = "ÉGALITÉ"; title.className = "text-6xl font-manga text-white mb-4"; }
+            }
+        }
+
         window.submitGuess = () => {
             if (!currentSongData || document.getElementById('input-guess').disabled) return;
             const input = document.getElementById('input-guess');
@@ -538,16 +570,27 @@
                     document.getElementById('status-anime').classList.remove('hidden');
                 }
             }
+            if (!songFound) {
+                if (isCloseMatch(guess, currentSongData.song)) {
+                    songFound = true; pointsEarned += 1;
+                    document.getElementById('status-song').classList.remove('hidden');
+                }
+            }
             
             if(pointsEarned > 0) {
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: currentScore + pointsEarned });
                 });
+                const popup = document.createElement('div');
+                popup.className = 'fixed z-50 text-4xl text-yellow-400 font-bold animate-bounce';
+                popup.style.left = '50%'; popup.style.top = '40%'; popup.style.transform = 'translate(-50%, -50%)';
+                popup.innerText = `+${pointsEarned}`;
+                document.body.appendChild(popup);
+                setTimeout(() => popup.remove(), 1000);
             }
             input.value = "";
         };
-
     </script>
 </body>
 </html>
