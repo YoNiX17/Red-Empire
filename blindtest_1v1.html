@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <script>
-        // Configuration Tailwind pour éviter les warnings et activer le mode JIT
         tailwind.config = {
             mode: 'jit',
             theme: {
@@ -542,20 +541,36 @@
                     onPlayListener = null;
                 }
                 
-                // FORCE RESET VIDEO POUR SYNCHRO
+                // 1. Reset et Source
+                videoEl.onloadedmetadata = null;
                 videoEl.pause();
                 videoEl.removeAttribute('src'); 
                 videoEl.load();
 
                 videoEl.src = songData.url;
-                videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
+                // 2. Attente chargement métadonnées pour SEEK
+                videoEl.onloadedmetadata = () => {
+                    videoEl.currentTime = gameState.seekTime || 0;
+                    
+                    const playPromise = videoEl.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => { console.log("Auto-play prevented"); });
+                    }
+                };
+
+                // 3. Attente lecture réelle pour SYNC
                 onPlayListener = () => {
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
+                    
+                    // Force CSS Reflow pour restart anim
+                    bar.classList.remove('timer-running');
+                    void bar.offsetWidth; 
                     bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
                     bar.classList.add('timer-running');
+
                     if (isHost) {
                         clearTimeout(roundTimer);
                         roundTimer = setTimeout(() => {
@@ -564,7 +579,6 @@
                     }
                 };
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
-                videoEl.play().catch(e => console.log("Autoplay blocked:", e));
 
             } else if (gameState.phase === 'reveal') {
                 document.getElementById('loader-overlay').classList.add('hidden');
@@ -583,9 +597,8 @@
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
                             return; 
                         }
-                        // SAFE NEXT ROUND LOGIC
                         if (!gameState.deck) return console.error("Deck lost!");
-                        const nextIndex = gameState.deck[gameState.currentRound]; // currentRound starts at 1, so index 1 is round 2
+                        const nextIndex = gameState.deck[gameState.currentRound]; 
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: gameState.currentRound + 1,
