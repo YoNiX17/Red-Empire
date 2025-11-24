@@ -4,10 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranked Duel 1v1 | Red Empire</title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
+    <script>
+        // Configuration Tailwind pour éviter les warnings et activer le mode JIT
+        tailwind.config = {
+            mode: 'jit',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: '#fbbf24',
+                        'gold-dark': '#b45309',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         :root {
             --gold: #fbbf24;
@@ -17,7 +33,7 @@
             --dark-bg: #0f0f0f;
             --panel-bg: #141414;
             --text-main: #eeeeee;
-            --border-color: #fbbf24; /* Bordures dorées pour le ranked */
+            --border-color: #fbbf24;
         }
 
         body { 
@@ -31,7 +47,6 @@
         
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* --- PANNEAUX MANGA DARK --- */
         .manga-panel {
             background: var(--panel-bg);
             border: 3px solid var(--border-color);
@@ -48,7 +63,6 @@
             pointer-events: none;
         }
 
-        /* --- BOUTONS POP --- */
         .btn-pop {
             background: #222;
             color: var(--gold);
@@ -67,18 +81,15 @@
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px; }
         .btn-pop:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         
-        /* --- TIMER BAR --- */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--gold); width: 100%; }
         .timer-running { animation: shrink linear forwards; }
 
-        /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
 
-        /* --- INPUT STYLE --- */
         .input-manga {
             border: 3px solid var(--border-color);
             background: #222;
@@ -89,7 +100,6 @@
         }
         .input-manga:focus { outline: none; border-color: white; color: white; }
 
-        /* --- LOADER SPINNER --- */
         .loader-ring { display: inline-block; width: 64px; height: 64px; }
         .loader-ring:after {
             content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%;
@@ -98,7 +108,6 @@
         }
         @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* VS ANIMATION */
         .vs-text {
             text-shadow: 4px 4px 0px #000;
             animation: pulse-vs 1s infinite alternate;
@@ -108,7 +117,6 @@
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- NAVBAR RANKED -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
         <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
             <i class="fa-solid fa-chevron-left"></i>
@@ -128,172 +136,92 @@
         </div>
     </nav>
 
-
-    <!-- ========================================== -->
-    <!-- ÉCRAN 1 : MENU PRINCIPAL (RANKED)          -->
-    <!-- ========================================== -->
     <div id="screen-menu" class="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
-        <!-- Décoration de fond -->
         <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-        
         <div class="manga-panel p-8 max-w-md w-full text-center speed-lines z-10">
             <div class="w-24 h-24 bg-yellow-500 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-black shadow-[0px_0px_30px_rgba(251,191,36,0.6)]">
                 <i class="fa-solid fa-swords text-5xl text-black"></i>
             </div>
-            
             <h2 class="text-5xl font-manga text-white mb-2 text-shadow-sm">DUEL 1 CONTRE 1</h2>
             <p class="text-yellow-500 font-bold mb-8 text-sm tracking-wider uppercase border-b border-yellow-500/30 pb-2 inline-block">Mode Compétitif Officiel</p>
-            
             <div class="space-y-4">
-                <button onclick="createRoom()" class="btn-pop w-full py-4 text-2xl tracking-wider rounded-lg bg-yellow-600 text-black border-black hover:bg-yellow-500">
-                    CRÉER UN DUEL
-                </button>
-                
-                <div class="flex items-center gap-3 opacity-50">
-                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
-                    <span class="text-xs font-bold text-gray-500">OU</span>
-                    <div class="h-0.5 bg-gray-600 flex-1 rounded"></div>
-                </div>
-
+                <button onclick="createRoom()" class="btn-pop w-full py-4 text-2xl tracking-wider rounded-lg bg-yellow-600 text-black border-black hover:bg-yellow-500">CRÉER UN DUEL</button>
+                <div class="flex items-center gap-3 opacity-50"><div class="h-0.5 bg-gray-600 flex-1 rounded"></div><span class="text-xs font-bold text-gray-500">OU</span><div class="h-0.5 bg-gray-600 flex-1 rounded"></div></div>
                 <div class="flex gap-3">
                     <input type="text" id="input-room-code" placeholder="CODE DUEL" class="input-manga w-32 text-center text-2xl uppercase rounded-lg text-yellow-500 border-gray-600">
-                    <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl border-gray-500 text-gray-300 hover:text-black hover:border-yellow-500">
-                        REJOINDRE
-                    </button>
+                    <button onclick="joinRoom()" class="btn-pop flex-1 rounded-lg text-xl border-gray-500 text-gray-300 hover:text-black hover:border-yellow-500">REJOINDRE</button>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- ========================================== -->
-    <!-- ÉCRAN 2 : LOBBY (FACE À FACE)              -->
-    <!-- ========================================== -->
     <div id="screen-lobby" class="hidden flex-grow flex flex-col p-6 gap-6 h-full relative z-10">
-        
-        <!-- Haut : Info Salle & Paramètres Lockés -->
         <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/50 p-4 rounded border border-yellow-500/30">
             <div class="flex items-center gap-4">
-                <div class="bg-yellow-500 text-black px-4 py-2 font-manga text-2xl rounded shadow-[4px_4px_0px_#000]">
-                    CODE: <span id="lobby-code">----</span>
-                </div>
-                <div class="text-xs text-gray-400 font-mono">
-                    <i class="fa-solid fa-lock text-yellow-500 mr-1"></i> RÈGLES RANKED ACTIVES
-                </div>
+                <div class="bg-yellow-500 text-black px-4 py-2 font-manga text-2xl rounded shadow-[4px_4px_0px_#000]">CODE: <span id="lobby-code">----</span></div>
+                <div class="text-xs text-gray-400 font-mono"><i class="fa-solid fa-lock text-yellow-500 mr-1"></i> RÈGLES RANKED ACTIVES</div>
             </div>
-            <!-- Paramètres Ranked Fixes -->
             <div class="flex gap-4 text-sm font-bold text-gray-300">
                 <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-clock text-yellow-500 mr-2"></i>20s</span>
                 <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-list-ol text-yellow-500 mr-2"></i>15 Rounds</span>
                 <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-skull text-red-500 mr-2"></i>Non</span>
             </div>
         </div>
-
-        <!-- Centre : LE FACE À FACE -->
         <div class="flex-grow flex items-center justify-center relative">
-            
-            <!-- Joueur 1 (Hôte/Bleu) -->
             <div id="slot-p1" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-blue-900/10 border-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.2)] transition-all">
                 <div class="text-blue-500 font-manga text-2xl mb-4">CHALLENGER (VOUS)</div>
                 <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-blue-500 bg-black overflow-hidden relative mb-4 shadow-lg">
                     <img id="p1-avatar" src="" class="w-full h-full object-cover opacity-50">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i id="p1-icon" class="fa-solid fa-user text-4xl text-blue-500"></i>
-                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center"><i id="p1-icon" class="fa-solid fa-user text-4xl text-blue-500"></i></div>
                 </div>
                 <h2 id="p1-name" class="text-3xl font-manga text-white uppercase truncate w-full text-center">EN ATTENTE...</h2>
                 <div class="mt-2 bg-blue-600 text-white text-xs px-3 py-1 font-bold rounded">HÔTE DE LA SALLE</div>
             </div>
-
-            <!-- VS Badge -->
-            <div class="absolute z-20">
-                <h1 class="text-7xl md:text-9xl font-black italic text-yellow-500 vs-text font-manga">VS</h1>
-            </div>
-
-            <!-- Joueur 2 (Invité/Rouge) -->
+            <div class="absolute z-20"><h1 class="text-7xl md:text-9xl font-black italic text-yellow-500 vs-text font-manga">VS</h1></div>
             <div id="slot-p2" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-red-900/10 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all opacity-50">
                 <div class="text-red-500 font-manga text-2xl mb-4">OPPOSANT</div>
                 <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-red-500 bg-black overflow-hidden relative mb-4 shadow-lg">
                     <img id="p2-avatar" src="" class="w-full h-full object-cover opacity-50">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i id="p2-spinner" class="fa-solid fa-spinner animate-spin text-4xl text-red-500"></i>
-                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center"><i id="p2-spinner" class="fa-solid fa-spinner animate-spin text-4xl text-red-500"></i></div>
                 </div>
                 <h2 id="p2-name" class="text-3xl font-manga text-white uppercase truncate w-full text-center">RECHERCHE...</h2>
                 <div class="mt-2 bg-red-600 text-white text-xs px-3 py-1 font-bold rounded">INVITÉ</div>
             </div>
-
         </div>
-
-        <!-- Bas : Contrôles -->
         <div class="h-20 flex items-center justify-center">
             <div id="host-controls" class="hidden w-full max-w-lg">
-                <button id="btn-start" onclick="startGame()" disabled class="btn-pop w-full py-4 text-2xl rounded-lg bg-green-600 border-green-400 text-white shadow-[4px_4px_0px_#064e3b] disabled:bg-gray-700 disabled:border-gray-500 disabled:text-gray-500 disabled:shadow-none transition-all">
-                    EN ATTENTE DE L'ADVERSAIRE...
-                </button>
+                <button id="btn-start" onclick="startGame()" disabled class="btn-pop w-full py-4 text-2xl rounded-lg bg-green-600 border-green-400 text-white shadow-[4px_4px_0px_#064e3b] disabled:bg-gray-700 disabled:border-gray-500 disabled:text-gray-500 disabled:shadow-none transition-all">EN ATTENTE DE L'ADVERSAIRE...</button>
             </div>
-            <div id="guest-controls" class="hidden text-center">
-                <p class="text-yellow-500 font-manga text-xl animate-pulse">L'HÔTE VA LANCER LE DUEL...</p>
-            </div>
+            <div id="guest-controls" class="hidden text-center"><p class="text-yellow-500 font-manga text-xl animate-pulse">L'HÔTE VA LANCER LE DUEL...</p></div>
         </div>
     </div>
 
-
-    <!-- ========================================== -->
-    <!-- ÉCRAN 3 : JEU (IN GAME)                    -->
-    <!-- ========================================== -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
-        
-        <!-- Score Bar (Duel Specific) -->
         <div class="bg-black border-b-4 border-yellow-500 p-2 flex justify-between items-center px-4 md:px-12 relative z-30 shadow-lg">
-            
-            <!-- Score P1 -->
             <div class="flex items-center gap-4 w-1/3">
-                <div class="text-right flex-1 hidden md:block">
-                    <div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate">JOUEUR 1</div>
-                    <div class="text-[10px] text-gray-500">CHALLENGER</div>
-                </div>
+                <div class="text-right flex-1 hidden md:block"><div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate">JOUEUR 1</div><div class="text-[10px] text-gray-500">CHALLENGER</div></div>
                 <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#2563eb]" id="score-p1">0</div>
             </div>
-
-            <!-- Timer & Round -->
             <div class="flex flex-col items-center w-1/3">
-                 <div class="bg-yellow-500 text-black font-bold px-3 rounded-full text-xs mb-1 border border-white">
-                    ROUND <span id="current-round-display">1</span>/15
-                 </div>
-                 <div class="timer-container w-full max-w-[200px]">
-                    <div id="game-timer-bar" class="timer-fill"></div>
-                </div>
+                 <div class="bg-yellow-500 text-black font-bold px-3 rounded-full text-xs mb-1 border border-white">ROUND <span id="current-round-display">1</span>/15</div>
+                 <div class="timer-container w-full max-w-[200px]"><div id="game-timer-bar" class="timer-fill"></div></div>
             </div>
-
-            <!-- Score P2 -->
             <div class="flex items-center gap-4 w-1/3 justify-end">
                 <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#dc2626]" id="score-p2">0</div>
-                <div class="text-left flex-1 hidden md:block">
-                    <div id="game-p2-name" class="font-bold text-red-400 uppercase truncate">JOUEUR 2</div>
-                    <div class="text-[10px] text-gray-500">OPPOSANT</div>
-                </div>
+                <div class="text-left flex-1 hidden md:block"><div id="game-p2-name" class="font-bold text-red-400 uppercase truncate">JOUEUR 2</div><div class="text-[10px] text-gray-500">OPPOSANT</div></div>
             </div>
         </div>
 
-
-        <!-- CENTRE : DISQUE & VIDEO -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
-            
-            <!-- Video Player -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-yellow-500 rounded-lg shadow-[0_0_50px_rgba(251,191,36,0.2)] overflow-hidden">
                     <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 </div>
             </div>
-            
-            <!-- LOADER -->
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
                 <div class="loader-ring"></div>
                 <p class="text-yellow-500 font-manga tracking-widest mt-4 text-xl animate-pulse">SYNCHRONISATION DUEL...</p>
             </div>
-
-            <!-- Mode Vinyle -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 scale-110">
                 <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
                     <div class="absolute inset-0 bg-yellow-500 rounded-full blur-xl opacity-10 animate-pulse"></div>
@@ -304,29 +232,22 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="text-center bg-yellow-500 px-8 py-2 border-4 border-black rounded-full shadow-[4px_4px_0px_#fff] transform -rotate-2">
                     <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">DUEL EN COURS</h2>
                 </div>
-
-                <!-- Indicateurs -->
                 <div id="status-indicators" class="flex gap-4 mt-8 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">ANIME OK (+1)</div>
                     <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg font-manga tracking-wide">TITRE OK (+1)</div>
                     <div id="status-op" class="hidden bg-blue-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">NUMÉRO OK (+0.5)</div>
                 </div>
             </div>
-            
-            <!-- Volume -->
             <div class="absolute top-4 right-4 z-30 bg-[#222] border border-gray-600 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
                 <i class="fa-solid fa-volume-high text-yellow-500"></i>
                 <input type="range" min="0" max="1" step="0.1" class="w-20 accent-yellow-500 h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
         </div>
 
-        <!-- BAS : INPUT -->
         <div class="bg-[#141414] border-t-4 border-yellow-500 p-6 relative z-30">
-            <!-- Overlay Résultat -->
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
                 <div class="bg-yellow-500 border-4 border-white p-8 max-w-2xl w-full text-center shadow-[0px_10px_40px_rgba(0,0,0,0.8)] transform rotate-1">
                     <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
@@ -337,17 +258,13 @@
                     </div>
                 </div>
             </div>
-
             <div class="max-w-3xl mx-auto flex gap-3">
                 <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg border-yellow-600 focus:border-white transition-colors" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="btn-pop w-40 rounded-lg text-2xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400">
-                    ENVOYER
-                </button>
+                <button onclick="submitGuess()" class="btn-pop w-40 rounded-lg text-2xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400">ENVOYER</button>
             </div>
         </div>
     </div>
     
-    <!-- Ecran Fin -->
     <div id="screen-end" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
         <div class="text-center">
             <h1 id="end-title" class="text-6xl font-manga text-yellow-500 mb-4 animate-bounce">VICTOIRE !</h1>
@@ -356,7 +273,6 @@
         </div>
     </div>
 
-    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -377,28 +293,21 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-
-        // --- CONSTANTES RANKED ---
-        // On force les règles ici. Le host ne peut pas les changer.
         const RANKED_SETTINGS = { duration: 20, rounds: 15, suddenDeath: false, teamCount: 2 };
 
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
         let roundTimer = null;
-        
-        // États jeu
         let animeFound = false;
         let songFound = false;
         let opFound = false;
         let currentSongData = null;
         let userVolume = 0.5;
 
-        // Éléments DOM
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Initialisation Volume
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
@@ -409,11 +318,9 @@
             if(videoEl) videoEl.volume = userVolume;
         }
 
-        // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Récupération pseudo custom si dispo
                 get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
                     if (snapshot.exists() && snapshot.val().username) {
                         document.querySelector('#user-badge span:last-child').innerText = snapshot.val().username;
@@ -421,12 +328,9 @@
                         document.querySelector('#user-badge span:last-child').innerText = user.displayName;
                     }
                 });
-            } else {
-                window.location.href = "index.html"; // Redirige si pas co
-            }
+            } else { window.location.href = "index.html"; }
         });
 
-        // --- UTILS ---
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -437,7 +341,6 @@
             return array;
         }
 
-        // Algorithme de Levenshtein (Tolérance fautes de frappe)
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -476,34 +379,21 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
-
-        // --- LOGIQUE SALLE (1v1) ---
-
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
             currentRoomId = roomCode;
             isHost = true;
-            
             const profile = await getUserProfile(currentUser.uid);
-
             const roomData = {
                 host: currentUser.uid,
                 createdAt: Date.now(),
                 status: 'lobby',
-                type: 'ranked_1v1', // Marqueur important
-                settings: RANKED_SETTINGS, // Paramètres verrouillés
-                players: { 
-                    [currentUser.uid]: { 
-                        name: profile.name, 
-                        team: 1, // Hôte = Toujours Team 1 (Bleu)
-                        score: 0, 
-                        avatar: profile.avatar 
-                    } 
-                },
+                type: 'ranked_1v1',
+                settings: RANKED_SETTINGS,
+                players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
             };
-
             await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
             enterLobby(roomCode);
         };
@@ -512,44 +402,25 @@
             if (!currentUser) return;
             const code = document.getElementById('input-room-code').value.toUpperCase();
             if (code.length < 4) return alert("Code invalide");
-
             const roomRef = ref(db, `blindtest/rooms/${code}`);
             const snapshot = await get(roomRef);
-
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                
-                // VÉRIFICATION LIMITE 2 JOUEURS
-                if (Object.keys(data.players || {}).length >= 2) {
-                    alert("⚠️ Cette salle est pleine (Duel en cours).");
-                    return;
-                }
-
+                if (Object.keys(data.players || {}).length >= 2) { return alert("⚠️ Salle pleine."); }
                 currentRoomId = code;
                 isHost = false;
                 const profile = await getUserProfile(currentUser.uid);
-                
-                // Rejoignant = Toujours Team 2 (Rouge)
                 const updates = {};
-                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { 
-                    name: profile.name, 
-                    team: 2, 
-                    score: 0, 
-                    avatar: profile.avatar 
-                };
-                
+                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { name: profile.name, team: 2, score: 0, avatar: profile.avatar };
                 await update(ref(db), updates);
                 enterLobby(code);
-            } else { 
-                alert("Salle introuvable."); 
-            }
+            } else { alert("Salle introuvable."); }
         };
 
         function enterLobby(code) {
             document.getElementById('screen-menu').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('lobby-code').innerText = code;
-
             if (isHost) {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('guest-controls').classList.add('hidden');
@@ -557,37 +428,21 @@
                 document.getElementById('host-controls').classList.add('hidden');
                 document.getElementById('guest-controls').classList.remove('hidden');
             }
-
-            // Écouteur Principal de la Salle
             onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return; // Salle supprimée ?
-
-                // 1. Mise à jour des Slots Joueurs (Visualisation VS)
+                if (!data) return;
                 updateLobbySlots(data.players);
-
-                // 2. Gestion État du Jeu
                 if (data.status === 'lobby') {
                     document.getElementById('screen-game').classList.add('hidden');
                     document.getElementById('screen-lobby').classList.remove('hidden');
-                    
-                    // Si on est Host et qu'il y a 2 joueurs, on active le bouton Start
                     if (isHost) {
                         const playerCount = Object.keys(data.players || {}).length;
                         const btnStart = document.getElementById('btn-start');
-                        if (playerCount === 2) {
-                            btnStart.disabled = false;
-                            btnStart.innerText = "LANCER LE DUEL !";
-                            btnStart.classList.add('animate-pulse');
-                        } else {
-                            btnStart.disabled = true;
-                            btnStart.innerText = "EN ATTENTE DE L'ADVERSAIRE...";
-                            btnStart.classList.remove('animate-pulse');
-                        }
+                        btnStart.disabled = playerCount < 2;
+                        btnStart.innerText = playerCount === 2 ? "LANCER LE DUEL !" : "EN ATTENTE DE L'ADVERSAIRE...";
+                        if(playerCount === 2) btnStart.classList.add('animate-pulse'); else btnStart.classList.remove('animate-pulse');
                     }
-
                 } else if (data.status === 'playing') {
-                    // Transition vers l'écran de jeu
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
@@ -598,28 +453,22 @@
         }
 
         function updateLobbySlots(players) {
-            // Reset visuel
             document.getElementById('slot-p2').classList.add('opacity-50');
             document.getElementById('p2-name').innerText = "RECHERCHE...";
             document.getElementById('p2-spinner').classList.remove('hidden');
             document.getElementById('p2-avatar').src = "";
             document.getElementById('p2-avatar').classList.add('opacity-50');
-
             Object.values(players).forEach(p => {
                 if (p.team === 1) {
-                    // P1 (Bleu)
                     document.getElementById('p1-name').innerText = p.name;
                     if(p.avatar) {
                         document.getElementById('p1-avatar').src = p.avatar;
                         document.getElementById('p1-avatar').classList.remove('opacity-50');
                         document.getElementById('p1-icon').classList.add('hidden');
                     }
-                    // Setup UI Jeu aussi
                     document.getElementById('game-p1-name').innerText = p.name;
                     document.getElementById('score-p1').innerText = p.score;
-                } 
-                else if (p.team === 2) {
-                    // P2 (Rouge)
+                } else if (p.team === 2) {
                     document.getElementById('slot-p2').classList.remove('opacity-50');
                     document.getElementById('p2-name').innerText = p.name;
                     document.getElementById('p2-spinner').classList.add('hidden');
@@ -627,22 +476,17 @@
                         document.getElementById('p2-avatar').src = p.avatar;
                         document.getElementById('p2-avatar').classList.remove('opacity-50');
                     }
-                    // Setup UI Jeu aussi
                     document.getElementById('game-p2-name').innerText = p.name;
                     document.getElementById('score-p2').innerText = p.score;
                 }
             });
         }
 
-        // --- MOTEUR DE JEU ---
-
         window.startGame = () => {
-            // Création Deck Aléatoire
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             const newDeck = shuffleArray(allIndices);
             const firstSongIndex = newDeck[0];
-            const randomSeek = Math.floor(Math.random() * 11) + 40; // Seek entre 40 et 50s
-
+            const randomSeek = Math.floor(Math.random() * 11) + 40;
             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                 status: 'playing',
                 gameState: {
@@ -661,15 +505,11 @@
         let onPlayListener = null;
 
         function handleGameSync(gameState, players) {
-            // Mise à jour des scores en temps réel
             Object.values(players).forEach(p => {
                 if (p.team === 1) document.getElementById('score-p1').innerText = p.score;
                 if (p.team === 2) document.getElementById('score-p2').innerText = p.score;
             });
-
-            // Eviter re-rendu inutile
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
-            
             if (isHost) clearTimeout(roundTimer);
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
@@ -679,7 +519,6 @@
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
             if (gameState.phase === 'guessing') {
-                // RESET UI
                 animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
@@ -687,7 +526,6 @@
                 document.getElementById('result-display').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
-                
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
@@ -703,8 +541,12 @@
                     videoEl.removeEventListener('playing', onPlayListener);
                     onPlayListener = null;
                 }
+                
+                // FORCE RESET VIDEO POUR SYNCHRO
+                videoEl.pause();
+                videoEl.removeAttribute('src'); 
+                videoEl.load();
 
-                // Chargement Vidéo
                 videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
@@ -714,7 +556,6 @@
                     diskEl.classList.remove('disk-paused');
                     bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
                     bar.classList.add('timer-running');
-
                     if (isHost) {
                         clearTimeout(roundTimer);
                         roundTimer = setTimeout(() => {
@@ -722,39 +563,30 @@
                         }, RANKED_SETTINGS.duration * 1000);
                     }
                 };
-                
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
                 videoEl.play().catch(e => console.log("Autoplay blocked:", e));
 
             } else if (gameState.phase === 'reveal') {
                 document.getElementById('loader-overlay').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
-                
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
                 document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
-                
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
-                
                 diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    const delay = 8000; // 8 secondes de révélation
                     setTimeout(() => {
-                        // FIN DE PARTIE ?
                         if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
-                            // On pourrait update le status à 'finished'
-                            // Ici on reload simple pour le MVP
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
                             return; 
                         }
-
-                        // Round Suivant
-                        const nextIndex = gameState.deck[gameState.currentRound];
+                        // SAFE NEXT ROUND LOGIC
+                        if (!gameState.deck) return console.error("Deck lost!");
+                        const nextIndex = gameState.deck[gameState.currentRound]; // currentRound starts at 1, so index 1 is round 2
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
-
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: gameState.currentRound + 1,
                             songIndex: nextIndex,
@@ -762,24 +594,19 @@
                             phase: 'guessing',
                             seekTime: nextSeek
                         });
-                    }, delay);
+                    }, 8000);
                 }
             } else if (gameState.phase === 'finished') {
-                // Ecran de fin
                 document.getElementById('screen-game').classList.add('blur-md');
                 document.getElementById('screen-end').classList.remove('hidden');
-                
-                // Calcul Vainqueur
                 let p1Score = 0, p2Score = 0;
                 Object.values(players).forEach(p => {
                     if (p.team === 1) p1Score = p.score;
                     if (p.team === 2) p2Score = p.score;
                 });
-
                 const myTeam = Object.values(players).find(p => p.name === (currentUser.displayName || "Joueur"))?.team;
                 const myScore = myTeam === 1 ? p1Score : p2Score;
                 const oppScore = myTeam === 1 ? p2Score : p1Score;
-
                 const title = document.getElementById('end-title');
                 if (myScore > oppScore) {
                     title.innerText = "VICTOIRE !";
@@ -800,66 +627,50 @@
             const input = document.getElementById('input-guess');
             const guess = input.value;
             if (!guess) return;
-
             let pointsEarned = 0;
             let feedback = "";
-
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
                 if (!matchAnime && currentSongData.alt) {
-                    for (let alias of currentSongData.alt) {
-                        if (isCloseMatch(guess, alias)) { matchAnime = true; break; }
-                    }
+                    for (let alias of currentSongData.alt) { if (isCloseMatch(guess, alias)) { matchAnime = true; break; } }
                 }
                 if (matchAnime) {
-                    animeFound = true;
-                    pointsEarned += 1;
+                    animeFound = true; pointsEarned += 1;
                     document.getElementById('status-anime').classList.remove('hidden');
                     feedback = "ANIME TROUVÉ !";
                 }
             }
-
             if (!songFound) {
                 if (isCloseMatch(guess, currentSongData.song)) {
-                    songFound = true;
-                    pointsEarned += 1;
+                    songFound = true; pointsEarned += 1;
                     document.getElementById('status-song').classList.remove('hidden');
                     feedback = feedback ? "DOUBLE COMBO !" : "TITRE TROUVÉ !";
                 }
             }
-
             if (!opFound && currentSongData.num) {
                 const inputNums = guess.match(/\d+/g);
                 if (inputNums && inputNums.includes(currentSongData.num.toString())) {
-                    opFound = true;
-                    pointsEarned += 0.5;
+                    opFound = true; pointsEarned += 0.5;
                     document.getElementById('status-op').classList.remove('hidden');
                     feedback = feedback ? "COMBO !!!" : "NUMÉRO OK !";
                 }
             }
-
             if (pointsEarned > 0) {
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: currentScore + pointsEarned });
                 });
-                
                 const popup = document.createElement('div');
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold fixed z-50 animate-bounce';
-                popup.style.left = '50%';
-                popup.style.top = '40%';
-                popup.style.transform = 'translate(-50%, -50%)';
-                popup.style.textShadow = '2px 2px 0 #000';
+                popup.style.left = '50%'; popup.style.top = '40%'; popup.style.transform = 'translate(-50%, -50%)'; popup.style.textShadow = '2px 2px 0 #000';
                 popup.innerText = `+${pointsEarned}`;
                 document.body.appendChild(popup);
                 setTimeout(() => popup.remove(), 1000);
             }
-
             input.value = "";
             input.placeholder = feedback || "NON...";
             setTimeout(() => input.placeholder = "Tapez votre réponse...", 1000);
         };
-
     </script>
 </body>
 </html>
