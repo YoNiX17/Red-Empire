@@ -25,9 +25,8 @@
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0 0 0; }
         .btn-pop:disabled { opacity: 0.5; filter: grayscale(1); }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--gold); width: 100%; }
-        .timer-running { animation: shrink linear forwards; }
-        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.1s linear; } /* Transition fluide manuel */
+        
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
@@ -114,16 +113,17 @@
             <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p1">0</div>
             <div class="flex flex-col items-center w-1/3">
                  <div class="bg-yellow-500 text-black font-bold px-3 rounded-full text-xs mb-1">ROUND <span id="current-round-display">1</span>/15</div>
-                 <div class="timer-container w-full max-w-[200px]"><div id="game-timer-bar" class="timer-fill"></div></div>
+                 <div class="timer-container w-full max-w-[200px]"><div id="game-timer-bar" class="timer-fill" style="width: 100%"></div></div>
             </div>
             <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p2">0</div>
         </div>
 
         <!-- Main Area -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
-            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/80">
+            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90">
                 <div class="loader-ring"></div>
-                <p class="text-yellow-500 font-manga mt-4">CHARGEMENT...</p>
+                <p class="text-yellow-500 font-manga mt-4 text-xl" id="loader-text">CHARGEMENT...</p>
+                <p class="text-gray-500 text-sm mt-2 font-mono" id="loader-subtext">Synchronisation du flux...</p>
             </div>
 
             <!-- Video (Hidden until reveal) -->
@@ -134,7 +134,9 @@
             <!-- Vinyl -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
                 <div class="w-64 h-64 rounded-full bg-[#111] border-[6px] border-yellow-500 shadow-2xl flex items-center justify-center disk-spin disk-paused" id="disk">
-                    <div class="absolute w-28 h-28 bg-yellow-600 rounded-full border-4 border-white"></div>
+                    <div class="absolute w-28 h-28 bg-yellow-600 rounded-full border-4 border-white flex items-center justify-center">
+                        <i class="fa-solid fa-music text-black text-4xl"></i>
+                    </div>
                 </div>
                 <div id="status-indicators" class="flex gap-2 mt-8">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">ANIME OK</div>
@@ -197,12 +199,13 @@
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
-        let roundTimer = null;
+        let roundInterval = null; // Remplacé timer par interval pour update fluide
         
         let animeFound = false, songFound = false, opFound = false;
         let currentSongData = null;
         let localPhase = '';
         let localStartTime = 0;
+        let videoReady = false;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
@@ -224,7 +227,6 @@
             currentRoomId = roomCode;
             isHost = true;
             
-            // Génération d'un Deck Fixe
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             const deck = shuffleArray(allIndices);
             logDebug(`Creating room ${roomCode} with Deck size: ${deck.length}`);
@@ -241,7 +243,7 @@
                     songIndex: 0, 
                     startTime: 0, 
                     phase: 'lobby', 
-                    deck: deck, // Le deck est sauvegardé DANS la DB
+                    deck: deck, 
                     seekTime: 0 
                 }
             };
@@ -315,7 +317,6 @@
         }
 
         window.startGame = () => {
-            // Au démarrage, on prend le premier index du deck
             get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
                 const deck = snap.val();
                 if(!deck) return logDebug("CRITICAL: Deck missing in DB", "error");
@@ -323,16 +324,16 @@
                 const firstIndex = deck[0];
                 const seek = Math.floor(Math.random() * 11) + 40;
                 
-                logDebug(`Host Starting Game. Round 1. Song Index: ${firstIndex}`);
+                logDebug(`Host Starting Game. Round 1.`);
 
                 update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                     status: 'playing',
                     gameState: {
                         currentRound: 1,
                         songIndex: firstIndex,
-                        startTime: Date.now() + 3000, // 3s de buffer global
+                        startTime: Date.now() + 4000, // BUFFER 4S POUR TOUS LES ROUNDS
                         phase: 'guessing',
-                        deck: deck, // On garde le deck
+                        deck: deck, 
                         seekTime: seek
                     }
                 });
@@ -342,28 +343,21 @@
         // --- SYNC ENGINE ---
 
         function handleGameSync(gameState, players) {
-            // Score update
             let p1 = Object.values(players).find(p => p.team === 1);
             let p2 = Object.values(players).find(p => p.team === 2);
             if(p1) document.getElementById('score-p1').innerText = p1.score;
             if(p2) document.getElementById('score-p2').innerText = p2.score;
 
-            // Anti-loop check
             if (gameState.phase === localPhase && gameState.startTime === localStartTime) return;
             
-            logDebug(`SYNC RECEIVED: Round ${gameState.currentRound} | Phase: ${gameState.phase} | SongIdx: ${gameState.songIndex}`);
+            logDebug(`SYNC: R${gameState.currentRound} | ${gameState.phase}`);
             
-            if (isHost) clearTimeout(roundTimer);
+            clearInterval(roundInterval); // Clean old loops
             localPhase = gameState.phase;
             localStartTime = gameState.startTime;
             
             document.getElementById('current-round-display').innerText = gameState.currentRound;
             currentSongData = OP_DATABASE[gameState.songIndex];
-
-            if (!currentSongData) {
-                logDebug(`ERROR: No song data for index ${gameState.songIndex}`, "error");
-                return;
-            }
 
             if (gameState.phase === 'guessing') {
                 startGuessingPhase(gameState);
@@ -373,79 +367,87 @@
         }
 
         function startGuessingPhase(gameState) {
-            // Reset UI
             resetUI();
             document.getElementById('loader-overlay').classList.remove('hidden');
+            document.getElementById('loader-text').innerText = "CHARGEMENT ROUND " + gameState.currentRound;
+            videoReady = false;
             
             const targetSeek = gameState.seekTime || 0;
-            logDebug(`Loading video: ${currentSongData.anime} (Seek: ${targetSeek}s)`);
-
-            // 1. HARD RESET VIDEO
+            
+            // 1. Reset Video
             videoEl.oncanplay = null;
             videoEl.onloadedmetadata = null;
+            videoEl.onerror = null;
             videoEl.pause();
-            videoEl.removeAttribute('src'); // Important pour clean le buffer
+            videoEl.removeAttribute('src');
             videoEl.load();
 
-            // 2. LOAD NEW SOURCE
+            // 2. Load
             videoEl.src = currentSongData.url;
             videoEl.volume = 0.5;
 
-            // 3. WAIT FOR METADATA (Durée connue)
+            // 3. Gestion Erreur (Crucial)
+            videoEl.onerror = (e) => {
+                logDebug("VIDEO ERROR! skipping wait...", "error");
+                document.getElementById('loader-subtext').innerText = "Erreur lecture, lancement du timer...";
+                // On force videoReady à true pour que le timer démarre quand même
+                videoReady = true;
+            };
+
+            // 4. Metadata
             videoEl.onloadedmetadata = () => {
-                logDebug("Video Metadata loaded. Setting time...");
                 videoEl.currentTime = targetSeek;
             };
 
-            // 4. WAIT FOR ENOUGH DATA (Ready to play)
+            // 5. Ready
             videoEl.oncanplay = () => {
-                logDebug("Video Can Play. Trying to start...");
-                const p = videoEl.play();
-                if (p) {
-                    p.then(() => {
-                        logDebug("Video Playing successfully!");
-                        syncVisuals();
-                    }).catch(e => {
-                        logDebug("Play blocked (Browser policy?): " + e.message, "warn");
-                        // Fallback: on force l'utilisateur à interagir ou on retente
-                        syncVisuals(); // On lance quand même le timer visuel
-                    });
+                videoReady = true; // Marqueur que le client est prêt
+                document.getElementById('loader-subtext').innerText = "En attente du top départ...";
+            };
+
+            // 6. BOUCLE DE SYNCHRO (Toutes les 100ms)
+            // Plutôt que des events, on boucle pour vérifier l'heure
+            roundInterval = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = (gameState.startTime - now) / 1000; // Temps avant départ
+
+                if (timeLeft > 0) {
+                    // On est dans le buffer (3s, 2s, 1s...)
+                    document.getElementById('loader-text').innerText = `DÉPART DANS ${Math.ceil(timeLeft)}s`;
+                } else {
+                    // LE JEU DOIT TOURNER
+                    document.getElementById('loader-overlay').classList.add('hidden');
+                    diskEl.classList.remove('disk-paused');
+                    
+                    // Gestion lecture vidéo (seulement si pas d'erreur)
+                    if (videoEl.paused && !videoEl.error && videoReady) {
+                        videoEl.play().catch(e => {});
+                    }
+
+                    // Calcul Timer visuel
+                    // On est à T = (now - startTime)
+                    // Durée totale = 20s
+                    const elapsed = (now - gameState.startTime) / 1000;
+                    const duration = RANKED_SETTINGS.duration;
+                    const percent = Math.max(0, 100 - ((elapsed / duration) * 100));
+                    
+                    document.getElementById('game-timer-bar').style.width = percent + "%";
+
+                    // Fin du round (Côté Hôte uniquement pour déclencher)
+                    if (isHost && elapsed >= duration) {
+                        clearInterval(roundInterval);
+                        logDebug("Host Timer End -> Trigger Reveal");
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                            phase: 'reveal', 
+                            startTime: Date.now() 
+                        });
+                    }
                 }
-            };
-
-            // Sécurité: Si ça bloque trop longtemps
-            videoEl.onerror = (e) => {
-                logDebug("Video Error: " + videoEl.error.message, "error");
-            };
-        }
-
-        function syncVisuals() {
-            document.getElementById('loader-overlay').classList.add('hidden');
-            diskEl.classList.remove('disk-paused');
-            
-            const bar = document.getElementById('game-timer-bar');
-            bar.classList.remove('timer-running');
-            void bar.offsetWidth; // Trigger Reflow
-            bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
-            bar.classList.add('timer-running');
-
-            document.getElementById('input-guess').focus();
-
-            if (isHost) {
-                logDebug("Host Timer Started for next round");
-                clearTimeout(roundTimer);
-                roundTimer = setTimeout(() => {
-                    logDebug("Time's up! Switching to Reveal.");
-                    update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
-                        phase: 'reveal', 
-                        startTime: Date.now() 
-                    });
-                }, RANKED_SETTINGS.duration * 1000);
-            }
+            }, 100);
         }
 
         function startRevealPhase(gameState) {
-            logDebug("Phase Reveal Started");
+            logDebug("Reveal Phase");
             document.getElementById('loader-overlay').classList.add('hidden');
             document.getElementById('video-wrapper').classList.remove('hidden');
             document.getElementById('vinyl-wrapper').classList.add('hidden');
@@ -457,37 +459,29 @@
             document.getElementById('input-guess').disabled = true;
             diskEl.classList.add('disk-paused');
 
+            // Unmute pour la révélation (optionnel)
+            videoEl.volume = 1.0; 
+
             if (isHost) {
                 setTimeout(() => {
                     const nextRound = gameState.currentRound + 1;
                     if (nextRound > RANKED_SETTINGS.rounds) {
-                        logDebug("Game Finished");
-                        // Logic fin
+                        // Fin de partie
                         return;
                     }
 
-                    // CRUCIAL: Récupérer le bon index du deck
-                    // deck[0] = Round 1, deck[1] = Round 2...
-                    // Index tableau = nextRound - 1
                     const nextSongIndex = gameState.deck[nextRound - 1]; 
                     const nextSeek = Math.floor(Math.random() * 11) + 40;
 
-                    logDebug(`Preparing Round ${nextRound}. Song Index from Deck: ${nextSongIndex}`);
-
-                    if (nextSongIndex === undefined) {
-                        logDebug("ERROR: Next song index is UNDEFINED. Deck exhausted?", "error");
-                        return;
-                    }
-
                     update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                         currentRound: nextRound,
-                        songIndex: nextSongIndex, // C'est ici que ça change !
-                        startTime: Date.now(),
+                        songIndex: nextSongIndex,
+                        startTime: Date.now() + 4000, // BUFFER 4S pour le prochain round
                         phase: 'guessing',
                         seekTime: nextSeek
                     });
 
-                }, 8000);
+                }, 8000); // 8s de révélation
             }
         }
 
@@ -500,9 +494,7 @@
             document.getElementById('result-display').classList.add('hidden');
             document.getElementById('input-guess').value = "";
             document.getElementById('input-guess').disabled = false;
-            const bar = document.getElementById('game-timer-bar');
-            bar.classList.remove('timer-running');
-            bar.style.width = '100%';
+            document.getElementById('game-timer-bar').style.width = "100%";
         }
 
         function shuffleArray(array) {
@@ -515,7 +507,6 @@
             return array;
         }
 
-        // Algorithmes de réponse (Levenshtein) inchangés...
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -548,8 +539,6 @@
             const input = document.getElementById('input-guess');
             const guess = input.value;
             if (!guess) return;
-
-            logDebug(`Guess submitted: ${guess}`);
 
             let pointsEarned = 0;
             if (!animeFound) {
