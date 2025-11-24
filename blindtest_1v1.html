@@ -218,7 +218,6 @@
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // INITIALISATION VOLUME
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
@@ -242,7 +241,6 @@
             } else { window.location.href = "index.html"; }
         });
 
-        // --- UTILITAIRES ---
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -291,7 +289,6 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
-        // --- LOGIQUE SALLE ---
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -401,7 +398,6 @@
         }
 
         window.startGame = () => {
-            // DECK DEJA GÉNÉRÉ À LA CRÉATION
             get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
                 const deck = snap.val();
                 if(!deck) return;
@@ -423,7 +419,7 @@
             });
         };
 
-        // --- MOTEUR DE JEU (COPIÉ DE BLINDTEST.HTML) ---
+        // --- MOTEUR DE JEU (IDENTIQUE À BLINDTEST.HTML) ---
         function handleGameSync(gameState, players) {
             // Update scores
             Object.values(players).forEach(p => {
@@ -465,7 +461,7 @@
                     onPlayListener = null;
                 }
 
-                // CHARGEMENT "NAIF" (Comme blindtest.html)
+                // CHARGEMENT SIMPLE ET DIRECT (LA CLEF)
                 videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
@@ -495,11 +491,12 @@
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
                 videoEl.play().catch(e => console.log("Autoplay blocked"));
                 
-                // SÉCURITÉ ANTI-CRASH (Si vidéo hôte plante, on force le timer)
+                // SÉCURITÉ ANTI-CRASH UNIQUEMENT POUR L'HÔTE
+                // Si sa vidéo plante, il force le jeu à avancer quand même
                 if(isHost) {
                     videoEl.onerror = () => {
-                        console.log("Video Error - Force Start Timer");
-                        onPlayListener(); // On simule le départ
+                        console.log("Host Video Error - Force Start Timer");
+                        onPlayListener(); 
                     };
                 }
 
