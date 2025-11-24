@@ -380,12 +380,16 @@
         let currentRoomId = null;
         let isHost = false;
         let roundTimer = null;
+        let matchmakingTimeout = null; // Timer pour l'attente
         
         // États jeu
         let animeFound = false;
         let songFound = false;
         let opFound = false;
         let currentSongData = null;
+        let lastPhase = '';
+        let lastStartTime = 0;
+        let onPlayListener = null;
         let userVolume = 0.5;
 
         // Éléments DOM
@@ -559,6 +563,25 @@
                 document.getElementById('guest-controls').classList.remove('hidden');
             }
 
+            // TIMEOUT DE SÉCURITÉ : 2 MIN SANS ADVERSAIRE
+            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
+            matchmakingTimeout = setTimeout(() => {
+                // Si on est encore dans le lobby (pas en jeu) et qu'on est seul
+                // On vérifie l'état actuel
+                get(ref(db, `blindtest/rooms/${code}`)).then(snap => {
+                    if(snap.exists()) {
+                        const room = snap.val();
+                        if(room.status === 'lobby' && Object.keys(room.players).length < 2) {
+                            if(isHost) {
+                                remove(ref(db, `blindtest/rooms/${code}`)); // Clean
+                            }
+                            alert("Aucun adversaire trouvé. Retour au menu.");
+                            window.location.href = "blindtest_ranked.html";
+                        }
+                    }
+                });
+            }, 120000); // 2 minutes
+
             // Écouteur Principal de la Salle
             onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
                 const data = snapshot.val();
@@ -573,8 +596,15 @@
                     document.getElementById('screen-lobby').classList.remove('hidden');
                     
                     // Si on est Host et qu'il y a 2 joueurs, on active le bouton Start
+                    const playerCount = Object.keys(data.players || {}).length;
+                    
+                    // Si 2 joueurs, on annule le timeout de sécurité
+                    if(playerCount >= 2 && matchmakingTimeout) {
+                        clearTimeout(matchmakingTimeout);
+                        matchmakingTimeout = null;
+                    }
+
                     if (isHost) {
-                        const playerCount = Object.keys(data.players || {}).length;
                         const btnStart = document.getElementById('btn-start');
                         if (playerCount === 2) {
                             btnStart.disabled = false;
@@ -589,6 +619,8 @@
 
                 } else if (data.status === 'playing') {
                     // Transition vers l'écran de jeu
+                    if (matchmakingTimeout) clearTimeout(matchmakingTimeout); // Sécurité
+                    
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
