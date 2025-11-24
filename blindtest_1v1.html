@@ -3,19 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranked Duel 1v1 | Red Empire (DEBUG)</title>
+    <title>Ranked Duel 1v1 | Red Empire (SYNC FIX)</title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
+    <!-- Tailwind Configuration JIT pour éviter les warnings -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            mode: 'jit',
-            theme: { extend: { colors: { gold: '#fbbf24', 'gold-dark': '#b45309' } } }
+            theme: {
+                extend: {
+                    colors: {
+                        gold: '#fbbf24',
+                        'gold-dark': '#b45309',
+                    }
+                }
+            }
         }
     </script>
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root { --gold: #fbbf24; --dark-bg: #0f0f0f; --panel-bg: #141414; }
         body { background-color: var(--dark-bg); color: #eee; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; }
@@ -25,7 +33,7 @@
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0 0 0; }
         .btn-pop:disabled { opacity: 0.5; filter: grayscale(1); }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.1s linear; } /* Transition fluide manuel */
+        .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.1s linear; }
         
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
@@ -33,7 +41,6 @@
         .input-manga { border: 3px solid var(--gold); background: #222; color: white; font-family: 'Bangers'; letter-spacing: 1px; }
         .input-manga:focus { outline: none; border-color: white; }
         
-        /* DEBUG CONSOLE STYLE */
         #debug-console {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 150px;
             background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; font-size: 10px;
@@ -48,9 +55,8 @@
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- DEBUG CONSOLE -->
     <div id="debug-console">
-        <div class="log-entry">--- DEBUG LOG STARTED ---</div>
+        <div class="log-entry">--- DEBUG LOG (TIME SYNC VERSION) ---</div>
     </div>
 
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
@@ -108,7 +114,6 @@
 
     <!-- GAME -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
-        <!-- Scoreboard -->
         <div class="bg-black border-b-4 border-yellow-500 p-2 flex justify-between items-center px-4 relative z-30">
             <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p1">0</div>
             <div class="flex flex-col items-center w-1/3">
@@ -118,20 +123,17 @@
             <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white" id="score-p2">0</div>
         </div>
 
-        <!-- Main Area -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90">
                 <div class="loader-ring"></div>
                 <p class="text-yellow-500 font-manga mt-4 text-xl" id="loader-text">CHARGEMENT...</p>
-                <p class="text-gray-500 text-sm mt-2 font-mono" id="loader-subtext">Synchronisation du flux...</p>
+                <p class="text-gray-500 text-sm mt-2 font-mono" id="loader-subtext">Calibrage temporel...</p>
             </div>
 
-            <!-- Video (Hidden until reveal) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
             </div>
 
-            <!-- Vinyl -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center">
                 <div class="w-64 h-64 rounded-full bg-[#111] border-[6px] border-yellow-500 shadow-2xl flex items-center justify-center disk-spin disk-paused" id="disk">
                     <div class="absolute w-28 h-28 bg-yellow-600 rounded-full border-4 border-white flex items-center justify-center">
@@ -145,9 +147,7 @@
             </div>
         </div>
 
-        <!-- Input -->
         <div class="bg-[#141414] border-t-4 border-yellow-500 p-6 relative z-30">
-            <!-- Result Overlay -->
             <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
                 <div class="bg-yellow-500 border-4 border-white p-4 max-w-xl w-full text-center shadow-lg rotate-1">
                     <h2 id="res-anime" class="text-3xl font-manga text-black mb-1">ANIME</h2>
@@ -169,7 +169,6 @@
         import { getDatabase, ref, set, get, onValue, update, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // --- DEBUGGER ---
         function logDebug(msg, type="info") {
             const consoleDiv = document.getElementById('debug-console');
             const entry = document.createElement('div');
@@ -199,28 +198,41 @@
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
-        let roundInterval = null; // Remplacé timer par interval pour update fluide
+        let roundInterval = null;
         
         let animeFound = false, songFound = false, opFound = false;
         let currentSongData = null;
         let localPhase = '';
         let localStartTime = 0;
         let videoReady = false;
+        
+        // --- TIME SYNC VARS ---
+        let serverTimeOffset = 0;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
+        // 1. CALCUL DU DÉCALAGE TEMPOREL (CRUCIAL)
+        const offsetRef = ref(db, ".info/serverTimeOffset");
+        onValue(offsetRef, (snap) => {
+            serverTimeOffset = snap.val();
+            logDebug(`Time Offset calculated: ${serverTimeOffset}ms`);
+        });
+
+        // Helper pour avoir l'heure serveur estimée
+        function getServerTime() {
+            return Date.now() + serverTimeOffset;
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                logDebug("User logged in: " + user.uid);
+                logDebug("Logged in: " + user.uid);
                 document.querySelector('#user-badge span:last-child').innerText = user.displayName;
             } else {
                 window.location.href = "index.html";
             }
         });
-
-        // --- GAME LOGIC ---
 
         window.createRoom = async () => {
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -229,11 +241,11 @@
             
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             const deck = shuffleArray(allIndices);
-            logDebug(`Creating room ${roomCode} with Deck size: ${deck.length}`);
+            logDebug(`Creating Room ${roomCode}`);
 
             const roomData = {
                 host: currentUser.uid,
-                createdAt: Date.now(),
+                createdAt: getServerTime(),
                 status: 'lobby',
                 type: 'ranked_1v1',
                 settings: RANKED_SETTINGS,
@@ -267,7 +279,6 @@
             document.getElementById('screen-menu').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('lobby-code').innerText = code;
-            logDebug("Entered Lobby: " + code);
 
             if(isHost) {
                 document.getElementById('host-controls').classList.remove('hidden');
@@ -287,7 +298,6 @@
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
-                        logDebug("Game Started! Switching screen.");
                     }
                     handleGameSync(data.gameState, data.players);
                 }
@@ -297,7 +307,6 @@
         function updateLobbyUI(players) {
             const p2Slot = document.getElementById('slot-p2');
             const p2Name = document.getElementById('p2-name');
-            
             let p1 = Object.values(players).find(p => p.team === 1);
             let p2 = Object.values(players).find(p => p.team === 2);
 
@@ -319,19 +328,20 @@
         window.startGame = () => {
             get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
                 const deck = snap.val();
-                if(!deck) return logDebug("CRITICAL: Deck missing in DB", "error");
+                if(!deck) return logDebug("Error: No Deck", "error");
                 
                 const firstIndex = deck[0];
                 const seek = Math.floor(Math.random() * 11) + 40;
                 
-                logDebug(`Host Starting Game. Round 1.`);
+                // Utilisation de l'heure SERVEUR pour la synchro
+                const serverNow = getServerTime();
 
                 update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                     status: 'playing',
                     gameState: {
                         currentRound: 1,
                         songIndex: firstIndex,
-                        startTime: Date.now() + 4000, // BUFFER 4S POUR TOUS LES ROUNDS
+                        startTime: serverNow + 5000, // Buffer 5s basé sur l'heure serveur
                         phase: 'guessing',
                         deck: deck, 
                         seekTime: seek
@@ -339,8 +349,6 @@
                 });
             });
         };
-
-        // --- SYNC ENGINE ---
 
         function handleGameSync(gameState, players) {
             let p1 = Object.values(players).find(p => p.team === 1);
@@ -350,9 +358,7 @@
 
             if (gameState.phase === localPhase && gameState.startTime === localStartTime) return;
             
-            logDebug(`SYNC: R${gameState.currentRound} | ${gameState.phase}`);
-            
-            clearInterval(roundInterval); // Clean old loops
+            clearInterval(roundInterval);
             localPhase = gameState.phase;
             localStartTime = gameState.startTime;
             
@@ -369,12 +375,11 @@
         function startGuessingPhase(gameState) {
             resetUI();
             document.getElementById('loader-overlay').classList.remove('hidden');
-            document.getElementById('loader-text').innerText = "CHARGEMENT ROUND " + gameState.currentRound;
             videoReady = false;
             
             const targetSeek = gameState.seekTime || 0;
             
-            // 1. Reset Video
+            // Reset & Load
             videoEl.oncanplay = null;
             videoEl.onloadedmetadata = null;
             videoEl.onerror = null;
@@ -382,64 +387,52 @@
             videoEl.removeAttribute('src');
             videoEl.load();
 
-            // 2. Load
-            videoEl.src = currentSongData.url;
-            videoEl.volume = 0.5;
-
-            // 3. Gestion Erreur (Crucial)
+            // Setup listeners BEFORE src
             videoEl.onerror = (e) => {
-                logDebug("VIDEO ERROR! skipping wait...", "error");
-                document.getElementById('loader-subtext').innerText = "Erreur lecture, lancement du timer...";
-                // On force videoReady à true pour que le timer démarre quand même
-                videoReady = true;
+                logDebug("VIDEO ERROR (404/Format). Forcing Timer start.", "error");
+                document.getElementById('loader-subtext').innerText = "Erreur vidéo - Le jeu continue...";
+                videoReady = true; 
             };
 
-            // 4. Metadata
             videoEl.onloadedmetadata = () => {
                 videoEl.currentTime = targetSeek;
             };
 
-            // 5. Ready
             videoEl.oncanplay = () => {
-                videoReady = true; // Marqueur que le client est prêt
-                document.getElementById('loader-subtext').innerText = "En attente du top départ...";
+                videoReady = true;
             };
 
-            // 6. BOUCLE DE SYNCHRO (Toutes les 100ms)
-            // Plutôt que des events, on boucle pour vérifier l'heure
+            videoEl.src = currentSongData.url;
+            videoEl.volume = 0.5;
+
+            // Boucle de synchro basée sur le TEMPS SERVEUR
             roundInterval = setInterval(() => {
-                const now = Date.now();
-                const timeLeft = (gameState.startTime - now) / 1000; // Temps avant départ
+                const now = getServerTime(); // Heure "absolue"
+                const timeLeft = (gameState.startTime - now) / 1000;
 
                 if (timeLeft > 0) {
-                    // On est dans le buffer (3s, 2s, 1s...)
                     document.getElementById('loader-text').innerText = `DÉPART DANS ${Math.ceil(timeLeft)}s`;
                 } else {
-                    // LE JEU DOIT TOURNER
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
                     
-                    // Gestion lecture vidéo (seulement si pas d'erreur)
                     if (videoEl.paused && !videoEl.error && videoReady) {
                         videoEl.play().catch(e => {});
                     }
 
-                    // Calcul Timer visuel
-                    // On est à T = (now - startTime)
-                    // Durée totale = 20s
+                    // Sync Timer Visuel
                     const elapsed = (now - gameState.startTime) / 1000;
                     const duration = RANKED_SETTINGS.duration;
                     const percent = Math.max(0, 100 - ((elapsed / duration) * 100));
-                    
                     document.getElementById('game-timer-bar').style.width = percent + "%";
 
-                    // Fin du round (Côté Hôte uniquement pour déclencher)
+                    // Fin du round (Hôte Only trigger)
                     if (isHost && elapsed >= duration) {
                         clearInterval(roundInterval);
-                        logDebug("Host Timer End -> Trigger Reveal");
+                        // IMPORTANT: Utiliser l'heure serveur pour le prochain état aussi
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
                             phase: 'reveal', 
-                            startTime: Date.now() 
+                            startTime: getServerTime() 
                         });
                     }
                 }
@@ -447,7 +440,6 @@
         }
 
         function startRevealPhase(gameState) {
-            logDebug("Reveal Phase");
             document.getElementById('loader-overlay').classList.add('hidden');
             document.getElementById('video-wrapper').classList.remove('hidden');
             document.getElementById('vinyl-wrapper').classList.add('hidden');
@@ -458,17 +450,12 @@
             
             document.getElementById('input-guess').disabled = true;
             diskEl.classList.add('disk-paused');
-
-            // Unmute pour la révélation (optionnel)
             videoEl.volume = 1.0; 
 
             if (isHost) {
                 setTimeout(() => {
                     const nextRound = gameState.currentRound + 1;
-                    if (nextRound > RANKED_SETTINGS.rounds) {
-                        // Fin de partie
-                        return;
-                    }
+                    if (nextRound > RANKED_SETTINGS.rounds) { return; } // End game logic TODO
 
                     const nextSongIndex = gameState.deck[nextRound - 1]; 
                     const nextSeek = Math.floor(Math.random() * 11) + 40;
@@ -476,12 +463,12 @@
                     update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                         currentRound: nextRound,
                         songIndex: nextSongIndex,
-                        startTime: Date.now() + 4000, // BUFFER 4S pour le prochain round
+                        startTime: getServerTime() + 5000, // 5s buffer based on Server Time
                         phase: 'guessing',
                         seekTime: nextSeek
                     });
 
-                }, 8000); // 8s de révélation
+                }, 8000);
             }
         }
 
@@ -549,7 +536,6 @@
                 if (matchAnime) {
                     animeFound = true; pointsEarned += 1;
                     document.getElementById('status-anime').classList.remove('hidden');
-                    logDebug("Anime Found!");
                 }
             }
             
