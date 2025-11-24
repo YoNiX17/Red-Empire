@@ -540,32 +540,35 @@
                     videoEl.removeEventListener('playing', onPlayListener);
                     onPlayListener = null;
                 }
-                
-                // 1. Reset et Source
-                videoEl.onloadedmetadata = null;
-                videoEl.pause();
-                videoEl.removeAttribute('src'); 
-                videoEl.load();
 
+                videoEl.pause();
+                
                 videoEl.src = songData.url;
                 videoEl.volume = userVolume;
 
-                // 2. Attente chargement métadonnées pour SEEK
-                videoEl.onloadedmetadata = () => {
+                const tryToPlay = () => {
                     videoEl.currentTime = gameState.seekTime || 0;
-                    
-                    const playPromise = videoEl.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => { console.log("Auto-play prevented"); });
-                    }
+                    const p = videoEl.play();
+                    if(p) p.catch(e => console.log("Play error", e));
                 };
 
-                // 3. Attente lecture réelle pour SYNC
+                videoEl.onloadedmetadata = () => {
+                    tryToPlay();
+                };
+                
+                videoEl.oncanplay = () => {
+                    if (videoEl.paused) tryToPlay();
+                };
+
                 onPlayListener = () => {
                     document.getElementById('loader-overlay').classList.add('hidden');
                     diskEl.classList.remove('disk-paused');
                     
-                    // Force CSS Reflow pour restart anim
+                    if (Math.abs(videoEl.currentTime - (gameState.seekTime || 0)) > 0.5) {
+                        console.log("Resyncing time...");
+                        videoEl.currentTime = gameState.seekTime || 0;
+                    }
+
                     bar.classList.remove('timer-running');
                     void bar.offsetWidth; 
                     bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
@@ -578,6 +581,7 @@
                         }, RANKED_SETTINGS.duration * 1000);
                     }
                 };
+                
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
 
             } else if (gameState.phase === 'reveal') {
