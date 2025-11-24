@@ -324,11 +324,10 @@
                     <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">DUEL EN COURS</h2>
                 </div>
 
-                <!-- Indicateurs (RESTAURÉS) -->
+                <!-- Indicateurs (AVEC NUMÉRO OP) -->
                 <div id="status-indicators" class="flex gap-4 mt-8 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">ANIME OK (+1)</div>
                     <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg font-manga tracking-wide">TITRE OK (+1)</div>
-                    <!-- OP RESTAURÉ -->
                     <div id="status-op" class="hidden bg-blue-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">NUMÉRO OK (+0.5)</div>
                 </div>
             </div>
@@ -402,14 +401,15 @@
         let isHost = false;
         let roundTimer = null;
         
-        // États jeu
         let animeFound = false;
         let songFound = false;
         let opFound = false;
         let currentSongData = null;
+        let lastPhase = '';
+        let lastStartTime = 0;
+        let onPlayListener = null;
         let userVolume = 0.5;
 
-        // Éléments DOM
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
@@ -424,11 +424,9 @@
             if(videoEl) videoEl.volume = userVolume;
         }
 
-        // Auth Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Récupération pseudo custom si dispo
                 get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
                     if (snapshot.exists() && snapshot.val().username) {
                         document.querySelector('#user-badge span:last-child').innerText = snapshot.val().username;
@@ -437,7 +435,7 @@
                     }
                 });
             } else {
-                window.location.href = "index.html"; // Redirige si pas co
+                window.location.href = "index.html";
             }
         });
 
@@ -452,7 +450,6 @@
             return array;
         }
 
-        // Algorithme de Levenshtein (Tolérance fautes de frappe)
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -491,9 +488,7 @@
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
-
-        // --- LOGIQUE SALLE (1v1) ---
-
+        // --- LOGIQUE SALLE ---
         window.createRoom = async () => {
             if (!currentUser) return;
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -501,24 +496,18 @@
             isHost = true;
             
             const profile = await getUserProfile(currentUser.uid);
+            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
+            const deck = shuffleArray(allIndices);
 
             const roomData = {
                 host: currentUser.uid,
                 createdAt: Date.now(),
                 status: 'lobby',
-                type: 'ranked_1v1', // Marqueur important
-                settings: RANKED_SETTINGS, // Paramètres verrouillés
-                players: { 
-                    [currentUser.uid]: { 
-                        name: profile.name, 
-                        team: 1, // Hôte = Toujours Team 1 (Bleu)
-                        score: 0, 
-                        avatar: profile.avatar 
-                    } 
-                },
-                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby' }
+                type: 'ranked_1v1',
+                settings: RANKED_SETTINGS,
+                players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: deck, seekTime: 0 }
             };
-
             await set(ref(db, `blindtest/rooms/${roomCode}`), roomData);
             enterLobby(roomCode);
         };
@@ -526,45 +515,22 @@
         window.joinRoom = async () => {
             if (!currentUser) return;
             const code = document.getElementById('input-room-code').value.toUpperCase();
-            if (code.length < 4) return alert("Code invalide");
-
             const roomRef = ref(db, `blindtest/rooms/${code}`);
             const snapshot = await get(roomRef);
-
             if (snapshot.exists()) {
-                const data = snapshot.val();
-                
-                // VÉRIFICATION LIMITE 2 JOUEURS
-                if (Object.keys(data.players || {}).length >= 2) {
-                    alert("⚠️ Cette salle est pleine (Duel en cours).");
-                    return;
-                }
-
+                if (Object.keys(snapshot.val().players || {}).length >= 2) return alert("Salle pleine.");
                 currentRoomId = code;
                 isHost = false;
                 const profile = await getUserProfile(currentUser.uid);
-                
-                // Rejoignant = Toujours Team 2 (Rouge)
-                const updates = {};
-                updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { 
-                    name: profile.name, 
-                    team: 2, 
-                    score: 0, 
-                    avatar: profile.avatar 
-                };
-                
-                await update(ref(db), updates);
+                await update(ref(db, `blindtest/rooms/${code}/players/${currentUser.uid}`), { name: profile.name, team: 2, score: 0, avatar: profile.avatar });
                 enterLobby(code);
-            } else { 
-                alert("Salle introuvable."); 
-            }
+            } else { alert("Salle introuvable."); }
         };
 
         function enterLobby(code) {
             document.getElementById('screen-menu').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('lobby-code').innerText = code;
-
             if (isHost) {
                 document.getElementById('host-controls').classList.remove('hidden');
                 document.getElementById('guest-controls').classList.add('hidden');
@@ -572,37 +538,21 @@
                 document.getElementById('host-controls').classList.add('hidden');
                 document.getElementById('guest-controls').classList.remove('hidden');
             }
-
-            // Écouteur Principal de la Salle
             onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return; // Salle supprimée ?
-
-                // 1. Mise à jour des Slots Joueurs (Visualisation VS)
+                if (!data) return;
                 updateLobbySlots(data.players);
-
-                // 2. Gestion État du Jeu
                 if (data.status === 'lobby') {
                     document.getElementById('screen-game').classList.add('hidden');
                     document.getElementById('screen-lobby').classList.remove('hidden');
-                    
-                    // Si on est Host et qu'il y a 2 joueurs, on active le bouton Start
-                    if (isHost) {
-                        const playerCount = Object.keys(data.players || {}).length;
+                    if(isHost) {
                         const btnStart = document.getElementById('btn-start');
-                        if (playerCount === 2) {
-                            btnStart.disabled = false;
-                            btnStart.innerText = "LANCER LE DUEL !";
-                            btnStart.classList.add('animate-pulse');
-                        } else {
-                            btnStart.disabled = true;
-                            btnStart.innerText = "EN ATTENTE DE L'ADVERSAIRE...";
-                            btnStart.classList.remove('animate-pulse');
-                        }
+                        const pCount = Object.keys(data.players || {}).length;
+                        btnStart.disabled = pCount < 2;
+                        btnStart.innerText = pCount === 2 ? "LANCER LE DUEL !" : "EN ATTENTE DE L'ADVERSAIRE...";
+                        if(pCount===2) btnStart.classList.add('animate-pulse');
                     }
-
                 } else if (data.status === 'playing') {
-                    // Transition vers l'écran de jeu
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
@@ -613,78 +563,46 @@
         }
 
         function updateLobbySlots(players) {
-            // Reset visuel
-            document.getElementById('slot-p2').classList.add('opacity-50');
-            document.getElementById('p2-name').innerText = "RECHERCHE...";
-            document.getElementById('p2-spinner').classList.remove('hidden');
-            document.getElementById('p2-avatar').src = "";
-            document.getElementById('p2-avatar').classList.add('opacity-50');
+            const p2Slot = document.getElementById('slot-p2');
+            const p2Name = document.getElementById('p2-name');
+            const p2Avatar = document.getElementById('p2-avatar');
+            p2Slot.classList.add('opacity-50'); p2Name.innerText = "RECHERCHE..."; p2Avatar.src = ""; p2Avatar.classList.add('opacity-50');
 
             Object.values(players).forEach(p => {
                 if (p.team === 1) {
-                    // P1 (Bleu)
                     document.getElementById('p1-name').innerText = p.name;
-                    if(p.avatar) {
-                        document.getElementById('p1-avatar').src = p.avatar;
-                        document.getElementById('p1-avatar').classList.remove('opacity-50');
-                        document.getElementById('p1-icon').classList.add('hidden');
-                    }
-                    // Setup UI Jeu aussi
+                    if(p.avatar) { document.getElementById('p1-avatar').src = p.avatar; document.getElementById('p1-avatar').classList.remove('opacity-50'); document.getElementById('p1-icon').classList.add('hidden'); }
                     document.getElementById('game-p1-name').innerText = p.name;
                     document.getElementById('score-p1').innerText = p.score;
-                } 
-                else if (p.team === 2) {
-                    // P2 (Rouge)
-                    document.getElementById('slot-p2').classList.remove('opacity-50');
-                    document.getElementById('p2-name').innerText = p.name;
-                    document.getElementById('p2-spinner').classList.add('hidden');
-                    if(p.avatar) {
-                        document.getElementById('p2-avatar').src = p.avatar;
-                        document.getElementById('p2-avatar').classList.remove('opacity-50');
-                    }
-                    // Setup UI Jeu aussi
+                } else if (p.team === 2) {
+                    p2Slot.classList.remove('opacity-50'); p2Name.innerText = p.name; document.getElementById('p2-spinner').classList.add('hidden');
+                    if(p.avatar) { p2Avatar.src = p.avatar; p2Avatar.classList.remove('opacity-50'); }
                     document.getElementById('game-p2-name').innerText = p.name;
                     document.getElementById('score-p2').innerText = p.score;
                 }
             });
         }
 
-        // --- MOTEUR DE JEU ---
-
         window.startGame = () => {
-            // Création Deck Aléatoire
-            const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
-            const newDeck = shuffleArray(allIndices);
-            const firstSongIndex = newDeck[0];
-            const randomSeek = Math.floor(Math.random() * 11) + 40; // Seek entre 40 et 50s
-
-            update(ref(db, `blindtest/rooms/${currentRoomId}`), {
-                status: 'playing',
-                gameState: {
-                    currentRound: 1,
-                    songIndex: firstSongIndex,
-                    startTime: Date.now() + 3000,
-                    phase: 'guessing',
-                    deck: newDeck,
-                    seekTime: randomSeek
-                }
+            get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
+                const deck = snap.val();
+                if(!deck) return;
+                const firstIndex = deck[0];
+                const seek = Math.floor(Math.random() * 11) + 40;
+                update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                    status: 'playing',
+                    gameState: { currentRound: 1, songIndex: firstIndex, startTime: Date.now() + 3000, phase: 'guessing', deck: deck, seekTime: seek }
+                });
             });
         };
 
-        let lastPhase = '';
-        let lastStartTime = 0;
-        let onPlayListener = null;
-
         function handleGameSync(gameState, players) {
-            // Mise à jour des scores en temps réel
             Object.values(players).forEach(p => {
                 if (p.team === 1) document.getElementById('score-p1').innerText = p.score;
                 if (p.team === 2) document.getElementById('score-p2').innerText = p.score;
             });
 
-            // Eviter re-rendu inutile
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
-            
             if (isHost) clearTimeout(roundTimer);
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
@@ -694,7 +612,6 @@
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
             if (gameState.phase === 'guessing') {
-                // RESET UI
                 animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
@@ -702,7 +619,6 @@
                 document.getElementById('result-display').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
-                
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
@@ -714,12 +630,8 @@
                 document.getElementById('loader-overlay').classList.remove('hidden'); 
                 diskEl.classList.add('disk-paused'); 
 
-                if(onPlayListener) {
-                    videoEl.removeEventListener('playing', onPlayListener);
-                    onPlayListener = null;
-                }
+                if(onPlayListener) { videoEl.removeEventListener('playing', onPlayListener); onPlayListener = null; }
 
-                // Chargement Vidéo
                 videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
@@ -737,17 +649,9 @@
                         }, RANKED_SETTINGS.duration * 1000);
                     }
                 };
-                
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
                 videoEl.play().catch(e => console.log("Autoplay blocked:", e));
-
-                // SÉCURITÉ ANTI-CRASH (Hôte Only)
-                if(isHost) {
-                    videoEl.onerror = () => {
-                        console.log("Host Video Error - Force Start Timer");
-                        onPlayListener();
-                    };
-                }
+                if(isHost) { videoEl.onerror = () => { console.log("Host Video Error"); onPlayListener(); }; }
 
             } else if (gameState.phase === 'reveal') {
                 document.getElementById('loader-overlay').classList.add('hidden');
@@ -755,28 +659,19 @@
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
                 document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
-                
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
-                
                 diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    const delay = 8000; // 8 secondes de révélation
                     setTimeout(() => {
-                        // FIN DE PARTIE ?
                         if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
-                            // On pourrait update le status à 'finished'
-                            // Ici on reload simple pour le MVP
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
                             return; 
                         }
-
-                        // Round Suivant
                         const nextIndex = gameState.deck[gameState.currentRound];
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
-
                         update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                             currentRound: gameState.currentRound + 1,
                             songIndex: nextIndex,
@@ -784,35 +679,20 @@
                             phase: 'guessing',
                             seekTime: nextSeek
                         });
-                    }, delay);
+                    }, 8000);
                 }
             } else if (gameState.phase === 'finished') {
-                // Ecran de fin
                 document.getElementById('screen-game').classList.add('blur-md');
                 document.getElementById('screen-end').classList.remove('hidden');
-                
-                // Calcul Vainqueur
                 let p1Score = 0, p2Score = 0;
-                Object.values(players).forEach(p => {
-                    if (p.team === 1) p1Score = p.score;
-                    if (p.team === 2) p2Score = p.score;
-                });
-
+                Object.values(players).forEach(p => { if (p.team === 1) p1Score = p.score; if (p.team === 2) p2Score = p.score; });
                 const myTeam = Object.values(players).find(p => p.name === (currentUser.displayName || "Joueur"))?.team;
                 const myScore = myTeam === 1 ? p1Score : p2Score;
                 const oppScore = myTeam === 1 ? p2Score : p1Score;
-
                 const title = document.getElementById('end-title');
-                if (myScore > oppScore) {
-                    title.innerText = "VICTOIRE !";
-                    title.classList.add('text-green-500');
-                } else if (myScore < oppScore) {
-                    title.innerText = "DÉFAITE...";
-                    title.classList.add('text-red-500');
-                } else {
-                    title.innerText = "ÉGALITÉ";
-                    title.classList.add('text-white');
-                }
+                if(myScore > oppScore) { title.innerText = "VICTOIRE !"; title.className = "text-6xl font-manga text-green-500 mb-4 animate-bounce"; }
+                else if(myScore < oppScore) { title.innerText = "DÉFAITE..."; title.className = "text-6xl font-manga text-red-500 mb-4"; }
+                else { title.innerText = "ÉGALITÉ"; title.className = "text-6xl font-manga text-white mb-4"; }
                 document.getElementById('end-score').innerText = `${p1Score} - ${p2Score}`;
             }
         }
@@ -824,67 +704,33 @@
             if (!guess) return;
 
             let pointsEarned = 0;
-            let feedback = "";
-
-            // 1. CHECK ANIME
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
-                if (!matchAnime && currentSongData.alt) {
-                    for (let alias of currentSongData.alt) {
-                        if (isCloseMatch(guess, alias)) { matchAnime = true; break; }
-                    }
-                }
-                if (matchAnime) {
-                    animeFound = true;
-                    pointsEarned += 1;
-                    document.getElementById('status-anime').classList.remove('hidden');
-                    feedback = "ANIME TROUVÉ !";
-                }
+                if (!matchAnime && currentSongData.alt) { for (let alias of currentSongData.alt) { if (isCloseMatch(guess, alias)) { matchAnime = true; break; } } }
+                if (matchAnime) { animeFound = true; pointsEarned += 1; document.getElementById('status-anime').classList.remove('hidden'); }
             }
-
-            // 2. CHECK TITRE
             if (!songFound) {
-                if (isCloseMatch(guess, currentSongData.song)) {
-                    songFound = true;
-                    pointsEarned += 1;
-                    document.getElementById('status-song').classList.remove('hidden');
-                    feedback = feedback ? "DOUBLE COMBO !" : "TITRE TROUVÉ !";
-                }
+                if (isCloseMatch(guess, currentSongData.song)) { songFound = true; pointsEarned += 1; document.getElementById('status-song').classList.remove('hidden'); }
             }
-
-            // 3. CHECK OP NUM (RESTAURÉ !)
             if (!opFound && currentSongData.num) {
                 const inputNums = guess.match(/\d+/g);
-                if (inputNums && inputNums.includes(currentSongData.num.toString())) {
-                    opFound = true;
-                    pointsEarned += 0.5;
-                    document.getElementById('status-op').classList.remove('hidden');
-                    feedback = feedback ? "COMBO !!!" : "NUMÉRO OK !";
-                }
+                if (inputNums && inputNums.includes(currentSongData.num.toString())) { opFound = true; pointsEarned += 0.5; document.getElementById('status-op').classList.remove('hidden'); }
             }
-
-            if (pointsEarned > 0) {
+            
+            if(pointsEarned > 0) {
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: currentScore + pointsEarned });
                 });
-                
                 const popup = document.createElement('div');
-                popup.className = 'points-popup text-4xl text-yellow-400 font-bold fixed z-50 animate-bounce';
-                popup.style.left = '50%';
-                popup.style.top = '40%';
-                popup.style.transform = 'translate(-50%, -50%)';
-                popup.style.textShadow = '2px 2px 0 #000';
+                popup.className = 'fixed z-50 text-4xl text-yellow-400 font-bold animate-bounce';
+                popup.style.left = '50%'; popup.style.top = '40%'; popup.style.transform = 'translate(-50%, -50%)'; popup.style.textShadow = '2px 2px 0 #000';
                 popup.innerText = `+${pointsEarned}`;
                 document.body.appendChild(popup);
                 setTimeout(() => popup.remove(), 1000);
             }
-
             input.value = "";
-            input.placeholder = feedback || "NON...";
-            setTimeout(() => input.placeholder = "Tapez votre réponse...", 1000);
         };
-
     </script>
 </body>
 </html>
