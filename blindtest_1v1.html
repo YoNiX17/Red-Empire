@@ -32,7 +32,7 @@
             --gold: #fbbf24;
             --gold-dark: #b45309;
             --dark-bg: #0f0f0f;
-            --panel-bg: #141414;
+            --panel-bg: #1a1a1a;
             --text-main: #eeeeee;
             --border-color: #fbbf24;
         }
@@ -83,9 +83,8 @@
         .btn-pop:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
-        .timer-fill { height: 100%; background: var(--gold); width: 100%; }
-        .timer-running { animation: shrink linear forwards; }
-
+        .timer-fill { height: 100%; background: var(--gold); width: 100%; } /* Transition gérée par JS pour précision */
+        
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
@@ -221,7 +220,7 @@
             
             <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
                 <div class="loader-ring"></div>
-                <p class="text-yellow-500 font-manga tracking-widest mt-6 text-2xl animate-pulse">SYNCHRONISATION...</p>
+                <p class="text-yellow-500 font-manga tracking-widest mt-6 text-2xl animate-pulse" id="loader-msg">SYNCHRONISATION...</p>
             </div>
 
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 hover:scale-105">
@@ -298,7 +297,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, remove, push, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
         const firebaseConfig = {
@@ -323,25 +322,31 @@
         let isHost = false;
         let roundTimer = null;
         let matchmakingTimeout = null;
+        let clientInterval = null;
         
         let animeFound = false, songFound = false, opFound = false;
         let currentSongData = null;
         let lastPhase = '';
         let lastStartTime = 0;
-        let onPlayListener = null;
         let userVolume = 0.5;
         let hasTriggeredStart = false;
+        let serverOffset = 0;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Volume
+        // SYNCHRO TEMPS SERVEUR
+        const offsetRef = ref(db, ".info/serverTimeOffset");
+        onValue(offsetRef, (snap) => { serverOffset = snap.val(); });
+        function getServerTime() { return Date.now() + serverOffset; }
+
+        // VOLUME
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
         window.updateVolume = (val) => { userVolume = val; localStorage.setItem('userVolume', val); if(videoEl) videoEl.volume = userVolume; }
 
-        // Auth & Start
+        // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -353,26 +358,28 @@
             } else { window.location.href = "index.html"; }
         });
 
-        // Utils
+        // UTILS
         function shuffleArray(array) {
             let i = array.length, r;
             while (i != 0) { r = Math.floor(Math.random() * i); i--; [array[i], array[r]] = [array[r], array[i]]; }
             return array;
         }
 
+        function levenshtein(a, b) {
+            if(a.length == 0) return b.length; if(b.length == 0) return a.length; 
+            var m = []; for(var i = 0; i <= b.length; i++) m[i] = [i]; for(var j = 0; j <= a.length; j++) m[0][j] = j;
+            for(var i = 1; i <= b.length; i++) for(var j = 1; j <= a.length; j++) {
+                m[i][j] = (b.charAt(i-1) == a.charAt(j-1)) ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, Math.min(m[i][j-1]+1, m[i-1][j]+1));
+            }
+            return m[b.length][a.length];
+        }
+
         function isCloseMatch(input, target) {
             if (!target) return false;
             const nI = input.toLowerCase().trim(); const nT = target.toLowerCase().trim();
             if (nI === nT) return true; if (nT.includes(nI) && nI.length > 3) return true; 
-            
-            // Levenshtein basic
-            if(nI.length === 0) return false;
-            var m = []; for(var i = 0; i <= nT.length; i++) m[i] = [i]; for(var j = 0; j <= nI.length; j++) m[0][j] = j;
-            for(var i = 1; i <= nT.length; i++) for(var j = 1; j <= nI.length; j++) {
-                m[i][j] = (nT.charAt(i-1) == nI.charAt(j-1)) ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, Math.min(m[i][j-1]+1, m[i-1][j]+1));
-            }
-            const dist = m[nT.length][nI.length];
-            return (1 - dist/Math.max(nI.length, nT.length)) > 0.75; 
+            const dist = levenshtein(nI, nT); const max = Math.max(nI.length, nT.length);
+            return (1 - dist/max) > 0.75; 
         }
 
         async function getUserProfile(uid) {
@@ -408,7 +415,7 @@
 
             await set(ref(db, `blindtest/rooms/${code}`), {
                 host: currentUser.uid,
-                createdAt: Date.now(),
+                createdAt: getServerTime(),
                 status: 'lobby',
                 type: 'ranked_1v1',
                 players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
@@ -431,13 +438,12 @@
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('lobby-code').innerText = code;
 
-            // Timeout 2min safety
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             matchmakingTimeout = setTimeout(() => {
                 get(ref(db, `blindtest/rooms/${code}`)).then(snap => {
                     if(snap.exists() && snap.val().status === 'lobby' && Object.keys(snap.val().players).length < 2) {
                         if(isHost) remove(ref(db, `blindtest/rooms/${code}`));
-                        alert("Aucun adversaire trouvé. Réessayez.");
+                        alert("Aucun adversaire trouvé. Retour au menu.");
                         window.location.href = "blindtest_ranked.html";
                     }
                 });
@@ -492,11 +498,11 @@
             const seek = Math.floor(Math.random() * 11) + 40;
             update(ref(db, `blindtest/rooms/${currentRoomId}`), {
                 status: 'playing',
-                gameState: { currentRound: 1, songIndex: firstIndex, startTime: Date.now() + 3000, phase: 'guessing', deck: deck, seekTime: seek }
+                gameState: { currentRound: 1, songIndex: firstIndex, startTime: getServerTime() + 5000, phase: 'guessing', deck: deck, seekTime: seek }
             });
         };
 
-        // --- MOTEUR DE JEU ---
+        // --- MOTEUR JEU SYNCHRO TEMPS SERVEUR ---
         function handleGameSync(gameState, players) {
             const p1 = Object.values(players).find(p => p.team === 1);
             const p2 = Object.values(players).find(p => p.team === 2);
@@ -505,9 +511,10 @@
 
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
             if (isHost) clearTimeout(roundTimer);
+            if (clientInterval) clearInterval(clientInterval);
+            
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
-            
             currentSongData = OP_DATABASE[gameState.songIndex];
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
@@ -524,35 +531,44 @@
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
                 document.getElementById('loader-overlay').classList.remove('hidden');
+                document.getElementById('loader-msg').innerText = "CHARGEMENT...";
 
                 const bar = document.getElementById('game-timer-bar');
                 bar.classList.remove('timer-running');
                 bar.style.width = '100%';
                 diskEl.classList.add('disk-paused');
 
-                if(onPlayListener) { videoEl.removeEventListener('playing', onPlayListener); onPlayListener = null; }
-
+                videoEl.oncanplay = null; videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load();
                 videoEl.src = currentSongData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
 
-                onPlayListener = () => {
-                    document.getElementById('loader-overlay').classList.add('hidden');
-                    diskEl.classList.remove('disk-paused');
-                    bar.style.animationDuration = RANKED_SETTINGS.duration + 's';
-                    bar.classList.add('timer-running');
+                // BOUCLE SYNCHRO CLIENT (100ms)
+                clientInterval = setInterval(() => {
+                    const now = getServerTime();
+                    const timeLeft = gameState.startTime - now;
 
-                    if (isHost) {
-                        clearTimeout(roundTimer);
-                        roundTimer = setTimeout(() => {
-                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
-                        }, RANKED_SETTINGS.duration * 1000);
+                    if (timeLeft > 0) {
+                        document.getElementById('loader-msg').innerText = `DÉPART DANS ${(timeLeft/1000).toFixed(1)}s`;
+                    } else {
+                        document.getElementById('loader-overlay').classList.add('hidden');
+                        diskEl.classList.remove('disk-paused');
+                        if (videoEl.paused) videoEl.play().catch(e => {});
+
+                        const elapsed = now - gameState.startTime;
+                        const durationMs = RANKED_SETTINGS.duration * 1000;
+                        const percent = Math.max(0, 100 - (elapsed / durationMs * 100));
+                        bar.style.width = percent + "%";
+
+                        if (isHost && elapsed >= durationMs) {
+                            clearInterval(clientInterval);
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                                phase: 'reveal', 
+                                startTime: getServerTime() 
+                            });
+                        }
                     }
-                };
-                videoEl.addEventListener('playing', onPlayListener, { once: true });
-                videoEl.play().catch(e => {});
-                
-                if(isHost) { videoEl.onerror = () => onPlayListener(); }
+                }, 100);
 
             } else if (gameState.phase === 'reveal') {
                 document.getElementById('loader-overlay').classList.add('hidden');
@@ -575,7 +591,7 @@
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
                                 currentRound: gameState.currentRound + 1,
                                 songIndex: nextIndex,
-                                startTime: Date.now(),
+                                startTime: getServerTime() + 5000,
                                 phase: 'guessing',
                                 seekTime: nextSeek
                             });
@@ -602,8 +618,8 @@
             
             const title = document.getElementById('end-title');
             if (myScore > oppScore) { title.innerText = "VICTOIRE !"; title.classList.add('text-green-500'); }
-            else if (myScore < oppScore) { title.innerText = "DÉFAITE..."; title.classList.add('text-red-500'); }
-            else { title.innerText = "ÉGALITÉ"; title.classList.add('text-white'); }
+            else if (myScore < oppScore) { title.innerText = "DÉFAITE..."; title.className = "text-8xl font-manga text-red-600 mb-4 text-shadow-lg"; }
+            else { title.innerText = "ÉGALITÉ"; title.className = "text-8xl font-manga text-white mb-4 text-shadow-lg"; }
         }
 
         window.submitGuess = () => {
