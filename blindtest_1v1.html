@@ -235,7 +235,7 @@
             <!-- VIDEO -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-6xl max-h-[75vh] bg-black border-4 border-gold-500 rounded-2xl shadow-[0_0_100px_rgba(234,179,8,0.15)] overflow-hidden relative group">
-                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                     <div class="absolute inset-0 pointer-events-none border-4 border-white/10 rounded-xl"></div>
                 </div>
             </div>
@@ -404,8 +404,8 @@
             } else { window.location.href = "index.html"; }
         });
 
-        // MATCHMAKING
-        window.searchMatch = async () => {
+        // MATCHMAKING (Rename to match HTML onclick)
+        window.startMatchmaking = async () => {
             if (!currentUser) return;
             
             // WARM UP
