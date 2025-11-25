@@ -276,7 +276,7 @@
         import { getDatabase, ref, child, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // --- CONFIG FIREBASE ---
+        // --- CONFIG FIREBASE (Auth & Stats) ---
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -342,6 +342,13 @@
         // --- FONCTION START MATCHMAKING ---
         window.startMatchmaking = () => {
             if(!userProfile) return;
+
+            // === WARM-UP AUDIO CRUCIAL ===
+            // On lance le lecteur vidéo à vide dès le clic pour dire au navigateur "C'est bon, j'ai l'accord de l'utilisateur"
+            videoEl.src = ""; 
+            videoEl.load();
+            // On crée une promesse silencieuse pour éviter l'erreur dans la console si pas de source
+            videoEl.play().then(() => videoEl.pause()).catch(e => {});
 
             // UI Update
             document.getElementById('start-area').classList.add('hidden');
