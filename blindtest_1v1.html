@@ -36,34 +36,26 @@
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
         .manga-panel { background: var(--panel-bg); border: 4px solid var(--gold); box-shadow: 8px 8px 0px var(--gold-dark); position: relative; overflow: hidden; }
         .speed-lines::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.05) 10px, rgba(251, 191, 36, 0.05) 20px); pointer-events: none; }
-        
-        .btn-pop { 
-            background: #222; color: var(--gold); font-family: 'Bangers'; text-transform: uppercase; border: 3px solid var(--gold); transition: 0.1s; box-shadow: 4px 4px 0px var(--gold-dark); cursor: pointer;
-        }
+        .btn-pop { background: #222; color: var(--gold); font-family: 'Bangers'; text-transform: uppercase; border: 3px solid var(--gold); transition: 0.1s; box-shadow: 4px 4px 0px var(--gold-dark); cursor: pointer; }
         .btn-pop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--gold-dark); background: var(--gold); color: black; }
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0 0 0; }
         .btn-pop:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-        
-        /* Animations */
-        .pulse-btn { animation: pulse-gold 2s infinite; }
-        @keyframes pulse-gold { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
-
         .timer-container { width: 100%; height: 16px; background: #333; border: 3px solid white; border-radius: 99px; overflow: hidden; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
-        .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.2s linear; }
-        
+        .timer-fill { height: 100%; background: var(--gold); width: 100%; }
         .input-manga { border: 3px solid var(--gold); background: #222; color: white; font-family: 'Bangers'; letter-spacing: 1px; box-shadow: inset 4px 4px 0px #000; }
         .input-manga:focus { outline: none; border-color: white; }
-        
         .loader-ring { display: inline-block; width: 64px; height: 64px; }
         .loader-ring:after { content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%; border: 6px solid #fff; border-color: var(--gold) transparent var(--gold) transparent; animation: loader-ring 1.2s linear infinite; }
         @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+        .vs-text { text-shadow: 4px 4px 0px #000; animation: pulse-vs 1s infinite alternate; }
+        @keyframes pulse-vs { from { transform: scale(1); } to { transform: scale(1.1); } }
+        .points-popup { position: absolute; z-index: 100; animation: floatUp 1.5s ease-out forwards; pointer-events: none; text-shadow: 3px 3px 0 #000; -webkit-text-stroke: 1px black; }
+        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -20px) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -100px) scale(1); opacity: 0; } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .points-popup { position: absolute; z-index: 100; animation: floatUp 1.5s ease-out forwards; pointer-events: none; text-shadow: 3px 3px 0 #000; -webkit-text-stroke: 1px black; }
-        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -20px) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -100px) scale(1); opacity: 0; } }
+        .pulse-btn { animation: pulse-gold 2s infinite; }
+        @keyframes pulse-gold { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -82,7 +74,7 @@
         <div id="user-badge" class="flex items-center gap-3 bg-gray-900 px-4 py-1 rounded-full border-2 border-yellow-500/50 shadow-lg">
             <div class="flex flex-col items-end leading-none">
                 <span class="text-yellow-500 text-xs font-bold font-mono">MMR: 1200</span>
-                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">Joueur</span>
+                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">JOUEUR</span>
             </div>
             <div id="socket-dot" class="w-3 h-3 bg-red-500 rounded-full border border-white animate-pulse" title="État connexion socket"></div>
         </div>
@@ -94,7 +86,7 @@
         
         <div class="manga-panel p-12 max-w-4xl w-full text-center speed-lines z-10 flex flex-col items-center min-h-[500px] justify-center">
             
-            <!-- ZONE DE DÉPART (Obligatoire pour débloquer le son) -->
+            <!-- DÉPART (Obligatoire pour son) -->
             <div id="start-area" class="flex flex-col items-center">
                 <h2 class="text-6xl font-manga text-white mb-8 text-shadow-sm">PRÊT AU COMBAT ?</h2>
                 <button onclick="startMatchmaking()" class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform">
@@ -103,7 +95,7 @@
                 <p class="text-gray-500 mt-4 font-mono text-xs">Cliquez pour activer le système audio</p>
             </div>
 
-            <!-- ZONE DE RECHERCHE -->
+            <!-- RECHERCHE -->
             <div id="search-area" class="hidden w-full flex-col items-center">
                 <div class="loader-ring mb-8" id="lobby-spinner"></div>
                 <h2 class="text-6xl font-manga text-white mb-4 text-shadow-sm animate-pulse" id="lobby-status">RECHERCHE...</h2>
@@ -159,39 +151,35 @@
             </div>
         </div>
 
-        <!-- ZONE VIDEO & DISQUE -->
+        <!-- ZONE DE JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- VIDEO -->
+            <!-- VIDEO (Optimisée) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-5xl max-h-[75vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative group">
-                    <!-- crossOrigin retiré pour éviter l'erreur CORS sur animethemes -->
-                    <video id="game-video" class="w-full h-full object-contain" playsinline></video> 
+                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
                     <div class="absolute inset-0 pointer-events-none border-4 border-white/10 rounded-xl"></div>
                 </div>
             </div>
-
-            <!-- LOADER -->
-            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
-                <div class="loader-ring scale-150 mb-8"></div>
-                <p class="text-yellow-500 font-manga tracking-[0.2em] text-4xl animate-pulse">SYNCHRONISATION...</p>
-            </div>
-
+            
             <!-- VINYLE -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 hover:scale-105">
                 <div class="relative w-80 h-80 md:w-96 md:h-96 mb-10 group">
                     <div class="absolute inset-0 bg-yellow-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
                     <div class="w-full h-full rounded-full bg-[#111] border-[8px] border-gray-300 shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
                         <div class="absolute inset-0 rounded-full border-[24px] border-[#1a1a1a] opacity-60"></div>
+                        <div class="absolute inset-24 rounded-full border-[1px] border-[#333] opacity-40"></div>
                         <div class="absolute w-32 h-32 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
                             <i class="fa-solid fa-music text-5xl text-black drop-shadow-md"></i>
                         </div>
                     </div>
                 </div>
+
                 <div class="text-center bg-yellow-500 px-12 py-4 border-4 border-black rounded-full shadow-[8px_8px_0px_#fff] transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-                    <h2 class="text-6xl font-manga text-black tracking-widest drop-shadow-sm">ÉCOUTEZ !</h2>
+                    <h2 class="text-6xl font-manga text-black tracking-widest drop-shadow-sm" id="phase-text">ÉCOUTEZ !</h2>
                 </div>
-                
+
+                <!-- INDICATEURS -->
                 <div id="status-indicators" class="flex gap-4 mt-10 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-6 py-2 rounded-xl border-2 border-white font-bold text-lg shadow-lg font-manga animate-bounce">ANIME OK (+1)</div>
                     <div id="status-song" class="hidden bg-yellow-400 text-black px-6 py-2 rounded-xl border-2 border-black font-bold text-lg shadow-lg font-manga animate-bounce">TITRE OK (+1)</div>
@@ -218,6 +206,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="max-w-4xl mx-auto flex gap-4">
                 <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-20 px-8 text-3xl uppercase rounded-2xl border-4 border-gray-600 focus:border-yellow-500 transition-colors placeholder-gray-600" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
                 <button onclick="submitGuess()" class="btn-pop w-48 rounded-2xl text-3xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400 shadow-xl font-bold">ENVOYER</button>
@@ -243,7 +232,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, child, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
@@ -262,11 +251,15 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // SOCKET IO (Render)
+        // CONTOURNEMENT RESTRICTIONS NAVIGATEUR (PERSISTANCE)
+        setPersistence(auth, browserSessionPersistence).catch(error => {
+            console.log("Storage bloqué, passage en mémoire", error);
+            return setPersistence(auth, inMemoryPersistence);
+        });
+
         const SERVER_URL = "https://socket-2co5.onrender.com"; 
         let socket;
 
-        // GAME VARS
         let currentSongData = null;
         let animeFound = false, songFound = false, opFound = false;
         let timerInterval = null;
@@ -276,7 +269,7 @@
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
         const barEl = document.getElementById('game-timer-bar');
-
+        
         // Volume
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
@@ -304,39 +297,33 @@
             } catch(e) {}
         }
 
-        // BOUTON START (Clic Obligatoire)
+        // BOUTON START
         window.startMatchmaking = () => {
             if(!userProfile) return;
 
-            // --- WARM-UP AUDIO ---
-            // On fait un "faux départ" sur la vidéo pour débloquer l'audio context
-            videoEl.removeAttribute('src');
-            videoEl.load();
-            // On force une lecture muette
-            videoEl.muted = true; 
-            const promise = videoEl.play();
-            if (promise !== undefined) {
-                promise.then(_ => {
-                    videoEl.pause(); // Ok c'est débloqué
-                    videoEl.muted = false; // On remet le son pour la suite
-                }).catch(error => console.log("Warm-up failed"));
-            }
+            // === WARM-UP AUDIO V2 ===
+            // Essayer de charger une promesse audio vide pour obtenir l'autorisation du navigateur
+            try {
+                videoEl.src = ""; 
+                videoEl.load();
+                videoEl.muted = true; 
+                videoEl.play().then(() => {
+                    videoEl.pause(); 
+                    videoEl.muted = false; 
+                }).catch(() => {}); // Ignorer erreur si vide
+            } catch(e){}
 
-            // UI Switch
             document.getElementById('start-area').classList.add('hidden');
             document.getElementById('search-area').classList.remove('hidden');
 
-            // Connexion Socket
             socket = io(SERVER_URL);
 
             socket.on('connect', () => {
-                console.log("Socket connecté");
                 document.getElementById('socket-dot').classList.replace('bg-red-500', 'bg-green-500');
                 document.getElementById('lobby-status').innerText = "RECHERCHE...";
                 socket.emit('identify', userProfile);
             });
 
-            // Socket Events
             socket.on('waiting_opponent', () => {
                 document.getElementById('lobby-status').innerText = "EN ATTENTE...";
                 document.getElementById('lobby-info').innerText = "Recherche d'un adversaire...";
@@ -362,7 +349,6 @@
             });
 
             socket.on('round_start', (data) => {
-                // Switch vers l'écran de jeu
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
 
@@ -370,20 +356,20 @@
                 document.getElementById('current-round').innerText = data.round;
                 currentSongData = OP_DATABASE[data.songIndex];
 
-                // 1. Nettoyage complet du lecteur
+                // CHARGEMENT VIDEO BLINDÉ
                 videoEl.pause();
-                videoEl.removeAttribute('src');
-                videoEl.load();
+                videoEl.oncanplay = null; // Reset listeners
                 
-                // 2. Chargement nouvelle source
-                videoEl.src = currentSongData.url;
-                videoEl.volume = userVolume;
-
-                // 3. Attente des métadonnées avant de Seek (Crucial pour éviter les bugs de démarrage tardif)
+                // Ordre important : Events -> Src
                 videoEl.onloadedmetadata = () => {
-                    videoEl.currentTime = data.seekTime;
-                    videoEl.play().catch(e => console.log("Autoplay bloqué malgré tout"));
+                     videoEl.currentTime = data.seekTime;
+                     videoEl.volume = userVolume;
+                     const p = videoEl.play();
+                     if(p) p.catch(e => console.log("Lecture bloquée", e));
                 };
+
+                videoEl.src = currentSongData.url;
+                videoEl.load(); // Force reload
 
                 diskEl.classList.remove('disk-paused');
                 document.getElementById('input-guess').focus();
@@ -432,7 +418,6 @@
             clearInterval(timerInterval);
             barEl.style.width = "100%";
             const startTime = Date.now();
-            
             timerInterval = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000;
                 const percent = Math.max(0, 100 - (elapsed / durationSeconds * 100));
@@ -454,7 +439,6 @@
             barEl.style.width = "100%";
         }
 
-        // LEVENSHTEIN
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; if(b.length == 0) return a.length; 
             var m = []; for(var i = 0; i <= b.length; i++) m[i] = [i]; for(var j = 0; j <= a.length; j++) m[0][j] = j;
