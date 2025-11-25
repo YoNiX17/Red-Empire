@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranked Duel 1v1 | Socket.io</title>
-    <!-- Favicon -->
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
     
-    <!-- SOCKET.IO CLIENT (Essentiel) -->
+    <!-- 1. SOCKET.IO CLIENT (C'est ce qui remplace Firebase pour le jeu) -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,107 +31,38 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --gold: #fbbf24;
-            --gold-dark: #b45309;
-            --dark-bg: #0f0f0f;
-            --panel-bg: #1a1a1a;
-        }
-
-        body { 
-            background-color: var(--dark-bg);
-            color: #eee; 
-            font-family: 'Roboto Condensed', sans-serif; 
-            overflow: hidden;
-            background-image: radial-gradient(#333 10%, transparent 10%);
-            background-size: 20px 20px;
-        }
-        
+        :root { --gold: #fbbf24; --dark-bg: #0f0f0f; --panel-bg: #1a1a1a; }
+        body { background-color: var(--dark-bg); color: #eee; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; background-image: radial-gradient(#333 10%, transparent 10%); background-size: 20px 20px; }
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
-
-        /* --- DÉCORS --- */
-        .manga-panel {
-            background: var(--panel-bg);
-            border: 4px solid var(--gold);
-            box-shadow: 8px 8px 0px var(--gold-dark);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .speed-lines::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.05) 10px, rgba(251, 191, 36, 0.05) 20px);
-            pointer-events: none;
-        }
-
-        /* --- BOUTONS --- */
-        .btn-pop {
-            background: #222;
-            color: var(--gold);
-            font-family: 'Bangers', cursive;
-            text-transform: uppercase;
-            border: 3px solid var(--gold);
-            transition: all 0.1s ease;
-            box-shadow: 4px 4px 0px var(--gold-dark);
-        }
-        .btn-pop:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px var(--gold-dark);
-            background: var(--gold);
-            color: black;
-        }
-        .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px; }
+        .manga-panel { background: var(--panel-bg); border: 4px solid var(--gold); box-shadow: 8px 8px 0px var(--gold-dark); position: relative; overflow: hidden; }
+        .speed-lines::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.05) 10px, rgba(251, 191, 36, 0.05) 20px); pointer-events: none; }
+        .btn-pop { background: #222; color: var(--gold); font-family: 'Bangers'; text-transform: uppercase; border: 3px solid var(--gold); transition: 0.1s; box-shadow: 4px 4px 0px var(--gold-dark); }
+        .btn-pop:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--gold-dark); background: var(--gold); color: black; }
+        .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0 0 0; }
         .btn-pop:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-        
-        /* --- TIMER --- */
         .timer-container { width: 100%; height: 16px; background: #333; border: 3px solid white; border-radius: 99px; overflow: hidden; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
-        /* La transition est gérée via JS pour être fluide mais précise */
         .timer-fill { height: 100%; background: var(--gold); width: 100%; }
-        
-        /* --- ANIMATIONS --- */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .input-manga { border: 3px solid var(--gold); background: #222; color: white; font-family: 'Bangers'; letter-spacing: 1px; box-shadow: inset 4px 4px 0px #000; }
+        .input-manga:focus { outline: none; border-color: white; }
+        .loader-ring { display: inline-block; width: 64px; height: 64px; }
+        .loader-ring:after { content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%; border: 6px solid #fff; border-color: var(--gold) transparent var(--gold) transparent; animation: loader-ring 1.2s linear infinite; }
+        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .vs-text { text-shadow: 4px 4px 0px #000; animation: pulse-vs 1s infinite alternate; }
+        @keyframes pulse-vs { from { transform: scale(1); } to { transform: scale(1.1); } }
+        .points-popup { position: absolute; z-index: 100; animation: floatUp 1.5s ease-out forwards; pointer-events: none; text-shadow: 3px 3px 0 #000; -webkit-text-stroke: 1px black; }
+        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -30px) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -100px) scale(1); opacity: 0; } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
-        
-        .input-manga {
-            border: 3px solid var(--gold);
-            background: #222;
-            color: white;
-            font-family: 'Bangers', cursive;
-            letter-spacing: 1px;
-            box-shadow: inset 4px 4px 0px #000;
-        }
-        .input-manga:focus { outline: none; border-color: white; }
-        
-        .loader-ring { display: inline-block; width: 64px; height: 64px; }
-        .loader-ring:after {
-            content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%;
-            border: 6px solid #fff; border-color: var(--gold) transparent var(--gold) transparent;
-            animation: loader-ring 1.2s linear infinite;
-        }
-        @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .vs-text { text-shadow: 4px 4px 0px #000; font-style: italic; animation: pulse-vs 0.8s infinite alternate; }
-        @keyframes pulse-vs { from { transform: scale(1); } to { transform: scale(1.1); } }
-
-        .points-popup {
-            position: absolute;
-            z-index: 100;
-            animation: floatUp 1.5s ease-out forwards;
-            pointer-events: none;
-            text-shadow: 3px 3px 0 #000;
-            -webkit-text-stroke: 1px black;
-        }
-        @keyframes floatUp {
-            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
-            20% { transform: translate(-50%, -30px) scale(1.5); opacity: 1; }
-            100% { transform: translate(-50%, -100px) scale(1); opacity: 0; }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-screen flex flex-col">
+
+    <!-- SERVER STATUS INDICATOR (Preuve de Socket.io) -->
+    <div class="absolute top-2 left-2 z-[60] flex items-center gap-2 bg-black/80 px-3 py-1 rounded-full border border-gray-700 text-[10px] font-mono">
+        <div id="server-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+        <span id="server-status" class="text-gray-400">DÉCONNECTÉ</span>
+    </div>
 
     <!-- NAVBAR -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
@@ -340,7 +270,7 @@
         import { getDatabase, ref, child, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // --- CONFIG FIREBASE (Auth & Stats) ---
+        // --- CONFIG FIREBASE (Auth & Stats SEULEMENT) ---
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -356,7 +286,6 @@
         const db = getDatabase(app);
 
         // --- SOCKET IO (Temps Réel) ---
-        // URL de votre serveur hébergé
         const SERVER_URL = "https://socket-2co5.onrender.com"; 
         let socket;
 
@@ -393,7 +322,7 @@
         });
 
         async function connectSocket(user) {
-            // Récupère profil DB ou User
+            // Récupérer profil depuis Firebase
             let userProfile = { uid: user.uid, name: user.displayName, avatar: user.photoURL };
             try {
                 const snap = await get(child(ref(db), `users/${user.uid}`));
@@ -403,12 +332,22 @@
                 }
             } catch(e) {}
 
+            // Connexion au serveur de JEU
             socket = io(SERVER_URL);
 
             socket.on('connect', () => {
                 console.log("Socket connecté !");
                 document.getElementById('status-text').innerText = "RECHERCHE...";
-                // On s'identifie et on déclenche automatiquement le matchmaking côté serveur
+                
+                // Indicateur visuel serveur
+                const srvDot = document.getElementById('server-dot');
+                const srvTxt = document.getElementById('server-status');
+                if(srvDot && srvTxt) {
+                    srvDot.classList.replace('bg-red-500', 'bg-green-500');
+                    srvTxt.innerText = "CONNECTÉ";
+                    srvTxt.classList.replace('text-gray-400', 'text-green-400');
+                }
+
                 socket.emit('identify', userProfile);
             });
 
@@ -420,21 +359,14 @@
             });
 
             socket.on('match_found', (data) => {
-                // Afficher l'animation de VS
+                // data = { p1, p2, roomId }
                 document.getElementById('status-text').innerText = "ADVERSAIRE TROUVÉ !";
                 document.getElementById('status-text').classList.add('text-green-500');
                 document.getElementById('spinner').classList.add('hidden');
                 document.getElementById('status-subtext').innerText = "Lancement imminent...";
                 
-                const vsDisplay = document.getElementById('vs-display');
-                vsDisplay.classList.remove('hidden');
-                
-                // Petit délai pour l'animation d'entrée
-                setTimeout(() => {
-                    vsDisplay.classList.remove('opacity-0', 'translate-y-10');
-                }, 100);
-
-                // Remplir les infos
+                // Affichage VS
+                document.getElementById('vs-display').classList.remove('hidden');
                 document.getElementById('p1-img').src = data.p1.avatar || `https://ui-avatars.com/api/?name=${data.p1.name}`;
                 document.getElementById('p1-name').innerText = data.p1.name;
                 document.getElementById('p2-img').src = data.p2.avatar || `https://ui-avatars.com/api/?name=${data.p2.name}`;
@@ -446,7 +378,9 @@
             });
 
             socket.on('round_start', (data) => {
-                // Le serveur lance le round !
+                // data = { round, songIndex, seekTime, duration }
+                
+                // Switch ecran si besoin
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
                 document.getElementById('autoplay-overlay').classList.add('hidden'); 
@@ -455,12 +389,12 @@
                 document.getElementById('current-round').innerText = data.round;
                 currentSongData = OP_DATABASE[data.songIndex];
 
-                // Chargement Vidéo
+                // Lancer la video
                 videoEl.src = currentSongData.url;
                 videoEl.currentTime = data.seekTime;
                 videoEl.volume = userVolume;
                 
-                // Anti-Autoplay
+                // Anti-Autoplay Check
                 const playPromise = videoEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
@@ -476,6 +410,7 @@
             });
 
             socket.on('round_reveal', () => {
+                // Le serveur dit STOP
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
@@ -491,12 +426,13 @@
             });
 
             socket.on('score_update', (scores) => {
+                // scores = { p1, p2 }
                 document.getElementById('score-p1').innerText = scores.p1;
                 document.getElementById('score-p2').innerText = scores.p2;
             });
 
             socket.on('opponent_left', () => {
-                alert("L'adversaire a quitté la partie (Ragequit ?) !");
+                alert("L'adversaire a quitté la partie !");
                 location.reload();
             });
             
@@ -581,8 +517,7 @@
             }
             
             if(pointsEarned > 0) {
-                socket.emit('submit_score', pointsEarned); // Envoi au serveur
-                
+                socket.emit('submit_score', pointsEarned);
                 const popup = document.createElement('div');
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold fixed z-50 animate-bounce';
                 popup.style.left='50%'; popup.style.top='40%'; popup.style.transform='translate(-50%, -50%)';
