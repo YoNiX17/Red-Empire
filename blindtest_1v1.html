@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranked Duel 1v1 | Red Empire</title>
-    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+    <!-- Favicon pour éviter erreur 404 -->
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Config Tailwind pour éviter warnings -->
     <script>
         tailwind.config = {
             theme: {
@@ -14,6 +16,11 @@
                     colors: {
                         gold: '#fbbf24',
                         'gold-dark': '#b45309',
+                        // On garde les couleurs originales pour compatibilité animations
+                        red: '#ff2e2e',
+                        yellow: '#facc15',
+                        'dark-bg': '#121212',
+                        'panel-bg': '#1a1a1a',
                     }
                 }
             }
@@ -25,14 +32,15 @@
     
     <style>
         :root {
+            /* Palette Ranked (Or) + Originale */
             --gold: #fbbf24;
             --gold-dark: #b45309;
-            --blue: #2563eb;
-            --red: #dc2626;
+            --red: #ff2e2e;
+            --yellow: #facc15;
             --dark-bg: #0f0f0f;
             --panel-bg: #141414;
             --text-main: #eeeeee;
-            --border-color: #fbbf24;
+            --border-color: #fbbf24; /* Bordures dorées */
         }
 
         body { 
@@ -46,7 +54,7 @@
         
         .font-manga { font-family: 'Bangers', cursive; letter-spacing: 1.5px; }
 
-        /* --- PANNEAUX MANGA DARK --- */
+        /* --- STYLE ORIGINAL CONSERVÉ --- */
         .manga-panel {
             background: var(--panel-bg);
             border: 3px solid var(--border-color);
@@ -63,7 +71,6 @@
             pointer-events: none;
         }
 
-        /* --- BOUTONS POP --- */
         .btn-pop {
             background: #222;
             color: var(--gold);
@@ -82,18 +89,16 @@
         .btn-pop:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px; }
         .btn-pop:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         
-        /* --- TIMER BAR --- */
+        /* Animations Barre & Disque */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
         .timer-fill { height: 100%; background: var(--gold); width: 100%; }
         .timer-running { animation: shrink linear forwards; }
 
-        /* --- DISQUE QUI TOURNE --- */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
 
-        /* --- INPUT STYLE --- */
         .input-manga {
             border: 3px solid var(--border-color);
             background: #222;
@@ -104,7 +109,7 @@
         }
         .input-manga:focus { outline: none; border-color: white; color: white; }
 
-        /* --- LOADER SPINNER --- */
+        /* Loader */
         .loader-ring { display: inline-block; width: 64px; height: 64px; }
         .loader-ring:after {
             content: " "; display: block; width: 46px; height: 46px; margin: 8px; border-radius: 50%;
@@ -113,17 +118,28 @@
         }
         @keyframes loader-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* VS ANIMATION */
-        .vs-text {
-            text-shadow: 4px 4px 0px #000;
-            animation: pulse-vs 1s infinite alternate;
-        }
+        /* Badge VS */
+        .vs-text { text-shadow: 4px 4px 0px #000; animation: pulse-vs 1s infinite alternate; }
         @keyframes pulse-vs { from { transform: scale(1); } to { transform: scale(1.1); } }
+        
+        /* Animation Points */
+        .points-popup {
+            position: absolute;
+            z-index: 100;
+            animation: floatUp 1.5s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 0 #000;
+        }
+        @keyframes floatUp {
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -100px) scale(1); opacity: 0; }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- NAVBAR RANKED -->
+    <!-- NAVBAR -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
         <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
             <i class="fa-solid fa-chevron-left"></i>
@@ -145,90 +161,55 @@
 
 
     <!-- ========================================== -->
-    <!-- ÉCRAN 1 : MATCHMAKING (SEARCHING)          -->
+    <!-- ÉCRAN 1 : MATCHMAKING (AUTOMATIQUE)        -->
     <!-- ========================================== -->
-    <div id="screen-searching" class="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
-        <!-- Décoration de fond -->
-        <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+    <div id="screen-lobby" class="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
         
-        <div class="text-center z-10 flex flex-col items-center">
-            <div class="loader-ring mb-8"></div>
-            <h2 class="text-5xl font-manga text-white mb-2 text-shadow-sm animate-pulse">RECHERCHE D'ADVERSAIRE...</h2>
-            <p class="text-yellow-500 font-bold text-xl tracking-widest uppercase bg-black/50 px-6 py-2 rounded border border-yellow-500/30">
-                MATCHMAKING EN COURS
-            </p>
-        </div>
-    </div>
-
-
-    <!-- ========================================== -->
-    <!-- ÉCRAN 2 : LOBBY (FACE À FACE)              -->
-    <!-- ========================================== -->
-    <div id="screen-lobby" class="hidden flex-grow flex flex-col p-6 gap-6 h-full relative z-10">
+        <!-- Fond animé (optionnel) -->
+        <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
         
-        <!-- Haut : Info Salle & Paramètres Lockés -->
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/50 p-4 rounded border border-yellow-500/30">
-            <div class="flex items-center gap-4">
-                <div class="bg-yellow-500 text-black px-4 py-2 font-manga text-2xl rounded shadow-[4px_4px_0px_#000]">
-                    CODE: <span id="lobby-code">----</span>
-                </div>
-                <div class="text-xs text-gray-400 font-mono">
-                    <i class="fa-solid fa-lock text-yellow-500 mr-1"></i> RÈGLES RANKED ACTIVES
-                </div>
-            </div>
-            <!-- Paramètres Ranked Fixes -->
-            <div class="flex gap-4 text-sm font-bold text-gray-300">
-                <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-clock text-yellow-500 mr-2"></i>20s</span>
-                <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-list-ol text-yellow-500 mr-2"></i>15 Rounds</span>
-                <span class="bg-gray-800 px-3 py-1 rounded border border-gray-600"><i class="fa-solid fa-skull text-red-500 mr-2"></i>Non</span>
-            </div>
-        </div>
-
-        <!-- Centre : LE FACE À FACE -->
-        <div class="flex-grow flex items-center justify-center relative">
+        <!-- Panneau Central -->
+        <div class="text-center z-10 flex flex-col items-center bg-black/90 p-12 rounded-2xl border-4 border-gold shadow-[0_0_60px_rgba(251,191,36,0.15)] max-w-3xl w-full">
             
-            <!-- Joueur 1 (Hôte/Bleu) -->
-            <div id="slot-p1" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-blue-900/10 border-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.2)] transition-all">
-                <div class="text-blue-500 font-manga text-2xl mb-4">CHALLENGER (VOUS)</div>
-                <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-blue-500 bg-black overflow-hidden relative mb-4 shadow-lg">
-                    <img id="p1-avatar" src="" class="w-full h-full object-cover opacity-50">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i id="p1-icon" class="fa-solid fa-user text-4xl text-blue-500"></i>
+            <!-- STATUS MATCHMAKING -->
+            <div class="mb-10 relative">
+                <div class="loader-ring mb-4" id="lobby-spinner"></div>
+                <h2 class="text-6xl font-manga text-white mb-2 text-shadow-sm animate-pulse" id="lobby-status">RECHERCHE...</h2>
+                <p class="text-gray-400 font-mono text-sm tracking-widest uppercase" id="lobby-info">Connexion au serveur...</p>
+            </div>
+            
+            <!-- LE FACE À FACE -->
+            <div class="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
+                
+                <!-- JOUEUR 1 (Vous) -->
+                <div class="flex flex-col items-center w-40 transition-all duration-500">
+                    <div class="w-32 h-32 rounded-full border-4 border-blue-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_20px_rgba(59,130,246,0.3)] relative group">
+                        <img id="lobby-p1-img" src="" class="w-full h-full object-cover opacity-50 transition-opacity duration-500">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-40">
+                            <i class="fa-solid fa-user text-4xl text-blue-500"></i>
+                        </div>
                     </div>
+                    <div class="bg-blue-600 text-white px-4 py-1 rounded text-sm font-bold font-manga tracking-wider w-full truncate text-center" id="lobby-p1-name">VOUS</div>
                 </div>
-                <h2 id="p1-name" class="text-3xl font-manga text-white uppercase truncate w-full text-center">EN ATTENTE...</h2>
-                <div class="mt-2 bg-blue-600 text-white text-xs px-3 py-1 font-bold rounded">HÔTE DE LA SALLE</div>
-            </div>
+                
+                <div class="text-7xl font-manga text-gold vs-text mx-4 italic">VS</div>
 
-            <!-- VS Badge -->
-            <div class="absolute z-20">
-                <h1 class="text-7xl md:text-9xl font-black italic text-yellow-500 vs-text font-manga">VS</h1>
-            </div>
-
-            <!-- Joueur 2 (Invité/Rouge) -->
-            <div id="slot-p2" class="w-1/3 max-w-sm manga-panel p-6 flex flex-col items-center bg-red-900/10 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all opacity-50">
-                <div class="text-red-500 font-manga text-2xl mb-4">OPPOSANT</div>
-                <div class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-red-500 bg-black overflow-hidden relative mb-4 shadow-lg">
-                    <img id="p2-avatar" src="" class="w-full h-full object-cover opacity-50">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i id="p2-spinner" class="fa-solid fa-spinner animate-spin text-4xl text-red-500"></i>
+                <!-- JOUEUR 2 (Adversaire) -->
+                <div class="flex flex-col items-center w-40 transition-all duration-500" id="lobby-p2-container">
+                    <div class="w-32 h-32 rounded-full border-4 border-red-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_20px_rgba(239,68,68,0.3)] relative">
+                        <img id="lobby-p2-img" src="" class="w-full h-full object-cover opacity-50 hidden">
+                        <div id="lobby-p2-placeholder" class="absolute inset-0 flex items-center justify-center animate-pulse">
+                            <i class="fa-solid fa-question text-5xl text-red-900/50"></i>
+                        </div>
                     </div>
+                    <div class="bg-gray-800 text-gray-500 px-4 py-1 rounded text-sm font-bold font-manga tracking-wider w-full truncate text-center border border-gray-700" id="lobby-p2-name">...</div>
                 </div>
-                <h2 id="p2-name" class="text-3xl font-manga text-white uppercase truncate w-full text-center">RECHERCHE...</h2>
-                <div class="mt-2 bg-red-600 text-white text-xs px-3 py-1 font-bold rounded">INVITÉ</div>
-            </div>
 
-        </div>
-
-        <!-- Bas : Contrôles -->
-        <div class="h-20 flex items-center justify-center">
-            <div id="host-controls" class="hidden w-full max-w-lg">
-                <button id="btn-start" onclick="startGame()" disabled class="btn-pop w-full py-4 text-2xl rounded-lg bg-green-600 border-green-400 text-white shadow-[4px_4px_0px_#064e3b] disabled:bg-gray-700 disabled:border-gray-500 disabled:text-gray-500 disabled:shadow-none transition-all">
-                    EN ATTENTE DE L'ADVERSAIRE...
-                </button>
             </div>
-            <div id="guest-controls" class="hidden text-center">
-                <p class="text-yellow-500 font-manga text-xl animate-pulse">L'HÔTE VA LANCER LE DUEL...</p>
+            
+            <!-- CODE SALLE DISCRET -->
+            <div class="mt-8 text-xs text-gray-600 font-mono">
+                ROOM ID: <span id="lobby-code" class="text-gray-500">----</span>
             </div>
         </div>
     </div>
@@ -239,119 +220,138 @@
     <!-- ========================================== -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
         
-        <!-- Score Bar (Duel Specific) -->
+        <!-- BARRE DE SCORE -->
         <div class="bg-black border-b-4 border-yellow-500 p-2 flex justify-between items-center px-4 md:px-12 relative z-30 shadow-lg">
-            
-            <!-- Score P1 -->
+            <!-- P1 Score -->
             <div class="flex items-center gap-4 w-1/3">
                 <div class="text-right flex-1 hidden md:block">
-                    <div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate">JOUEUR 1</div>
-                    <div class="text-[10px] text-gray-500">CHALLENGER</div>
+                    <div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga tracking-wider">JOUEUR 1</div>
                 </div>
-                <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#2563eb]" id="score-p1">0</div>
+                <div class="bg-blue-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#2563eb] min-w-[60px] text-center" id="score-p1">0</div>
             </div>
 
-            <!-- Timer & Round -->
+            <!-- Timer Central -->
             <div class="flex flex-col items-center w-1/3">
-                 <div class="bg-yellow-500 text-black font-bold px-3 rounded-full text-xs mb-1 border border-white">
-                    ROUND <span id="current-round-display">1</span>/15
+                 <div class="bg-yellow-500 text-black font-bold px-4 py-0.5 rounded-full text-sm mb-1 border-2 border-white font-manga shadow-md transform -skew-x-12">
+                    ROUND <span id="current-round-display">1</span> / 15
                  </div>
-                 <div class="timer-container w-full max-w-[200px]">
+                 <div class="timer-container w-full max-w-[300px] shadow-inner bg-gray-800">
                     <div id="game-timer-bar" class="timer-fill"></div>
                 </div>
             </div>
 
-            <!-- Score P2 -->
+            <!-- P2 Score -->
             <div class="flex items-center gap-4 w-1/3 justify-end">
-                <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#dc2626]" id="score-p2">0</div>
+                <div class="bg-red-600 text-white font-manga text-3xl px-4 py-1 rounded border-2 border-white shadow-[0_0_10px_#dc2626] min-w-[60px] text-center" id="score-p2">0</div>
                 <div class="text-left flex-1 hidden md:block">
-                    <div id="game-p2-name" class="font-bold text-red-400 uppercase truncate">JOUEUR 2</div>
-                    <div class="text-[10px] text-gray-500">OPPOSANT</div>
+                    <div id="game-p2-name" class="font-bold text-red-400 uppercase truncate font-manga tracking-wider">JOUEUR 2</div>
                 </div>
             </div>
         </div>
 
 
-        <!-- CENTRE : DISQUE & VIDEO -->
+        <!-- ZONE CENTRALE : JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- Video Player -->
+            <!-- VIDEO PLAYER -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
-                <div class="w-full h-full max-w-4xl max-h-[70vh] bg-black border-4 border-yellow-500 rounded-lg shadow-[0_0_50px_rgba(251,191,36,0.2)] overflow-hidden">
+                <div class="w-full h-full max-w-5xl max-h-[70vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative">
                     <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 </div>
             </div>
             
-            <!-- LOADER -->
-            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+            <!-- LOADER OVERLAY (BUFFER) -->
+            <div id="loader-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
                 <div class="loader-ring"></div>
-                <p class="text-yellow-500 font-manga tracking-widest mt-4 text-xl animate-pulse">SYNCHRONISATION DUEL...</p>
+                <p class="text-yellow-500 font-manga tracking-widest mt-6 text-2xl animate-pulse">SYNCHRONISATION...</p>
             </div>
 
-            <!-- Mode Vinyle -->
-            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 scale-110">
-                <div class="relative w-64 h-64 md:w-80 md:h-80 mb-8 group">
-                    <div class="absolute inset-0 bg-yellow-500 rounded-full blur-xl opacity-10 animate-pulse"></div>
-                    <div class="w-full h-full rounded-full bg-[#111] border-[6px] border-yellow-500 shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
-                        <div class="absolute inset-0 rounded-full border-[20px] border-[#1a1a1a] opacity-60"></div>
-                        <div class="absolute w-28 h-28 bg-yellow-600 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
-                            <i class="fa-solid fa-music text-4xl text-black"></i>
+            <!-- DISQUE / VINYLE -->
+            <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 hover:scale-105">
+                <div class="relative w-72 h-72 md:w-96 md:h-96 mb-8 group">
+                    <div class="absolute inset-0 bg-yellow-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
+                    <!-- Le Disque -->
+                    <div class="w-full h-full rounded-full bg-[#111] border-[8px] border-gray-200 shadow-2xl flex items-center justify-center disk-spin disk-paused relative" id="disk">
+                        <div class="absolute inset-0 rounded-full border-[24px] border-[#1a1a1a] opacity-60"></div>
+                        <div class="absolute inset-20 rounded-full border-[1px] border-[#333] opacity-40"></div>
+                        <div class="absolute w-32 h-32 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-full flex items-center justify-center border-4 border-white z-20 shadow-inner">
+                            <i class="fa-solid fa-music text-5xl text-black drop-shadow-md"></i>
                         </div>
                     </div>
+                    <!-- Bras de lecture -->
+                    <div class="absolute -top-4 -right-4 w-40 h-6 bg-gray-400 rotate-45 origin-top-right border-2 border-black rounded-full shadow-xl z-30 transform translate-x-2 translate-y-2"></div>
                 </div>
 
-                <div class="text-center bg-yellow-500 px-8 py-2 border-4 border-black rounded-full shadow-[4px_4px_0px_#fff] transform -rotate-2">
-                    <h2 class="text-4xl font-manga text-black tracking-widest animate-pulse">DUEL EN COURS</h2>
+                <div class="text-center bg-yellow-500 px-10 py-3 border-4 border-black rounded-full shadow-[6px_6px_0px_#fff] transform -rotate-2 hover:rotate-0 transition-transform">
+                    <h2 class="text-5xl font-manga text-black tracking-widest drop-shadow-sm">ÉCOUTEZ !</h2>
                 </div>
 
-                <!-- Indicateurs (AVEC NUMÉRO OP) -->
-                <div id="status-indicators" class="flex gap-4 mt-8 flex-wrap justify-center">
-                    <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">ANIME OK (+1)</div>
-                    <div id="status-song" class="hidden bg-yellow-500 text-black px-4 py-1 rounded border-2 border-black font-bold text-sm shadow-lg font-manga tracking-wide">TITRE OK (+1)</div>
-                    <div id="status-op" class="hidden bg-blue-600 text-white px-4 py-1 rounded border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide">NUMÉRO OK (+0.5)</div>
+                <!-- Indicateurs de Validation -->
+                <div id="status-indicators" class="flex gap-3 mt-8 flex-wrap justify-center">
+                    <div id="status-anime" class="hidden bg-green-600 text-white px-4 py-2 rounded-lg border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide animate-bounce">
+                        <i class="fa-solid fa-check mr-2"></i> ANIME (+1)
+                    </div>
+                    <div id="status-song" class="hidden bg-yellow-400 text-black px-4 py-2 rounded-lg border-2 border-black font-bold text-sm shadow-lg font-manga tracking-wide animate-bounce">
+                        <i class="fa-solid fa-music mr-2"></i> TITRE (+1)
+                    </div>
+                    <div id="status-op" class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg border-2 border-white font-bold text-sm shadow-lg font-manga tracking-wide animate-bounce">
+                        <i class="fa-solid fa-hashtag mr-2"></i> OP (+0.5)
+                    </div>
                 </div>
             </div>
             
-            <!-- Volume -->
-            <div class="absolute top-4 right-4 z-30 bg-[#222] border border-gray-600 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
-                <i class="fa-solid fa-volume-high text-yellow-500"></i>
-                <input type="range" min="0" max="1" step="0.1" class="w-20 accent-yellow-500 h-1 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
+            <!-- Volume Slider -->
+            <div class="absolute top-6 right-6 z-30 bg-black/80 backdrop-blur border border-gray-600 rounded-full px-5 py-3 flex items-center gap-4 shadow-xl hover:border-yellow-500 transition-colors">
+                <i class="fa-solid fa-volume-high text-yellow-500 text-lg"></i>
+                <input type="range" min="0" max="1" step="0.1" class="w-24 accent-yellow-500 h-1.5 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
         </div>
 
-        <!-- BAS : INPUT -->
-        <div class="bg-[#141414] border-t-4 border-yellow-500 p-6 relative z-30">
-            <!-- Overlay Résultat -->
-            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-8 z-50 flex justify-center pointer-events-none px-4">
-                <div class="bg-yellow-500 border-4 border-white p-8 max-w-2xl w-full text-center shadow-[0px_10px_40px_rgba(0,0,0,0.8)] transform rotate-1">
-                    <h3 class="text-black font-bold text-sm uppercase tracking-[0.3em] mb-3 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
-                    <h2 id="res-anime" class="text-4xl md:text-6xl font-manga text-black text-shadow-white mb-1">ANIME NAME</h2>
-                    <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 mt-3">
-                        <p id="res-song" class="text-white bg-black text-xl font-bold italic inline-block px-4 py-1 border-2 border-white">"Song Title"</p>
-                        <p id="res-op-num" class="text-black bg-white text-lg font-bold px-3 py-1 border-2 border-black font-manga transform skew-x-[-10deg]">OP 1</p>
+        <!-- ZONE DE SAISIE (BAS) -->
+        <div class="bg-[#141414] border-t-4 border-yellow-500 p-6 relative z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+            
+            <!-- RESULTAT OVERLAY (Révélation) -->
+            <div id="result-display" class="hidden absolute inset-x-0 bottom-full mb-12 z-50 flex justify-center pointer-events-none px-4">
+                <div class="bg-yellow-500 border-4 border-white p-8 max-w-3xl w-full text-center shadow-[0px_10px_50px_rgba(0,0,0,0.8)] transform rotate-1">
+                    <h3 class="text-black font-bold text-xs uppercase tracking-[0.4em] mb-4 border-b-2 border-black inline-block pb-1">C'ÉTAIT L'OPENING DE</h3>
+                    <h2 id="res-anime" class="text-5xl md:text-7xl font-manga text-black text-shadow-white mb-2 leading-none break-words">ANIME NAME</h2>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-3 mt-4">
+                        <p id="res-song" class="text-white bg-black text-xl font-bold italic inline-block px-6 py-2 border-2 border-white shadow-md">"Song Title"</p>
+                        <p id="res-op-num" class="text-black bg-white text-xl font-bold px-4 py-2 border-2 border-black font-manga transform skew-x-[-10deg] shadow-md">OP 1</p>
                     </div>
                 </div>
             </div>
 
             <div class="max-w-3xl mx-auto flex gap-3">
-                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-2xl uppercase rounded-lg border-yellow-600 focus:border-white transition-colors" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="btn-pop w-40 rounded-lg text-2xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-16 px-6 text-3xl uppercase rounded-xl border-2 border-gray-600 focus:border-yellow-500 transition-colors" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
+                <button onclick="submitGuess()" class="btn-pop w-40 rounded-xl text-2xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400 shadow-lg font-bold">
                     ENVOYER
                 </button>
             </div>
         </div>
     </div>
     
-    <!-- Ecran Fin -->
-    <div id="screen-end" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
-        <div class="text-center">
-            <h1 id="end-title" class="text-6xl font-manga text-yellow-500 mb-4 animate-bounce">VICTOIRE !</h1>
-            <p id="end-score" class="text-white text-2xl font-mono mb-8">SCORE FINAL: 10 - 5</p>
-            <button onclick="location.reload()" class="btn-pop px-8 py-4 text-xl rounded bg-white text-black">RETOUR LOBBY</button>
+    <!-- ÉCRAN FIN DE PARTIE -->
+    <div id="screen-end" class="hidden fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-8">
+        <div class="text-center animate-bounce">
+            <h1 id="end-title" class="text-8xl font-manga text-yellow-500 mb-4 text-shadow-lg">VICTOIRE !</h1>
+        </div>
+        
+        <div class="bg-[#1a1a1a] border-4 border-white p-10 rounded-xl text-center shadow-2xl max-w-2xl w-full">
+            <p class="text-gray-400 font-mono uppercase tracking-widest mb-6">SCORE FINAL</p>
+            <div class="flex justify-center items-center gap-10 mb-8">
+                <div class="text-blue-500 font-manga text-6xl" id="end-score-p1">0</div>
+                <div class="text-white font-manga text-4xl">-</div>
+                <div class="text-red-500 font-manga text-6xl" id="end-score-p2">0</div>
+            </div>
+            
+            <button onclick="location.reload()" class="btn-pop px-12 py-4 text-2xl rounded-lg bg-white text-black hover:bg-gray-200 transform hover:scale-105 transition-all">
+                RETOUR AU LOBBY
+            </button>
         </div>
     </div>
 
-    <!-- SCRIPT LOGIQUE -->
+    <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -373,16 +373,16 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- CONSTANTES RANKED ---
+        // Paramètres Fixes du Ranked
         const RANKED_SETTINGS = { duration: 20, rounds: 15, suddenDeath: false, teamCount: 2 };
 
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
         let roundTimer = null;
-        let matchmakingTimeout = null; // Timer pour l'attente
+        let matchmakingTimeout = null;
         
-        // États jeu
+        // Game State Variables
         let animeFound = false;
         let songFound = false;
         let opFound = false;
@@ -391,12 +391,12 @@
         let lastStartTime = 0;
         let onPlayListener = null;
         let userVolume = 0.5;
+        let hasTriggeredStart = false;
 
-        // Éléments DOM
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
 
-        // Initialisation Volume
+        // Gestion Volume Persistant
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
@@ -407,26 +407,25 @@
             if(videoEl) videoEl.volume = userVolume;
         }
 
-        // Auth Listener
+        // --- AUTHENTIFICATION & DÉMARRAGE ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // Récupération pseudo custom si dispo
                 get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
                     if (snapshot.exists() && snapshot.val().username) {
                         document.querySelector('#user-badge span:last-child').innerText = snapshot.val().username;
                     } else {
                         document.querySelector('#user-badge span:last-child').innerText = user.displayName;
                     }
-                    // MATCHMAKING AUTOMATIQUE DÈS LA CONNEXION
+                    // AUTO-START MATCHMAKING
                     findMatch();
                 });
             } else {
-                window.location.href = "index.html"; // Redirige si pas co
+                window.location.href = "index.html";
             }
         });
 
-        // --- UTILS ---
+        // --- FONCTIONS UTILITAIRES ---
         function shuffleArray(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
@@ -437,17 +436,15 @@
             return array;
         }
 
-        // Algorithme de Levenshtein (Tolérance fautes de frappe)
         function levenshtein(a, b) {
-            if(a.length == 0) return b.length; 
-            if(b.length == 0) return a.length; 
+            if(a.length == 0) return b.length; if(b.length == 0) return a.length; 
             var matrix = [];
-            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
-            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
+            for(var i = 0; i <= b.length; i++) matrix[i] = [i];
+            for(var j = 0; j <= a.length; j++) matrix[0][j] = j;
             for(var i = 1; i <= b.length; i++){
                 for(var j = 1; j <= a.length; j++){
-                    if(b.charAt(i-1) == a.charAt(j-1)){ matrix[i][j] = matrix[i-1][j-1]; } 
-                    else { matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1)); }
+                    if(b.charAt(i-1) == a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
+                    else matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
                 }
             }
             return matrix[b.length][a.length];
@@ -461,24 +458,19 @@
             if (normTarget.includes(normInput) && normInput.length > 3) return true; 
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
-            const similarity = 1 - (distance / maxLength);
-            return similarity > 0.75; 
+            return (1 - distance / maxLength) > 0.75; 
         }
 
         async function getUserProfile(uid) {
             try {
                 const snap = await get(child(ref(db), `users/${uid}`));
-                if (snap.exists()) {
-                    const val = snap.val();
-                    return { name: val.username || currentUser.displayName, avatar: val.avatar || currentUser.photoURL };
-                }
-            } catch(e) { console.error(e); }
+                if (snap.exists()) return { name: snap.val().username || currentUser.displayName, avatar: snap.val().avatar || currentUser.photoURL };
+            } catch(e) {}
             return { name: currentUser.displayName, avatar: currentUser.photoURL };
         }
 
-
-        // --- LOGIQUE MATCHMAKING (AUTO) ---
-
+        // --- SYSTEME DE MATCHMAKING ---
+        
         window.findMatch = async () => {
             const roomsRef = ref(db, 'blindtest/rooms');
             const snapshot = await get(roomsRef);
@@ -486,28 +478,27 @@
 
             if (snapshot.exists()) {
                 const rooms = snapshot.val();
-                // Chercher une salle existante en attente (status lobby, < 2 joueurs)
                 for (const [key, room] of Object.entries(rooms)) {
+                    // On cherche une salle RANKED, en LOBBY, avec 1 SEUL JOUEUR
                     if (room.type === 'ranked_1v1' && room.status === 'lobby' && room.players && Object.keys(room.players).length < 2) {
-                        await joinSpecificRoom(key);
+                        await joinRoom(key);
                         joined = true;
                         break;
                     }
                 }
             }
-
             if (!joined) {
-                await createRankedRoom();
+                await createRoom();
             }
         };
 
-        async function createRankedRoom() {
+        async function createRoom() {
             const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
             currentRoomId = roomCode;
             isHost = true;
-            
             const profile = await getUserProfile(currentUser.uid);
             
+            // Génération Deck
             const allIndices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
             const deck = shuffleArray(allIndices);
 
@@ -517,14 +508,7 @@
                 status: 'lobby',
                 type: 'ranked_1v1',
                 settings: RANKED_SETTINGS,
-                players: { 
-                    [currentUser.uid]: { 
-                        name: profile.name, 
-                        team: 1, 
-                        score: 0, 
-                        avatar: profile.avatar 
-                    } 
-                },
+                players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
                 gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: deck, seekTime: 0 }
             };
 
@@ -532,95 +516,61 @@
             enterLobby(roomCode);
         }
 
-        async function joinSpecificRoom(code) {
+        async function joinRoom(code) {
             currentRoomId = code;
             isHost = false;
             const profile = await getUserProfile(currentUser.uid);
-            
-            const updates = {};
-            updates[`blindtest/rooms/${code}/players/${currentUser.uid}`] = { 
-                name: profile.name, 
-                team: 2, 
-                score: 0, 
-                avatar: profile.avatar 
-            };
-            
-            await update(ref(db), updates);
+            await update(ref(db, `blindtest/rooms/${code}/players/${currentUser.uid}`), { 
+                name: profile.name, team: 2, score: 0, avatar: profile.avatar 
+            });
             enterLobby(code);
         }
 
         function enterLobby(code) {
-            // Hide searching screen
+            // Affichage
             document.getElementById('screen-searching').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('lobby-code').innerText = code;
 
-            if (isHost) {
-                document.getElementById('host-controls').classList.remove('hidden');
-                document.getElementById('guest-controls').classList.add('hidden');
-            } else {
-                document.getElementById('host-controls').classList.add('hidden');
-                document.getElementById('guest-controls').classList.remove('hidden');
-            }
-
-            // TIMEOUT DE SÉCURITÉ : 2 MIN SANS ADVERSAIRE
+            // Timeout Sécurité (2 min)
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             matchmakingTimeout = setTimeout(() => {
-                // Si on est encore dans le lobby (pas en jeu) et qu'on est seul
-                // On vérifie l'état actuel
                 get(ref(db, `blindtest/rooms/${code}`)).then(snap => {
                     if(snap.exists()) {
                         const room = snap.val();
+                        // Si toujours seul dans le lobby après 2 min
                         if(room.status === 'lobby' && Object.keys(room.players).length < 2) {
-                            if(isHost) {
-                                remove(ref(db, `blindtest/rooms/${code}`)); // Clean
-                            }
-                            alert("Aucun adversaire trouvé. Retour au menu.");
+                            if(isHost) remove(ref(db, `blindtest/rooms/${code}`));
+                            alert("Aucun adversaire trouvé. Réessayez plus tard.");
                             window.location.href = "blindtest_ranked.html";
                         }
                     }
                 });
-            }, 120000); // 2 minutes
+            }, 120000);
 
-            // Écouteur Principal de la Salle
+            // Abonnement
             onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return; // Salle supprimée ?
+                if (!data) return;
 
-                // 1. Mise à jour des Slots Joueurs (Visualisation VS)
-                updateLobbySlots(data.players);
+                const players = Object.values(data.players || {});
+                updateLobbyDisplay(players);
 
-                // 2. Gestion État du Jeu
+                // START AUTOMATIQUE (Quand 2 joueurs présents)
                 if (data.status === 'lobby') {
-                    document.getElementById('screen-game').classList.add('hidden');
-                    document.getElementById('screen-lobby').classList.remove('hidden');
-                    
-                    // Si on est Host et qu'il y a 2 joueurs, on active le bouton Start
-                    const playerCount = Object.keys(data.players || {}).length;
-                    
-                    // Si 2 joueurs, on annule le timeout de sécurité
-                    if(playerCount >= 2 && matchmakingTimeout) {
-                        clearTimeout(matchmakingTimeout);
-                        matchmakingTimeout = null;
-                    }
-
-                    if (isHost) {
-                        const btnStart = document.getElementById('btn-start');
-                        if (playerCount === 2) {
-                            btnStart.disabled = false;
-                            btnStart.innerText = "LANCER LE DUEL !";
-                            btnStart.classList.add('animate-pulse');
-                        } else {
-                            btnStart.disabled = true;
-                            btnStart.innerText = "EN ATTENTE DE L'ADVERSAIRE...";
-                            btnStart.classList.remove('animate-pulse');
+                    if (players.length === 2) {
+                        if (matchmakingTimeout) clearTimeout(matchmakingTimeout); // Annule le timeout d'attente
+                        
+                        document.getElementById('lobby-status').innerText = "ADVERSAIRE TROUVÉ !";
+                        document.getElementById('lobby-status').classList.add('text-green-500');
+                        document.getElementById('lobby-info').innerText = "Lancement imminent...";
+                        
+                        if (isHost && !hasTriggeredStart) {
+                            hasTriggeredStart = true;
+                            setTimeout(() => startGame(data.gameState.deck), 2000);
                         }
                     }
-
                 } else if (data.status === 'playing') {
-                    // Transition vers l'écran de jeu
-                    if (matchmakingTimeout) clearTimeout(matchmakingTimeout); // Sécurité
-                    
                     if (document.getElementById('screen-game').classList.contains('hidden')) {
                         document.getElementById('screen-lobby').classList.add('hidden');
                         document.getElementById('screen-game').classList.remove('hidden');
@@ -630,83 +580,55 @@
             });
         }
 
-        function updateLobbySlots(players) {
-            // Reset visuel
-            document.getElementById('slot-p2').classList.add('opacity-50');
-            document.getElementById('p2-name').innerText = "RECHERCHE...";
-            document.getElementById('p2-spinner').classList.remove('hidden');
-            document.getElementById('p2-avatar').src = "";
-            document.getElementById('p2-avatar').classList.add('opacity-50');
+        function updateLobbyDisplay(players) {
+            const p1 = players.find(p => p.team === 1);
+            const p2 = players.find(p => p.team === 2);
 
-            Object.values(players).forEach(p => {
-                if (p.team === 1) {
-                    // P1 (Bleu)
-                    document.getElementById('p1-name').innerText = p.name;
-                    if(p.avatar) {
-                        document.getElementById('p1-avatar').src = p.avatar;
-                        document.getElementById('p1-avatar').classList.remove('opacity-50');
-                        document.getElementById('p1-icon').classList.add('hidden');
-                    }
-                    // Setup UI Jeu aussi
-                    document.getElementById('game-p1-name').innerText = p.name;
-                    document.getElementById('score-p1').innerText = p.score;
-                } 
-                else if (p.team === 2) {
-                    // P2 (Rouge)
-                    document.getElementById('slot-p2').classList.remove('opacity-50');
-                    document.getElementById('p2-name').innerText = p.name;
-                    document.getElementById('p2-spinner').classList.add('hidden');
-                    if(p.avatar) {
-                        document.getElementById('p2-avatar').src = p.avatar;
-                        document.getElementById('p2-avatar').classList.remove('opacity-50');
-                    }
-                    // Setup UI Jeu aussi
-                    document.getElementById('game-p2-name').innerText = p.name;
-                    document.getElementById('score-p2').innerText = p.score;
-                }
-            });
+            if(p1) {
+                document.getElementById('lobby-p1-img').src = p1.avatar || 'https://ui-avatars.com/api/?name='+p1.name;
+                document.getElementById('lobby-p1-img').classList.remove('opacity-50');
+                document.getElementById('lobby-p1-name').innerText = p1.name;
+            }
+            
+            if(p2) {
+                document.getElementById('lobby-p2-img').src = p2.avatar || 'https://ui-avatars.com/api/?name='+p2.name;
+                document.getElementById('lobby-p2-img').classList.remove('hidden');
+                document.getElementById('lobby-p2-placeholder').classList.add('hidden');
+                document.getElementById('lobby-p2-name').innerText = p2.name;
+                document.getElementById('lobby-p2-name').classList.replace('text-gray-500', 'text-white');
+                document.getElementById('lobby-p2-name').classList.replace('bg-gray-800', 'bg-red-600');
+                document.getElementById('lobby-p2-name').classList.remove('border-gray-700');
+            }
         }
 
-        // --- MOTEUR DE JEU ---
+        // --- LOGIQUE DE JEU (MOTEUR DU BLINDTEST.HTML) ---
 
-        window.startGame = () => {
-            // Récupérer le deck déjà généré
-            get(ref(db, `blindtest/rooms/${currentRoomId}/gameState/deck`)).then(snap => {
-                const deck = snap.val();
-                // Pas de deck ? On en recrée un au cas où (sécurité)
-                const finalDeck = deck || shuffleArray(Array.from({length: OP_DATABASE.length}, (_, i) => i));
-                
-                const firstSongIndex = finalDeck[0];
-                const randomSeek = Math.floor(Math.random() * 11) + 40; // Seek entre 40 et 50s
-
-                update(ref(db, `blindtest/rooms/${currentRoomId}`), {
-                    status: 'playing',
-                    gameState: {
-                        currentRound: 1,
-                        songIndex: firstSongIndex,
-                        startTime: Date.now() + 3000,
-                        phase: 'guessing',
-                        deck: finalDeck,
-                        seekTime: randomSeek
-                    }
-                });
+        window.startGame = (deck) => {
+            const firstIndex = deck[0];
+            const seek = Math.floor(Math.random() * 11) + 40;
+            
+            update(ref(db, `blindtest/rooms/${currentRoomId}`), {
+                status: 'playing',
+                gameState: {
+                    currentRound: 1,
+                    songIndex: firstIndex,
+                    startTime: Date.now() + 3000,
+                    phase: 'guessing',
+                    deck: deck,
+                    seekTime: seek
+                }
             });
         };
 
-        let lastPhase = '';
-        let lastStartTime = 0;
-        let onPlayListener = null;
-
         function handleGameSync(gameState, players) {
-            // Mise à jour des scores en temps réel
-            Object.values(players).forEach(p => {
-                if (p.team === 1) document.getElementById('score-p1').innerText = p.score;
-                if (p.team === 2) document.getElementById('score-p2').innerText = p.score;
-            });
+            // Scores UI
+            const p1 = Object.values(players).find(p => p.team === 1);
+            const p2 = Object.values(players).find(p => p.team === 2);
+            if(p1) { document.getElementById('score-p1').innerText = p1.score; document.getElementById('game-p1-name').innerText = p1.name; }
+            if(p2) { document.getElementById('score-p2').innerText = p2.score; document.getElementById('game-p2-name').innerText = p2.name; }
 
-            // Eviter re-rendu inutile
+            // Anti-loop
             if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
-            
             if (isHost) clearTimeout(roundTimer);
             lastPhase = gameState.phase;
             lastStartTime = gameState.startTime;
@@ -716,7 +638,7 @@
             document.getElementById('current-round-display').innerText = gameState.currentRound;
 
             if (gameState.phase === 'guessing') {
-                // RESET UI
+                // PHASE JEU
                 animeFound = false; songFound = false; opFound = false;
                 document.getElementById('status-anime').classList.add('hidden');
                 document.getElementById('status-song').classList.add('hidden');
@@ -724,7 +646,6 @@
                 document.getElementById('result-display').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.add('hidden');
                 document.getElementById('vinyl-wrapper').classList.remove('hidden');
-                
                 document.getElementById('input-guess').value = "";
                 document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
@@ -736,12 +657,8 @@
                 document.getElementById('loader-overlay').classList.remove('hidden'); 
                 diskEl.classList.add('disk-paused'); 
 
-                if(onPlayListener) {
-                    videoEl.removeEventListener('playing', onPlayListener);
-                    onPlayListener = null;
-                }
+                if(onPlayListener) { videoEl.removeEventListener('playing', onPlayListener); onPlayListener = null; }
 
-                // Chargement Vidéo
                 videoEl.src = songData.url;
                 videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
@@ -755,48 +672,37 @@
                     if (isHost) {
                         clearTimeout(roundTimer);
                         roundTimer = setTimeout(() => {
-                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: Date.now() });
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { 
+                                phase: 'reveal', 
+                                startTime: Date.now() 
+                            });
                         }, RANKED_SETTINGS.duration * 1000);
                     }
                 };
                 
                 videoEl.addEventListener('playing', onPlayListener, { once: true });
                 videoEl.play().catch(e => console.log("Autoplay blocked:", e));
-
-                // SÉCURITÉ ANTI-CRASH (Hôte Only)
-                if(isHost) {
-                    videoEl.onerror = () => {
-                        console.log("Host Video Error - Force Start Timer");
-                        onPlayListener();
-                    };
-                }
+                
+                if(isHost) { videoEl.onerror = () => { console.log("Video Error > Skip"); onPlayListener(); }; }
 
             } else if (gameState.phase === 'reveal') {
+                // PHASE REVELATION
                 document.getElementById('loader-overlay').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
-                
                 document.getElementById('res-anime').innerText = songData.anime;
                 document.getElementById('res-song').innerText = songData.song;
                 document.getElementById('res-op-num').innerText = "OP " + (songData.num || "?");
-                
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
-                
                 diskEl.classList.add('disk-paused');
                 document.getElementById('input-guess').disabled = true;
 
                 if (isHost) {
-                    const delay = 8000; // 8 secondes de révélation
                     setTimeout(() => {
-                        // FIN DE PARTIE ?
                         if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
-                            // On pourrait update le status à 'finished'
-                            // Ici on reload simple pour le MVP
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
                             return; 
                         }
-
-                        // Round Suivant
                         const nextIndex = gameState.deck[gameState.currentRound];
                         const nextSeek = Math.floor(Math.random() * 11) + 40;
 
@@ -807,36 +713,27 @@
                             phase: 'guessing',
                             seekTime: nextSeek
                         });
-                    }, delay);
+                    }, 8000);
                 }
             } else if (gameState.phase === 'finished') {
-                // Ecran de fin
+                // ECRAN FIN
                 document.getElementById('screen-game').classList.add('blur-md');
                 document.getElementById('screen-end').classList.remove('hidden');
                 
-                // Calcul Vainqueur
-                let p1Score = 0, p2Score = 0;
-                Object.values(players).forEach(p => {
-                    if (p.team === 1) p1Score = p.score;
-                    if (p.team === 2) p2Score = p.score;
-                });
-
+                const p1 = Object.values(players).find(p => p.team === 1) || {score:0};
+                const p2 = Object.values(players).find(p => p.team === 2) || {score:0};
+                
+                document.getElementById('end-score-p1').innerText = p1.score;
+                document.getElementById('end-score-p2').innerText = p2.score;
+                
                 const myTeam = Object.values(players).find(p => p.name === (currentUser.displayName || "Joueur"))?.team;
-                const myScore = myTeam === 1 ? p1Score : p2Score;
-                const oppScore = myTeam === 1 ? p2Score : p1Score;
-
+                const myScore = myTeam === 1 ? p1.score : p2.score;
+                const oppScore = myTeam === 1 ? p2.score : p1.score;
+                
                 const title = document.getElementById('end-title');
-                if (myScore > oppScore) {
-                    title.innerText = "VICTOIRE !";
-                    title.classList.add('text-green-500');
-                } else if (myScore < oppScore) {
-                    title.innerText = "DÉFAITE...";
-                    title.classList.add('text-red-500');
-                } else {
-                    title.innerText = "ÉGALITÉ";
-                    title.classList.add('text-white');
-                }
-                document.getElementById('end-score').innerText = `${p1Score} - ${p2Score}`;
+                if (myScore > oppScore) { title.innerText = "VICTOIRE !"; title.className = "text-8xl font-manga text-green-500 mb-4 text-shadow-lg animate-bounce"; }
+                else if (myScore < oppScore) { title.innerText = "DÉFAITE..."; title.className = "text-8xl font-manga text-red-600 mb-4 text-shadow-lg"; }
+                else { title.innerText = "ÉGALITÉ"; title.className = "text-8xl font-manga text-white mb-4 text-shadow-lg"; }
             }
         }
 
@@ -847,65 +744,35 @@
             if (!guess) return;
 
             let pointsEarned = 0;
-            let feedback = "";
-
-            // 1. CHECK ANIME
+            // CHECK ANIME
             if (!animeFound) {
                 let matchAnime = isCloseMatch(guess, currentSongData.anime);
-                if (!matchAnime && currentSongData.alt) {
-                    for (let alias of currentSongData.alt) {
-                        if (isCloseMatch(guess, alias)) { matchAnime = true; break; }
-                    }
-                }
-                if (matchAnime) {
-                    animeFound = true;
-                    pointsEarned += 1;
-                    document.getElementById('status-anime').classList.remove('hidden');
-                    feedback = "ANIME TROUVÉ !";
-                }
+                if (!matchAnime && currentSongData.alt) { for (let alias of currentSongData.alt) { if (isCloseMatch(guess, alias)) { matchAnime = true; break; } } }
+                if (matchAnime) { animeFound = true; pointsEarned += 1; document.getElementById('status-anime').classList.remove('hidden'); }
             }
-
-            // 2. CHECK TITRE
+            // CHECK SONG
             if (!songFound) {
-                if (isCloseMatch(guess, currentSongData.song)) {
-                    songFound = true;
-                    pointsEarned += 1;
-                    document.getElementById('status-song').classList.remove('hidden');
-                    feedback = feedback ? "DOUBLE COMBO !" : "TITRE TROUVÉ !";
-                }
+                if (isCloseMatch(guess, currentSongData.song)) { songFound = true; pointsEarned += 1; document.getElementById('status-song').classList.remove('hidden'); }
             }
-
-            // 3. CHECK OP NUM (RESTAURÉ !)
+            // CHECK OP
             if (!opFound && currentSongData.num) {
                 const inputNums = guess.match(/\d+/g);
-                if (inputNums && inputNums.includes(currentSongData.num.toString())) {
-                    opFound = true;
-                    pointsEarned += 0.5;
-                    document.getElementById('status-op').classList.remove('hidden');
-                    feedback = feedback ? "COMBO !!!" : "NUMÉRO OK !";
-                }
+                if (inputNums && inputNums.includes(currentSongData.num.toString())) { opFound = true; pointsEarned += 0.5; document.getElementById('status-op').classList.remove('hidden'); }
             }
-
-            if (pointsEarned > 0) {
+            
+            if(pointsEarned > 0) {
                 get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
                     const currentScore = snap.val() || 0;
                     update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: currentScore + pointsEarned });
                 });
-                
                 const popup = document.createElement('div');
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold fixed z-50 animate-bounce';
-                popup.style.left = '50%';
-                popup.style.top = '40%';
-                popup.style.transform = 'translate(-50%, -50%)';
-                popup.style.textShadow = '2px 2px 0 #000';
+                popup.style.left = '50%'; popup.style.top = '40%'; popup.style.transform = 'translate(-50%, -50%)';
                 popup.innerText = `+${pointsEarned}`;
                 document.body.appendChild(popup);
                 setTimeout(() => popup.remove(), 1000);
             }
-
             input.value = "";
-            input.placeholder = feedback || "NON...";
-            setTimeout(() => input.placeholder = "Tapez votre réponse...", 1000);
         };
 
     </script>
