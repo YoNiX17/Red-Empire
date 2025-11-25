@@ -87,7 +87,6 @@
         /* --- TIMER BAR --- */
         @keyframes shrink { from { width: 100%; } to { width: 0%; } }
         .timer-container { width: 100%; height: 12px; background: #333; border: 2px solid white; border-radius: 99px; overflow: hidden; }
-        /* Transition fluide mais rapide pour corriger les micro-lags */
         .timer-fill { height: 100%; background: var(--gold); width: 100%; transition: width 0.1s linear; }
         .timer-running { animation: shrink linear forwards; }
 
@@ -390,10 +389,10 @@
         let currentUser = null;
         let currentRoomId = null;
         let isHost = false;
-        let roundTimer = null; // Utilisation de setInterval pour la boucle de jeu
+        let roundTimer = null;
         let matchmakingTimeout = null;
+        let clientInterval = null;
         
-        // Variables d'état
         let animeFound = false, songFound = false, opFound = false;
         let currentSongData = null;
         let lastPhase = '';
@@ -619,12 +618,25 @@
             Object.values(players).forEach(p => {
                 if (p.team === 1) {
                     document.getElementById('p1-name').innerText = p.name;
-                    if(p.avatar) { document.getElementById('p1-avatar').src = p.avatar; document.getElementById('p1-avatar').classList.remove('opacity-50'); document.getElementById('p1-icon').classList.add('hidden'); }
+                    if(p.avatar) {
+                        document.getElementById('p1-avatar').src = p.avatar;
+                        document.getElementById('p1-avatar').classList.remove('opacity-50');
+                        document.getElementById('p1-icon').classList.add('hidden');
+                    }
+                    // Setup UI Jeu aussi
                     document.getElementById('game-p1-name').innerText = p.name;
                     document.getElementById('score-p1').innerText = p.score;
-                } else if (p.team === 2) {
-                    p2Slot.classList.remove('opacity-50'); p2Name.innerText = p.name; document.getElementById('p2-spinner').classList.add('hidden');
-                    if(p.avatar) { p2Avatar.src = p.avatar; p2Avatar.classList.remove('opacity-50'); }
+                } 
+                else if (p.team === 2) {
+                    // P2 (Rouge)
+                    document.getElementById('slot-p2').classList.remove('opacity-50');
+                    document.getElementById('p2-name').innerText = p.name;
+                    document.getElementById('p2-spinner').classList.add('hidden');
+                    if(p.avatar) {
+                        document.getElementById('p2-avatar').src = p.avatar;
+                        document.getElementById('p2-avatar').classList.remove('opacity-50');
+                    }
+                    // Setup UI Jeu aussi
                     document.getElementById('game-p2-name').innerText = p.name;
                     document.getElementById('score-p2').innerText = p.score;
                 }
@@ -658,19 +670,21 @@
                 document.getElementById('loader-overlay').classList.remove('hidden');
                 document.getElementById('loader-text').innerText = "CHARGEMENT ROUND " + gameState.currentRound;
                 
-                videoReady = false;
+                // Reset Video
                 videoEl.oncanplay = null;
+                videoEl.onloadedmetadata = null;
                 videoEl.pause();
                 videoEl.removeAttribute('src');
                 videoEl.load();
                 
-                videoEl.src = songData.url;
-                videoEl.currentTime = gameState.seekTime || 0;
                 videoEl.volume = userVolume;
+                videoEl.src = songData.url;
 
-                // Quand la vidéo est prête, on marque le flag
-                videoEl.oncanplay = () => { videoReady = true; };
-                
+                // Use 'loadedmetadata' to set currentTime safely
+                videoEl.onloadedmetadata = function() {
+                    videoEl.currentTime = gameState.seekTime || 0;
+                };
+
                 // Boucle de haute précision (100ms)
                 roundTimer = setInterval(() => {
                     const now = getServerTime(); // Heure actuelle synchronisée
@@ -680,10 +694,6 @@
                         // EN ATTENTE DU DEPART
                         document.getElementById('loader-text').innerText = `DÉPART DANS ${(timeUntilStart/1000).toFixed(1)}s`;
                         document.getElementById('loader-debug').innerText = `Offset: ${serverOffset}ms`;
-                        // Pré-Seek constant pour être sûr
-                        if(videoEl.readyState >= 1 && Math.abs(videoEl.currentTime - gameState.seekTime) > 0.5) {
-                            videoEl.currentTime = gameState.seekTime;
-                        }
                     } else {
                         // LE JEU A COMMENCÉ
                         document.getElementById('loader-overlay').classList.add('hidden');
@@ -693,11 +703,6 @@
                         if (videoEl.paused && !videoEl.error) {
                             videoEl.play().catch(e => {});
                         }
-
-                        // RESYNC BRUTALE : Si la vidéo dérive de plus de 0.5s par rapport au temps écoulé théorique
-                        // Temps écoulé théorique = (now - startTime) / 1000
-                        // Position théorique vidéo = seekTime + Temps écoulé
-                        /* Note : C'est risqué d'activer ça sur mobile, donc on laisse le navigateur gérer sauf gros crash */
 
                         // Gestion Barre de Temps
                         const elapsed = now - gameState.startTime;
@@ -735,19 +740,18 @@
                     setTimeout(() => {
                         if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
                             update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
-                        } else {
-                            // Préparation round suivant
-                            const nextIndex = gameState.deck[gameState.currentRound];
-                            const nextSeek = Math.floor(Math.random() * 11) + 40;
-                            
-                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
-                                currentRound: gameState.currentRound + 1,
-                                songIndex: nextIndex,
-                                startTime: getServerTime() + 5000, // +5s de buffer pour le chargement
-                                phase: 'guessing',
-                                seekTime: nextSeek
-                            });
+                            return; 
                         }
+                        const nextIndex = gameState.deck[gameState.currentRound];
+                        const nextSeek = Math.floor(Math.random() * 11) + 40;
+                        
+                        update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
+                            currentRound: gameState.currentRound + 1,
+                            songIndex: nextIndex,
+                            startTime: getServerTime() + 5000, // +5s de buffer pour le chargement
+                            phase: 'guessing',
+                            seekTime: nextSeek
+                        });
                     }, 8000); // 8 secondes de pause
                 }
             } else if (gameState.phase === 'finished') {
@@ -755,8 +759,25 @@
                 document.getElementById('screen-end').classList.remove('hidden');
                 // Calcul scores finaux...
                 let p1Score = 0, p2Score = 0;
-                Object.values(players).forEach(p => { if(p.team===1) p1Score=p.score; if(p.team===2) p2Score=p.score; });
-                document.getElementById('end-score').innerText = `SCORE: ${p1Score} - ${p2Score}`;
+                Object.values(players).forEach(p => {
+                    if (p.team === 1) p1Score = p.score;
+                    if (p.team === 2) p2Score = p.score;
+                });
+                const myTeam = Object.values(players).find(p => p.name === (currentUser.displayName || "Joueur"))?.team;
+                const myScore = myTeam === 1 ? p1Score : p2Score;
+                const oppScore = myTeam === 1 ? p2Score : p1Score;
+                const title = document.getElementById('end-title');
+                if (myScore > oppScore) {
+                    title.innerText = "VICTOIRE !";
+                    title.classList.add('text-green-500');
+                } else if (myScore < oppScore) {
+                    title.innerText = "DÉFAITE...";
+                    title.classList.add('text-red-500');
+                } else {
+                    title.innerText = "ÉGALITÉ";
+                    title.classList.add('text-white');
+                }
+                document.getElementById('end-score').innerText = `${p1Score} - ${p2Score}`;
             }
         }
 
