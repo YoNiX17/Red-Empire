@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CRUCIAL : Permet de contourner la protection d'AnimeThemes -->
+    <meta name="referrer" content="no-referrer">
+    
     <title>Ranked Duel 1v1 | Socket.io</title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
     
@@ -86,7 +89,7 @@
         
         <div class="manga-panel p-12 max-w-4xl w-full text-center speed-lines z-10 flex flex-col items-center min-h-[500px] justify-center">
             
-            <!-- DÉPART (Obligatoire pour son) -->
+            <!-- ZONE DE DÉPART -->
             <div id="start-area" class="flex flex-col items-center">
                 <h2 class="text-6xl font-manga text-white mb-8 text-shadow-sm">PRÊT AU COMBAT ?</h2>
                 <button onclick="startMatchmaking()" class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform">
@@ -95,23 +98,26 @@
                 <p class="text-gray-500 mt-4 font-mono text-xs">Cliquez pour activer le système audio</p>
             </div>
 
-            <!-- RECHERCHE -->
+            <!-- ZONE DE RECHERCHE -->
             <div id="search-area" class="hidden w-full flex-col items-center">
                 <div class="loader-ring mb-8" id="lobby-spinner"></div>
                 <h2 class="text-6xl font-manga text-white mb-4 text-shadow-sm animate-pulse" id="lobby-status">RECHERCHE...</h2>
                 <p class="text-gray-400 font-mono text-sm tracking-[0.3em] uppercase mb-12" id="lobby-info">Connexion au serveur...</p>
                 
-                <!-- VERSUS -->
+                <!-- VERSUS FRAME -->
                 <div id="vs-display" class="hidden flex flex-col md:flex-row gap-12 items-center justify-center w-full relative transition-all duration-500 opacity-0 translate-y-10">
+                    <!-- JOUEUR 1 -->
                     <div class="flex flex-col items-center transform scale-110">
                         <div class="w-40 h-40 rounded-full border-4 border-blue-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_40px_rgba(59,130,246,0.5)] relative group ring-4 ring-black">
                             <img id="p1-img" src="" class="w-full h-full object-cover">
                         </div>
                         <div class="bg-blue-600 text-white px-8 py-2 rounded-xl text-2xl font-bold font-manga tracking-wider w-full truncate text-center border-2 border-blue-400 shadow-lg transform -rotate-2" id="p1-name">VOUS</div>
                     </div>
+                    <!-- VS -->
                     <div class="relative z-20 mx-6">
                         <div class="text-9xl font-manga text-yellow-500 vs-text italic absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-max drop-shadow-[0_0_10px_black]">VS</div>
                     </div>
+                    <!-- JOUEUR 2 -->
                     <div class="flex flex-col items-center transform scale-110">
                         <div class="w-40 h-40 rounded-full border-4 border-red-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_40px_rgba(239,68,68,0.5)] relative ring-4 ring-black">
                             <img id="p2-img" src="" class="w-full h-full object-cover">
@@ -154,14 +160,24 @@
         <!-- ZONE DE JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- VIDEO (Optimisée) -->
+            <!-- VIDEO (Avec gestion d'erreur) -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-5xl max-h-[75vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative group">
-                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
+                    <!-- Sécurité: onError arrête le chargement pour éviter les 32 requêtes -->
+                    <video id="game-video" class="w-full h-full object-contain" playsinline onerror="this.removeAttribute('src')"></video>
                     <div class="absolute inset-0 pointer-events-none border-4 border-white/10 rounded-xl"></div>
                 </div>
             </div>
             
+            <!-- AUTOPLAY BLOCK OVERLAY -->
+            <div id="autoplay-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer" onclick="forcePlay()">
+                <div class="bg-red-600 text-white p-8 rounded-full border-4 border-white shadow-[0_0_50px_red] animate-pulse transform hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-play text-6xl ml-2"></i>
+                </div>
+                <p class="text-white font-manga text-4xl mt-8 tracking-widest text-shadow-lg">CLIQUEZ POUR JOUER !</p>
+                <p class="text-gray-400 text-sm mt-2 font-mono uppercase tracking-widest">Activation du son requise</p>
+            </div>
+
             <!-- VINYLE -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 hover:scale-105">
                 <div class="relative w-80 h-80 md:w-96 md:h-96 mb-10 group">
@@ -174,11 +190,10 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="text-center bg-yellow-500 px-12 py-4 border-4 border-black rounded-full shadow-[8px_8px_0px_#fff] transform -rotate-2 hover:rotate-0 transition-transform duration-300">
                     <h2 class="text-6xl font-manga text-black tracking-widest drop-shadow-sm" id="phase-text">ÉCOUTEZ !</h2>
                 </div>
-
+                
                 <!-- INDICATEURS -->
                 <div id="status-indicators" class="flex gap-4 mt-10 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-6 py-2 rounded-xl border-2 border-white font-bold text-lg shadow-lg font-manga animate-bounce">ANIME OK (+1)</div>
@@ -188,7 +203,7 @@
             </div>
             
             <!-- VOLUME -->
-            <div class="absolute top-6 right-6 z-30 bg-black/80 backdrop-blur border-2 border-gray-600 rounded-full px-5 py-3 flex items-center gap-4 shadow-xl hover:border-yellow-500 transition-colors group">
+            <div class="absolute top-6 right-6 z-30 bg-black/80 backdrop-blur border-2 border-gray-600 rounded-full px-6 py-3 flex items-center gap-4 shadow-xl hover:border-yellow-500 transition-colors group">
                 <i class="fa-solid fa-volume-high text-yellow-500 text-xl group-hover:scale-110 transition-transform"></i>
                 <input type="range" min="0" max="1" step="0.1" class="w-32 accent-yellow-500 h-2 bg-gray-600 rounded-lg cursor-pointer" id="volume-slider" oninput="updateVolume(this.value)">
             </div>
@@ -214,7 +229,7 @@
         </div>
     </div>
     
-    <!-- FIN -->
+    <!-- FIN DE PARTIE -->
     <div id="screen-end" class="hidden fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-8 backdrop-blur-lg">
         <div class="text-center animate-bounce mb-10">
             <h1 id="end-title" class="text-9xl font-manga text-yellow-500 text-shadow-lg drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">VICTOIRE !</h1>
@@ -230,13 +245,14 @@
         </div>
     </div>
 
+    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, child, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // FIREBASE CONFIG
+        // --- CONFIG FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -251,15 +267,17 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // CONTOURNEMENT RESTRICTIONS NAVIGATEUR (PERSISTANCE)
+        // CONTOURNEMENT RESTRICTIONS NAVIGATEUR
         setPersistence(auth, browserSessionPersistence).catch(error => {
-            console.log("Storage bloqué, passage en mémoire", error);
+            console.log("Passage en mémoire");
             return setPersistence(auth, inMemoryPersistence);
         });
 
+        // --- SOCKET IO ---
         const SERVER_URL = "https://socket-2co5.onrender.com"; 
         let socket;
 
+        // --- GAME VARS ---
         let currentSongData = null;
         let animeFound = false, songFound = false, opFound = false;
         let timerInterval = null;
@@ -270,13 +288,19 @@
         const diskEl = document.getElementById('disk');
         const barEl = document.getElementById('game-timer-bar');
         
+        // Fonction de secours
+        window.forcePlay = () => {
+            videoEl.play();
+            document.getElementById('autoplay-overlay').classList.add('hidden');
+        };
+
         // Volume
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
         window.updateVolume = (val) => { userVolume = val; localStorage.setItem('userVolume', val); if(videoEl) videoEl.volume = userVolume; }
 
-        // Auth
+        // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.querySelector('#user-badge span:last-child').innerText = user.displayName;
@@ -297,20 +321,16 @@
             } catch(e) {}
         }
 
-        // BOUTON START
+        // --- FONCTION START MATCHMAKING ---
         window.startMatchmaking = () => {
             if(!userProfile) return;
 
-            // === WARM-UP AUDIO V2 ===
-            // Essayer de charger une promesse audio vide pour obtenir l'autorisation du navigateur
+            // === WARM-UP AUDIO ===
             try {
                 videoEl.src = ""; 
                 videoEl.load();
                 videoEl.muted = true; 
-                videoEl.play().then(() => {
-                    videoEl.pause(); 
-                    videoEl.muted = false; 
-                }).catch(() => {}); // Ignorer erreur si vide
+                videoEl.play().then(() => { videoEl.pause(); videoEl.muted = false; }).catch(() => {}); 
             } catch(e){}
 
             document.getElementById('start-area').classList.add('hidden');
@@ -343,7 +363,6 @@
                 document.getElementById('p1-name').innerText = data.p1.name;
                 document.getElementById('p2-img').src = data.p2.avatar || `https://ui-avatars.com/api/?name=${data.p2.name}`;
                 document.getElementById('p2-name').innerText = data.p2.name;
-
                 document.getElementById('game-p1-name').innerText = data.p1.name;
                 document.getElementById('game-p2-name').innerText = data.p2.name;
             });
@@ -351,25 +370,26 @@
             socket.on('round_start', (data) => {
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('autoplay-overlay').classList.add('hidden'); 
 
                 resetUI();
                 document.getElementById('current-round').innerText = data.round;
                 currentSongData = OP_DATABASE[data.songIndex];
 
-                // CHARGEMENT VIDEO BLINDÉ
+                // LOAD VIDEO
                 videoEl.pause();
-                videoEl.oncanplay = null; // Reset listeners
+                videoEl.src = currentSongData.url;
                 
-                // Ordre important : Events -> Src
+                // Listen for Metadata to seek accurately
                 videoEl.onloadedmetadata = () => {
                      videoEl.currentTime = data.seekTime;
                      videoEl.volume = userVolume;
                      const p = videoEl.play();
-                     if(p) p.catch(e => console.log("Lecture bloquée", e));
+                     if(p) p.catch(e => {
+                         console.log("Autoplay blocked");
+                         document.getElementById('autoplay-overlay').classList.remove('hidden');
+                     });
                 };
-
-                videoEl.src = currentSongData.url;
-                videoEl.load(); // Force reload
 
                 diskEl.classList.remove('disk-paused');
                 document.getElementById('input-guess').focus();
@@ -380,6 +400,7 @@
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
+                document.getElementById('autoplay-overlay').classList.add('hidden');
                 
                 document.getElementById('res-anime').innerText = currentSongData.anime;
                 document.getElementById('res-song').innerText = currentSongData.song;
@@ -407,9 +428,7 @@
                 document.getElementById('end-score-p2').innerText = finalScores.p2Score;
                 
                 if(auth.currentUser) {
-                    update(ref(db, `users/${auth.currentUser.uid}/stats/ranked`), {
-                        lastPlayed: new Date().toISOString()
-                    });
+                    update(ref(db, `users/${auth.currentUser.uid}/stats/ranked`), { lastPlayed: new Date().toISOString() });
                 }
             });
         };
