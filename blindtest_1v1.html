@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CRUCIAL : Permet de contourner la protection d'AnimeThemes -->
+    <!-- Anti-Hotlink pour AnimeThemes -->
     <meta name="referrer" content="no-referrer">
     
     <title>Ranked Duel 1v1 | Socket.io</title>
@@ -63,6 +63,12 @@
 </head>
 <body class="h-screen flex flex-col">
 
+    <!-- SERVER STATUS -->
+    <div class="absolute top-2 left-2 z-[60] flex items-center gap-2 bg-black/80 px-3 py-1 rounded-full border border-gray-700 text-[10px] font-mono">
+        <div id="server-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+        <span id="server-status" class="text-gray-400">DÉCONNECTÉ</span>
+    </div>
+
     <!-- NAVBAR -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
         <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
@@ -77,7 +83,7 @@
         <div id="user-badge" class="flex items-center gap-3 bg-gray-900 px-4 py-1 rounded-full border-2 border-yellow-500/50 shadow-lg">
             <div class="flex flex-col items-end leading-none">
                 <span class="text-yellow-500 text-xs font-bold font-mono">MMR: 1200</span>
-                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">JOUEUR</span>
+                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">Chargement...</span>
             </div>
             <div id="socket-dot" class="w-3 h-3 bg-red-500 rounded-full border border-white animate-pulse" title="État connexion socket"></div>
         </div>
@@ -92,8 +98,8 @@
             <!-- ZONE DE DÉPART -->
             <div id="start-area" class="flex flex-col items-center">
                 <h2 class="text-6xl font-manga text-white mb-8 text-shadow-sm">PRÊT AU COMBAT ?</h2>
-                <button onclick="startMatchmaking()" class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform">
-                    TROUVER UN ADVERSAIRE
+                <button id="btn-start-match" onclick="startMatchmaking()" disabled class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform opacity-50 cursor-wait">
+                    CHARGEMENT...
                 </button>
                 <p class="text-gray-500 mt-4 font-mono text-xs">Cliquez pour activer le système audio</p>
             </div>
@@ -106,18 +112,15 @@
                 
                 <!-- VERSUS FRAME -->
                 <div id="vs-display" class="hidden flex flex-col md:flex-row gap-12 items-center justify-center w-full relative transition-all duration-500 opacity-0 translate-y-10">
-                    <!-- JOUEUR 1 -->
                     <div class="flex flex-col items-center transform scale-110">
                         <div class="w-40 h-40 rounded-full border-4 border-blue-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_40px_rgba(59,130,246,0.5)] relative group ring-4 ring-black">
                             <img id="p1-img" src="" class="w-full h-full object-cover">
                         </div>
                         <div class="bg-blue-600 text-white px-8 py-2 rounded-xl text-2xl font-bold font-manga tracking-wider w-full truncate text-center border-2 border-blue-400 shadow-lg transform -rotate-2" id="p1-name">VOUS</div>
                     </div>
-                    <!-- VS -->
                     <div class="relative z-20 mx-6">
                         <div class="text-9xl font-manga text-yellow-500 vs-text italic absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-max drop-shadow-[0_0_10px_black]">VS</div>
                     </div>
-                    <!-- JOUEUR 2 -->
                     <div class="flex flex-col items-center transform scale-110">
                         <div class="w-40 h-40 rounded-full border-4 border-red-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_40px_rgba(239,68,68,0.5)] relative ring-4 ring-black">
                             <img id="p2-img" src="" class="w-full h-full object-cover">
@@ -131,15 +134,12 @@
 
     <!-- ECRAN 2 : JEU -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
-        <!-- HUD -->
+        <!-- HUD SCORE -->
         <div class="bg-black border-b-4 border-yellow-500 p-3 flex justify-between items-center px-4 md:px-12 relative z-30 shadow-2xl">
             <div class="flex items-center gap-4 w-1/3">
-                <div class="text-right flex-1 hidden md:block">
-                    <div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 1</div>
-                </div>
+                <div class="text-right flex-1 hidden md:block"><div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 1</div></div>
                 <div class="bg-blue-600 text-white font-manga text-4xl px-5 py-1 rounded-lg border-2 border-white shadow-[0_0_15px_#2563eb] min-w-[80px] text-center transform -skew-x-12" id="score-p1">0</div>
             </div>
-
             <div class="flex flex-col items-center w-1/3">
                  <div class="bg-yellow-500 text-black font-black px-6 py-1 rounded-full text-sm mb-2 border-2 border-white font-manga shadow-lg transform -skew-x-12 uppercase tracking-widest">
                     ROUND <span id="current-round" class="text-lg">1</span> / 15
@@ -148,23 +148,20 @@
                     <div id="game-timer-bar" class="timer-fill"></div>
                 </div>
             </div>
-
             <div class="flex items-center gap-4 w-1/3 justify-end">
                 <div class="bg-red-600 text-white font-manga text-4xl px-5 py-1 rounded-lg border-2 border-white shadow-[0_0_15px_#dc2626] min-w-[80px] text-center transform -skew-x-12" id="score-p2">0</div>
-                <div class="text-left flex-1 hidden md:block">
-                    <div id="game-p2-name" class="font-bold text-red-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 2</div>
-                </div>
+                <div class="text-left flex-1 hidden md:block"><div id="game-p2-name" class="font-bold text-red-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 2</div></div>
             </div>
         </div>
 
         <!-- ZONE DE JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
             
-            <!-- VIDEO (Avec gestion d'erreur) -->
+            <!-- VIDEO -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-5xl max-h-[75vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative group">
-                    <!-- Sécurité: onError arrête le chargement pour éviter les 32 requêtes -->
-                    <video id="game-video" class="w-full h-full object-contain" playsinline onerror="this.removeAttribute('src')"></video>
+                    <!-- IMPORTANT : Pas d'attribut 'src' vide au démarrage -->
+                    <video id="game-video" class="w-full h-full object-contain" playsinline></video>
                     <div class="absolute inset-0 pointer-events-none border-4 border-white/10 rounded-xl"></div>
                 </div>
             </div>
@@ -175,7 +172,6 @@
                     <i class="fa-solid fa-play text-6xl ml-2"></i>
                 </div>
                 <p class="text-white font-manga text-4xl mt-8 tracking-widest text-shadow-lg">CLIQUEZ POUR JOUER !</p>
-                <p class="text-gray-400 text-sm mt-2 font-mono uppercase tracking-widest">Activation du son requise</p>
             </div>
 
             <!-- VINYLE -->
@@ -221,7 +217,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="max-w-4xl mx-auto flex gap-4">
                 <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-20 px-8 text-3xl uppercase rounded-2xl border-4 border-gray-600 focus:border-yellow-500 transition-colors placeholder-gray-600" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
                 <button onclick="submitGuess()" class="btn-pop w-48 rounded-2xl text-3xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400 shadow-xl font-bold">ENVOYER</button>
@@ -267,9 +262,8 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // CONTOURNEMENT RESTRICTIONS NAVIGATEUR
+        // PERSISTANCE EN MEMOIRE (Contourne Tracking Protection)
         setPersistence(auth, browserSessionPersistence).catch(error => {
-            console.log("Passage en mémoire");
             return setPersistence(auth, inMemoryPersistence);
         });
 
@@ -303,7 +297,8 @@
         // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.querySelector('#user-badge span:last-child').innerText = user.displayName;
+                const spanName = document.querySelector('#user-badge span:last-child');
+                if(spanName) spanName.innerText = user.displayName;
                 loadUserProfile(user);
             } else {
                 window.location.href = "index.html";
@@ -319,18 +314,27 @@
                     userProfile.avatar = snap.val().avatar || user.photoURL;
                 }
             } catch(e) {}
+            
+            // ACTIVE LE BOUTON START
+            const btn = document.getElementById('btn-start-match');
+            if(btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-wait');
+                btn.innerText = "TROUVER UN ADVERSAIRE";
+            }
         }
 
         // --- FONCTION START MATCHMAKING ---
         window.startMatchmaking = () => {
             if(!userProfile) return;
 
-            // === WARM-UP AUDIO ===
+            // === WARM-UP AUDIO CRUCIAL (Solution du "jamais lancé") ===
             try {
-                videoEl.src = ""; 
-                videoEl.load();
                 videoEl.muted = true; 
-                videoEl.play().then(() => { videoEl.pause(); videoEl.muted = false; }).catch(() => {}); 
+                videoEl.play().then(() => { 
+                    videoEl.pause(); 
+                    videoEl.muted = false; // Son activé pour le futur
+                }).catch(() => {}); 
             } catch(e){}
 
             document.getElementById('start-area').classList.add('hidden');
@@ -363,6 +367,7 @@
                 document.getElementById('p1-name').innerText = data.p1.name;
                 document.getElementById('p2-img').src = data.p2.avatar || `https://ui-avatars.com/api/?name=${data.p2.name}`;
                 document.getElementById('p2-name').innerText = data.p2.name;
+
                 document.getElementById('game-p1-name').innerText = data.p1.name;
                 document.getElementById('game-p2-name').innerText = data.p2.name;
             });
@@ -376,11 +381,12 @@
                 document.getElementById('current-round').innerText = data.round;
                 currentSongData = OP_DATABASE[data.songIndex];
 
-                // LOAD VIDEO
+                // RESET LECTEUR (Fix du "Failed to load")
                 videoEl.pause();
+                // Ne PAS utiliser removeAttribute('src') qui cause NotSupportedError
+                // Charger directement la nouvelle source
                 videoEl.src = currentSongData.url;
                 
-                // Listen for Metadata to seek accurately
                 videoEl.onloadedmetadata = () => {
                      videoEl.currentTime = data.seekTime;
                      videoEl.volume = userVolume;
@@ -390,6 +396,10 @@
                          document.getElementById('autoplay-overlay').classList.remove('hidden');
                      });
                 };
+                // Si loadedmetadata ne se lance pas (cache?), on force le play
+                setTimeout(() => {
+                    if(videoEl.paused) videoEl.play().catch(()=>{});
+                }, 1000);
 
                 diskEl.classList.remove('disk-paused');
                 document.getElementById('input-guess').focus();
@@ -437,6 +447,7 @@
             clearInterval(timerInterval);
             barEl.style.width = "100%";
             const startTime = Date.now();
+            
             timerInterval = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000;
                 const percent = Math.max(0, 100 - (elapsed / durationSeconds * 100));
