@@ -3,14 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Anti-Hotlink pour AnimeThemes -->
     <meta name="referrer" content="no-referrer">
-    
-    <title>Ranked Duel 1v1 | Socket.io</title>
+    <title>Ranked Duel 1v1 | Firebase Edition</title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
-    
-    <!-- SOCKET.IO CLIENT -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -63,54 +58,46 @@
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- SERVER STATUS -->
-    <div class="absolute top-2 left-2 z-[60] flex items-center gap-2 bg-black/80 px-3 py-1 rounded-full border border-gray-700 text-[10px] font-mono">
-        <div id="server-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-        <span id="server-status" class="text-gray-400">DÉCONNECTÉ</span>
-    </div>
-
     <!-- NAVBAR -->
     <nav class="h-16 bg-black border-b-4 border-yellow-500 flex items-center justify-between px-6 z-50 shadow-lg">
         <a href="blindtest_ranked.html" class="flex items-center gap-2 font-bold text-gray-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-chevron-left"></i>
-            <span class="font-manga text-xl tracking-wider">QUITTER</span>
+            <i class="fa-solid fa-chevron-left"></i> <span class="font-manga text-xl tracking-wider">QUITTER</span>
         </a>
         <div class="absolute left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black px-10 py-1 skew-x-[-15deg] border-2 border-white shadow-[0px_0px_15px_#fbbf24]">
             <h1 class="font-manga text-3xl skew-x-[15deg] tracking-widest flex items-center gap-2">
-                <i class="fa-solid fa-trophy text-white drop-shadow-md"></i> RANKED <span class="text-white drop-shadow-md">SOCKET</span>
+                <i class="fa-solid fa-trophy text-white drop-shadow-md"></i> RANKED <span class="text-white drop-shadow-md">DUEL</span>
             </h1>
         </div>
         <div id="user-badge" class="flex items-center gap-3 bg-gray-900 px-4 py-1 rounded-full border-2 border-yellow-500/50 shadow-lg">
             <div class="flex flex-col items-end leading-none">
                 <span class="text-yellow-500 text-xs font-bold font-mono">MMR: 1200</span>
-                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">Chargement...</span>
+                <span class="text-sm font-bold text-white truncate max-w-[100px] font-manga tracking-wide">Joueur</span>
             </div>
-            <div id="socket-dot" class="w-3 h-3 bg-red-500 rounded-full border border-white animate-pulse" title="État connexion socket"></div>
+            <div id="status-dot" class="w-3 h-3 bg-green-500 rounded-full border border-white animate-pulse" title="Connexion"></div>
         </div>
     </nav>
 
     <!-- ECRAN 1 : LOBBY -->
     <div id="screen-lobby" class="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-        
         <div class="manga-panel p-12 max-w-4xl w-full text-center speed-lines z-10 flex flex-col items-center min-h-[500px] justify-center">
             
-            <!-- ZONE DE DÉPART -->
+            <!-- START (Pour Audio Context) -->
             <div id="start-area" class="flex flex-col items-center">
                 <h2 class="text-6xl font-manga text-white mb-8 text-shadow-sm">PRÊT AU COMBAT ?</h2>
-                <button id="btn-start-match" onclick="startMatchmaking()" disabled class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform opacity-50 cursor-wait">
+                <button id="btn-search" onclick="startMatchmaking()" disabled class="btn-pop px-12 py-6 text-3xl rounded-xl bg-yellow-500 text-black font-bold pulse-btn hover:scale-105 transition-transform opacity-50 cursor-wait">
                     CHARGEMENT...
                 </button>
                 <p class="text-gray-500 mt-4 font-mono text-xs">Cliquez pour activer le système audio</p>
             </div>
 
-            <!-- ZONE DE RECHERCHE -->
+            <!-- RECHERCHE -->
             <div id="search-area" class="hidden w-full flex-col items-center">
                 <div class="loader-ring mb-8" id="lobby-spinner"></div>
                 <h2 class="text-6xl font-manga text-white mb-4 text-shadow-sm animate-pulse" id="lobby-status">RECHERCHE...</h2>
-                <p class="text-gray-400 font-mono text-sm tracking-[0.3em] uppercase mb-12" id="lobby-info">Connexion au serveur...</p>
+                <p class="text-gray-400 font-mono text-sm tracking-[0.3em] uppercase mb-12" id="lobby-info">Matchmaking Firebase...</p>
                 
-                <!-- VERSUS FRAME -->
+                <!-- VERSUS -->
                 <div id="vs-display" class="hidden flex flex-col md:flex-row gap-12 items-center justify-center w-full relative transition-all duration-500 opacity-0 translate-y-10">
                     <div class="flex flex-col items-center transform scale-110">
                         <div class="w-40 h-40 rounded-full border-4 border-blue-500 bg-gray-900 overflow-hidden mb-4 shadow-[0_0_40px_rgba(59,130,246,0.5)] relative group ring-4 ring-black">
@@ -134,7 +121,6 @@
 
     <!-- ECRAN 2 : JEU -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
-        <!-- HUD SCORE -->
         <div class="bg-black border-b-4 border-yellow-500 p-3 flex justify-between items-center px-4 md:px-12 relative z-30 shadow-2xl">
             <div class="flex items-center gap-4 w-1/3">
                 <div class="text-right flex-1 hidden md:block"><div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 1</div></div>
@@ -154,23 +140,18 @@
             </div>
         </div>
 
-        <!-- ZONE DE JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
-            
             <!-- VIDEO -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-5xl max-h-[75vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative group">
-                    <!-- IMPORTANT : Pas d'attribut 'src' vide au démarrage -->
                     <video id="game-video" class="w-full h-full object-contain" playsinline></video>
                     <div class="absolute inset-0 pointer-events-none border-4 border-white/10 rounded-xl"></div>
                 </div>
             </div>
             
-            <!-- AUTOPLAY BLOCK OVERLAY -->
+            <!-- AUTOPLAY OVERLAY -->
             <div id="autoplay-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer" onclick="forcePlay()">
-                <div class="bg-red-600 text-white p-8 rounded-full border-4 border-white shadow-[0_0_50px_red] animate-pulse transform hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-play text-6xl ml-2"></i>
-                </div>
+                <div class="bg-red-600 text-white p-8 rounded-full border-4 border-white shadow-[0_0_50px_red] animate-pulse transform hover:scale-110 transition-transform"><i class="fa-solid fa-play text-6xl ml-2"></i></div>
                 <p class="text-white font-manga text-4xl mt-8 tracking-widest text-shadow-lg">CLIQUEZ POUR JOUER !</p>
             </div>
 
@@ -189,8 +170,6 @@
                 <div class="text-center bg-yellow-500 px-12 py-4 border-4 border-black rounded-full shadow-[8px_8px_0px_#fff] transform -rotate-2 hover:rotate-0 transition-transform duration-300">
                     <h2 class="text-6xl font-manga text-black tracking-widest drop-shadow-sm" id="phase-text">ÉCOUTEZ !</h2>
                 </div>
-                
-                <!-- INDICATEURS -->
                 <div id="status-indicators" class="flex gap-4 mt-10 flex-wrap justify-center">
                     <div id="status-anime" class="hidden bg-green-600 text-white px-6 py-2 rounded-xl border-2 border-white font-bold text-lg shadow-lg font-manga animate-bounce">ANIME OK (+1)</div>
                     <div id="status-song" class="hidden bg-yellow-400 text-black px-6 py-2 rounded-xl border-2 border-black font-bold text-lg shadow-lg font-manga animate-bounce">TITRE OK (+1)</div>
@@ -224,7 +203,7 @@
         </div>
     </div>
     
-    <!-- FIN DE PARTIE -->
+    <!-- FIN -->
     <div id="screen-end" class="hidden fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-8 backdrop-blur-lg">
         <div class="text-center animate-bounce mb-10">
             <h1 id="end-title" class="text-9xl font-manga text-yellow-500 text-shadow-lg drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">VICTOIRE !</h1>
@@ -240,14 +219,12 @@
         </div>
     </div>
 
-    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, child, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, push, child, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // --- CONFIG FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -258,215 +235,309 @@
             appId: "1:1002924043244:web:e76002c3dc8810017faec9",
             measurementId: "G-DPG3ZZ68G4"
         };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // PERSISTANCE EN MEMOIRE (Contourne Tracking Protection)
-        setPersistence(auth, browserSessionPersistence).catch(error => {
-            return setPersistence(auth, inMemoryPersistence);
-        });
+        // PERSISTANCE
+        setPersistence(auth, browserSessionPersistence).catch(() => setPersistence(auth, inMemoryPersistence));
 
-        // --- SOCKET IO ---
-        const SERVER_URL = "https://socket-2co5.onrender.com"; 
-        let socket;
-
-        // --- GAME VARS ---
+        const RANKED_SETTINGS = { duration: 20, rounds: 15 };
+        let currentUser = null;
+        let currentRoomId = null;
+        let isHost = false;
+        let serverOffset = 0;
+        
+        // Game State
         let currentSongData = null;
         let animeFound = false, songFound = false, opFound = false;
         let timerInterval = null;
         let userVolume = 0.5;
-        let userProfile = null;
+        let hasTriggeredStart = false;
 
+        // DOM
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
         const barEl = document.getElementById('game-timer-bar');
-        
-        // Fonction de secours
-        window.forcePlay = () => {
-            videoEl.play();
-            document.getElementById('autoplay-overlay').classList.add('hidden');
-        };
 
-        // Volume
+        // TIME SYNC
+        onValue(ref(db, ".info/serverTimeOffset"), (snap) => { serverOffset = snap.val(); });
+        function getServerTime() { return Date.now() + serverOffset; }
+
+        // VOLUME
         const savedVol = localStorage.getItem('userVolume');
         if(savedVol) userVolume = parseFloat(savedVol);
         document.getElementById('volume-slider').value = userVolume;
         window.updateVolume = (val) => { userVolume = val; localStorage.setItem('userVolume', val); if(videoEl) videoEl.volume = userVolume; }
 
+        // SECURE PLAY
+        window.forcePlay = () => {
+            videoEl.play().catch(()=>{});
+            document.getElementById('autoplay-overlay').classList.add('hidden');
+        };
+
         // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const spanName = document.querySelector('#user-badge span:last-child');
-                if(spanName) spanName.innerText = user.displayName;
-                loadUserProfile(user);
-            } else {
-                window.location.href = "index.html";
-            }
+                currentUser = user;
+                get(child(ref(db), `users/${user.uid}`)).then(snapshot => {
+                    const name = snapshot.exists() && snapshot.val().username ? snapshot.val().username : user.displayName;
+                    document.querySelector('#user-badge span:last-child').innerText = name;
+                    // Active bouton
+                    const btn = document.getElementById('btn-search');
+                    btn.disabled = false; btn.innerText = "TROUVER UN ADVERSAIRE";
+                    btn.classList.remove('opacity-50', 'cursor-wait');
+                });
+            } else { window.location.href = "index.html"; }
         });
 
-        async function loadUserProfile(user) {
-            userProfile = { uid: user.uid, name: user.displayName, avatar: user.photoURL };
-            try {
-                const snap = await get(child(ref(db), `users/${user.uid}`));
-                if(snap.exists()) {
-                    userProfile.name = snap.val().username || user.displayName;
-                    userProfile.avatar = snap.val().avatar || user.photoURL;
-                }
-            } catch(e) {}
+        // MATCHMAKING LOGIC
+        window.startMatchmaking = async () => {
+            if(!currentUser) return;
             
-            // ACTIVE LE BOUTON START
-            const btn = document.getElementById('btn-start-match');
-            if(btn) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-wait');
-                btn.innerText = "TROUVER UN ADVERSAIRE";
-            }
-        }
-
-        // --- FONCTION START MATCHMAKING ---
-        window.startMatchmaking = () => {
-            if(!userProfile) return;
-
-            // === WARM-UP AUDIO CRUCIAL (Solution du "jamais lancé") ===
-            try {
-                videoEl.muted = true; 
-                videoEl.play().then(() => { 
-                    videoEl.pause(); 
-                    videoEl.muted = false; // Son activé pour le futur
-                }).catch(() => {}); 
-            } catch(e){}
+            // WARM UP AUDIO
+            try { videoEl.src=""; videoEl.load(); videoEl.muted=true; videoEl.play().then(()=>{videoEl.pause();videoEl.muted=false;}).catch(()=>{}); } catch(e){}
 
             document.getElementById('start-area').classList.add('hidden');
             document.getElementById('search-area').classList.remove('hidden');
 
-            socket = io(SERVER_URL);
+            // FIND ROOM
+            const roomsRef = ref(db, 'blindtest/rooms');
+            const snapshot = await get(roomsRef);
+            let joined = false;
 
-            socket.on('connect', () => {
-                document.getElementById('socket-dot').classList.replace('bg-red-500', 'bg-green-500');
-                document.getElementById('lobby-status').innerText = "RECHERCHE...";
-                socket.emit('identify', userProfile);
+            if (snapshot.exists()) {
+                const rooms = snapshot.val();
+                for (const [key, room] of Object.entries(rooms)) {
+                    // Check if room is lobby and has 1 player
+                    if (room.type === 'ranked_1v1' && room.status === 'lobby' && room.players && Object.keys(room.players).length < 2) {
+                        await joinRoom(key);
+                        joined = true;
+                        break;
+                    }
+                }
+            }
+            if (!joined) await createRoom();
+        };
+
+        async function createRoom() {
+            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+            currentRoomId = code;
+            isHost = true;
+            const profile = await getUserProfile();
+            const deck = shuffleArray(Array.from({length: OP_DATABASE.length}, (_, i) => i));
+
+            await set(ref(db, `blindtest/rooms/${code}`), {
+                host: currentUser.uid,
+                createdAt: getServerTime(),
+                status: 'lobby',
+                type: 'ranked_1v1',
+                players: { [currentUser.uid]: { name: profile.name, team: 1, score: 0, avatar: profile.avatar } },
+                gameState: { currentRound: 0, songIndex: 0, startTime: 0, phase: 'lobby', deck: deck, seekTime: 0 }
             });
+            enterLobby(code);
+        }
 
-            socket.on('waiting_opponent', () => {
-                document.getElementById('lobby-status').innerText = "EN ATTENTE...";
-                document.getElementById('lobby-info').innerText = "Recherche d'un adversaire...";
+        async function joinRoom(code) {
+            currentRoomId = code;
+            isHost = false;
+            const profile = await getUserProfile();
+            await update(ref(db, `blindtest/rooms/${code}/players/${currentUser.uid}`), { 
+                name: profile.name, team: 2, score: 0, avatar: profile.avatar 
             });
+            enterLobby(code);
+        }
 
-            socket.on('match_found', (data) => {
-                document.getElementById('lobby-status').innerText = "ADVERSAIRE TROUVÉ !";
-                document.getElementById('lobby-status').classList.add('text-green-500');
-                document.getElementById('lobby-spinner').classList.add('hidden');
-                document.getElementById('lobby-info').innerText = "Lancement imminent...";
-                
-                const vsDisplay = document.getElementById('vs-display');
-                vsDisplay.classList.remove('hidden');
-                setTimeout(() => vsDisplay.classList.remove('opacity-0', 'translate-y-10'), 100);
+        function enterLobby(code) {
+            document.getElementById('screen-lobby').classList.remove('hidden');
+            // Listener Room
+            onValue(ref(db, `blindtest/rooms/${code}`), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
 
-                document.getElementById('p1-img').src = data.p1.avatar || `https://ui-avatars.com/api/?name=${data.p1.name}`;
-                document.getElementById('p1-name').innerText = data.p1.name;
-                document.getElementById('p2-img').src = data.p2.avatar || `https://ui-avatars.com/api/?name=${data.p2.name}`;
-                document.getElementById('p2-name').innerText = data.p2.name;
+                const players = Object.values(data.players || {});
+                updateLobbyUI(players);
 
-                document.getElementById('game-p1-name').innerText = data.p1.name;
-                document.getElementById('game-p2-name').innerText = data.p2.name;
+                // AUTO START
+                if (data.status === 'lobby' && players.length === 2) {
+                    document.getElementById('lobby-status').innerText = "ADVERSAIRE TROUVÉ !";
+                    document.getElementById('lobby-status').classList.add('text-green-500');
+                    document.getElementById('lobby-spinner').classList.add('hidden');
+                    
+                    if (isHost && !hasTriggeredStart) {
+                        hasTriggeredStart = true;
+                        setTimeout(() => {
+                            const deck = data.gameState.deck;
+                            const firstIndex = deck[0];
+                            const seek = Math.floor(Math.random() * 11) + 40;
+                            // START IN 5 SECONDS (Server Time)
+                            update(ref(db, `blindtest/rooms/${code}`), {
+                                status: 'playing',
+                                gameState: {
+                                    currentRound: 1, songIndex: firstIndex, startTime: getServerTime() + 5000,
+                                    phase: 'guessing', deck: deck, seekTime: seek
+                                }
+                            });
+                        }, 2000);
+                    }
+                } else if (data.status === 'playing') {
+                    document.getElementById('screen-lobby').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    handleGameSync(data.gameState, data.players);
+                }
             });
+        }
 
-            socket.on('round_start', (data) => {
-                document.getElementById('screen-lobby').classList.add('hidden');
-                document.getElementById('screen-game').classList.remove('hidden');
-                document.getElementById('autoplay-overlay').classList.add('hidden'); 
+        function updateLobbyUI(players) {
+            const vs = document.getElementById('vs-display');
+            vs.classList.remove('hidden');
+            setTimeout(()=>vs.classList.remove('opacity-0', 'translate-y-10'), 100);
 
-                resetUI();
-                document.getElementById('current-round').innerText = data.round;
-                currentSongData = OP_DATABASE[data.songIndex];
+            const p1 = players.find(p => p.team === 1);
+            const p2 = players.find(p => p.team === 2);
+            
+            if(p1) {
+                document.getElementById('p1-img').src = p1.avatar;
+                document.getElementById('p1-name').innerText = p1.name;
+            }
+            if(p2) {
+                document.getElementById('p2-img').src = p2.avatar;
+                document.getElementById('p2-name').innerText = p2.name;
+            }
+        }
 
-                // RESET LECTEUR (Fix du "Failed to load")
-                videoEl.pause();
-                // Ne PAS utiliser removeAttribute('src') qui cause NotSupportedError
-                // Charger directement la nouvelle source
-                videoEl.src = currentSongData.url;
-                
-                videoEl.onloadedmetadata = () => {
-                     videoEl.currentTime = data.seekTime;
-                     videoEl.volume = userVolume;
-                     const p = videoEl.play();
-                     if(p) p.catch(e => {
-                         console.log("Autoplay blocked");
-                         document.getElementById('autoplay-overlay').classList.remove('hidden');
-                     });
-                };
-                // Si loadedmetadata ne se lance pas (cache?), on force le play
-                setTimeout(() => {
-                    if(videoEl.paused) videoEl.play().catch(()=>{});
-                }, 1000);
+        // --- GAME ENGINE (SYNC TIME) ---
+        let lastPhase = '', lastStartTime = 0;
 
-                diskEl.classList.remove('disk-paused');
+        function handleGameSync(gameState, players) {
+            // HUD
+            const p1 = Object.values(players).find(p => p.team === 1);
+            const p2 = Object.values(players).find(p => p.team === 2);
+            if(p1) { document.getElementById('score-p1').innerText = p1.score; document.getElementById('game-p1-name').innerText = p1.name; }
+            if(p2) { document.getElementById('score-p2').innerText = p2.score; document.getElementById('game-p2-name').innerText = p2.name; }
+
+            // Anti-Loop
+            if (gameState.phase === lastPhase && gameState.startTime === lastStartTime) return;
+            lastPhase = gameState.phase; lastStartTime = gameState.startTime;
+
+            // Clear previous
+            if (timerInterval) clearInterval(timerInterval);
+
+            currentSongData = OP_DATABASE[gameState.songIndex];
+            document.getElementById('current-round').innerText = gameState.currentRound;
+
+            if (gameState.phase === 'guessing') {
+                // INIT ROUND
+                animeFound = false; songFound = false; opFound = false;
+                document.getElementById('status-anime').classList.add('hidden');
+                document.getElementById('status-song').classList.add('hidden');
+                document.getElementById('status-op').classList.add('hidden');
+                document.getElementById('result-display').classList.add('hidden');
+                document.getElementById('video-wrapper').classList.add('hidden');
+                document.getElementById('vinyl-wrapper').classList.remove('hidden');
+                document.getElementById('input-guess').value = "";
+                document.getElementById('input-guess').disabled = false;
                 document.getElementById('input-guess').focus();
-                startVisualTimer(data.duration);
-            });
+                document.getElementById('autoplay-overlay').classList.add('hidden');
+                
+                document.getElementById('loader-overlay').classList.remove('hidden');
+                diskEl.classList.add('disk-paused');
 
-            socket.on('round_reveal', () => {
+                // LOAD VIDEO SAFE
+                videoEl.pause();
+                videoEl.removeAttribute('src'); 
+                videoEl.load();
+                
+                videoEl.src = currentSongData.url;
+                videoEl.currentTime = gameState.seekTime || 0;
+                videoEl.volume = userVolume;
+
+                // SYNC LOOP
+                timerInterval = setInterval(() => {
+                    const now = getServerTime();
+                    const timeLeft = gameState.startTime - now;
+
+                    if (timeLeft > 0) {
+                        // Waiting Start
+                        document.getElementById('loader-msg').innerText = `DÉPART DANS ${(timeLeft/1000).toFixed(1)}s`;
+                    } else {
+                        // Running
+                        document.getElementById('loader-overlay').classList.add('hidden');
+                        diskEl.classList.remove('disk-paused');
+                        
+                        if (videoEl.paused) {
+                            const p = videoEl.play();
+                            if(p !== undefined) p.catch(e => {
+                                console.log("Block");
+                                document.getElementById('autoplay-overlay').classList.remove('hidden');
+                            });
+                        }
+
+                        const elapsed = now - gameState.startTime;
+                        const duration = RANKED_SETTINGS.duration * 1000;
+                        const pct = Math.max(0, 100 - (elapsed/duration*100));
+                        barEl.style.width = pct + "%";
+
+                        // Host Trigger Next
+                        if (isHost && elapsed >= duration) {
+                            clearInterval(timerInterval);
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'reveal', startTime: getServerTime() });
+                        }
+                    }
+                }, 100);
+
+            } else if (gameState.phase === 'reveal') {
+                // REVEAL
+                document.getElementById('loader-overlay').classList.add('hidden');
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
-                document.getElementById('autoplay-overlay').classList.add('hidden');
-                
                 document.getElementById('res-anime').innerText = currentSongData.anime;
                 document.getElementById('res-song').innerText = currentSongData.song;
                 document.getElementById('res-op-num').innerText = "OP " + (currentSongData.num || "?");
                 
                 document.getElementById('input-guess').disabled = true;
                 diskEl.classList.add('disk-paused');
-                clearInterval(timerInterval);
-            });
 
-            socket.on('score_update', (scores) => {
-                document.getElementById('score-p1').innerText = scores.p1;
-                document.getElementById('score-p2').innerText = scores.p2;
-            });
-
-            socket.on('opponent_left', () => {
-                alert("L'adversaire a quitté la partie !");
-                location.reload();
-            });
-            
-            socket.on('game_over', (finalScores) => {
+                if (isHost) {
+                    setTimeout(() => {
+                        if (gameState.currentRound >= RANKED_SETTINGS.rounds) {
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), { phase: 'finished' });
+                        } else {
+                            const nextIndex = gameState.deck[gameState.currentRound];
+                            const nextSeek = Math.floor(Math.random() * 11) + 40;
+                            update(ref(db, `blindtest/rooms/${currentRoomId}/gameState`), {
+                                currentRound: gameState.currentRound + 1,
+                                songIndex: nextIndex,
+                                startTime: getServerTime() + 5000,
+                                phase: 'guessing',
+                                seekTime: nextSeek
+                            });
+                        }
+                    }, 8000);
+                }
+            } else if (gameState.phase === 'finished') {
                 document.getElementById('screen-game').classList.add('blur-md');
                 document.getElementById('screen-end').classList.remove('hidden');
-                document.getElementById('end-score-p1').innerText = finalScores.p1Score;
-                document.getElementById('end-score-p2').innerText = finalScores.p2Score;
-                
-                if(auth.currentUser) {
-                    update(ref(db, `users/${auth.currentUser.uid}/stats/ranked`), { lastPlayed: new Date().toISOString() });
-                }
-            });
-        };
-
-        function startVisualTimer(durationSeconds) {
-            clearInterval(timerInterval);
-            barEl.style.width = "100%";
-            const startTime = Date.now();
-            
-            timerInterval = setInterval(() => {
-                const elapsed = (Date.now() - startTime) / 1000;
-                const percent = Math.max(0, 100 - (elapsed / durationSeconds * 100));
-                barEl.style.width = percent + "%";
-                if (elapsed >= durationSeconds) clearInterval(timerInterval);
-            }, 100);
+                document.getElementById('end-score-p1').innerText = p1.score;
+                document.getElementById('end-score-p2').innerText = p2.score;
+            }
         }
 
-        function resetUI() {
-            animeFound = false; songFound = false; opFound = false;
-            document.getElementById('status-anime').classList.add('hidden');
-            document.getElementById('status-song').classList.add('hidden');
-            document.getElementById('status-op').classList.add('hidden');
-            document.getElementById('result-display').classList.add('hidden');
-            document.getElementById('video-wrapper').classList.add('hidden');
-            document.getElementById('vinyl-wrapper').classList.remove('hidden');
-            document.getElementById('input-guess').value = "";
-            document.getElementById('input-guess').disabled = false;
-            barEl.style.width = "100%";
+        // --- HELPERS ---
+        async function getUserProfile() {
+            try {
+                const snap = await get(child(ref(db), `users/${currentUser.uid}`));
+                if (snap.exists()) return { name: snap.val().username || currentUser.displayName, avatar: snap.val().avatar || currentUser.photoURL };
+            } catch(e){}
+            return { name: currentUser.displayName, avatar: currentUser.photoURL };
+        }
+
+        function shuffleArray(array) {
+            let i = array.length, r;
+            while (i != 0) { r = Math.floor(Math.random() * i); i--; [array[i], array[r]] = [array[r], array[i]]; }
+            return array;
         }
 
         function levenshtein(a, b) {
@@ -505,7 +576,9 @@
             }
             
             if(pointsEarned > 0) {
-                socket.emit('submit_score', pointsEarned);
+                get(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}/score`)).then((snap) => {
+                    update(ref(db, `blindtest/rooms/${currentRoomId}/players/${currentUser.uid}`), { score: (snap.val()||0) + pointsEarned });
+                });
                 const popup = document.createElement('div');
                 popup.className = 'points-popup text-4xl text-yellow-400 font-bold fixed z-50 animate-bounce';
                 popup.style.left='50%'; popup.style.top='40%'; popup.style.transform='translate(-50%, -50%)';
