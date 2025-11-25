@@ -131,12 +131,15 @@
 
     <!-- ECRAN 2 : JEU -->
     <div id="screen-game" class="hidden relative flex-grow flex flex-col bg-[#0f0f0f]">
-        <!-- HUD -->
+        <!-- HUD SCORE -->
         <div class="bg-black border-b-4 border-yellow-500 p-3 flex justify-between items-center px-4 md:px-12 relative z-30 shadow-2xl">
             <div class="flex items-center gap-4 w-1/3">
-                <div class="text-right flex-1 hidden md:block"><div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 1</div></div>
+                <div class="text-right flex-1 hidden md:block">
+                    <div id="game-p1-name" class="font-bold text-blue-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 1</div>
+                </div>
                 <div class="bg-blue-600 text-white font-manga text-4xl px-5 py-1 rounded-lg border-2 border-white shadow-[0_0_15px_#2563eb] min-w-[80px] text-center transform -skew-x-12" id="score-p1">0</div>
             </div>
+
             <div class="flex flex-col items-center w-1/3">
                  <div class="bg-yellow-500 text-black font-black px-6 py-1 rounded-full text-sm mb-2 border-2 border-white font-manga shadow-lg transform -skew-x-12 uppercase tracking-widest">
                     ROUND <span id="current-round" class="text-lg">1</span> / 15
@@ -145,14 +148,18 @@
                     <div id="game-timer-bar" class="timer-fill"></div>
                 </div>
             </div>
+
             <div class="flex items-center gap-4 w-1/3 justify-end">
                 <div class="bg-red-600 text-white font-manga text-4xl px-5 py-1 rounded-lg border-2 border-white shadow-[0_0_15px_#dc2626] min-w-[80px] text-center transform -skew-x-12" id="score-p2">0</div>
-                <div class="text-left flex-1 hidden md:block"><div id="game-p2-name" class="font-bold text-red-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 2</div></div>
+                <div class="text-left flex-1 hidden md:block">
+                    <div id="game-p2-name" class="font-bold text-red-400 uppercase truncate font-manga text-xl tracking-wider">JOUEUR 2</div>
+                </div>
             </div>
         </div>
 
         <!-- ZONE DE JEU -->
         <div class="flex-grow flex flex-col items-center justify-center relative overflow-hidden p-4">
+            
             <!-- VIDEO -->
             <div id="video-wrapper" class="absolute inset-0 z-10 flex items-center justify-center bg-black/95 hidden">
                 <div class="w-full h-full max-w-5xl max-h-[75vh] bg-black border-4 border-yellow-500 rounded-xl shadow-[0_0_100px_rgba(251,191,36,0.1)] overflow-hidden relative group">
@@ -161,6 +168,15 @@
                 </div>
             </div>
             
+            <!-- AUTOPLAY BLOCK OVERLAY (Sécurité) -->
+            <div id="autoplay-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer" onclick="forcePlay()">
+                <div class="bg-red-600 text-white p-8 rounded-full border-4 border-white shadow-[0_0_50px_red] animate-pulse transform hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-play text-6xl ml-2"></i>
+                </div>
+                <p class="text-white font-manga text-4xl mt-8 tracking-widest text-shadow-lg">CLIQUEZ POUR JOUER !</p>
+                <p class="text-gray-400 text-sm mt-2 font-mono uppercase tracking-widest">Activation du son requise</p>
+            </div>
+
             <!-- VINYLE (GUESSING) -->
             <div id="vinyl-wrapper" class="relative z-20 flex flex-col items-center transition-transform duration-300 hover:scale-105">
                 <div class="relative w-80 h-80 md:w-96 md:h-96 mb-10 group">
@@ -217,10 +233,11 @@
                 </div>
             </div>
 
-            <!-- CHAMP REPONSE -->
             <div class="max-w-4xl mx-auto flex gap-4">
                 <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="input-manga flex-1 h-20 px-8 text-3xl uppercase rounded-2xl border-4 border-gray-600 focus:border-yellow-500 transition-colors placeholder-gray-600" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="btn-pop w-48 rounded-2xl text-3xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400 shadow-xl font-bold">ENVOYER</button>
+                <button onclick="submitGuess()" class="btn-pop w-48 rounded-2xl text-3xl bg-yellow-600 text-black border-yellow-400 hover:bg-yellow-400 shadow-xl font-bold">
+                    ENVOYER
+                </button>
             </div>
         </div>
     </div>
@@ -233,16 +250,26 @@
         
         <div class="manga-panel p-16 rounded-3xl text-center shadow-2xl max-w-3xl w-full bg-[#1a1a1a]">
             <p class="text-gray-400 font-mono uppercase tracking-[0.5em] mb-8 text-xl">SCORE FINAL</p>
+            
             <div class="flex justify-center items-center gap-16 mb-12">
-                <div class="text-center"><div class="text-blue-500 font-manga text-8xl drop-shadow-md" id="end-score-p1">0</div><div class="text-blue-300 font-bold tracking-wider mt-2">JOUEUR 1</div></div>
+                <div class="text-center">
+                    <div class="text-blue-500 font-manga text-8xl drop-shadow-md" id="end-score-p1">0</div>
+                    <div class="text-blue-300 font-bold tracking-wider mt-2">JOUEUR 1</div>
+                </div>
                 <div class="text-white font-manga text-6xl opacity-50">-</div>
-                <div class="text-center"><div class="text-red-500 font-manga text-8xl drop-shadow-md" id="end-score-p2">0</div><div class="text-red-300 font-bold tracking-wider mt-2">JOUEUR 2</div></div>
+                <div class="text-center">
+                    <div class="text-red-500 font-manga text-8xl drop-shadow-md" id="end-score-p2">0</div>
+                    <div class="text-red-300 font-bold tracking-wider mt-2">JOUEUR 2</div>
+                </div>
             </div>
-            <button onclick="location.reload()" class="btn-pop px-16 py-6 text-3xl rounded-xl bg-white text-black hover:bg-gray-200 transform hover:scale-105 transition-all shadow-2xl">RETOUR AU LOBBY</button>
+            
+            <button onclick="location.reload()" class="btn-pop px-16 py-6 text-3xl rounded-xl bg-white text-black hover:bg-gray-200 transform hover:scale-105 transition-all shadow-2xl">
+                RETOUR AU LOBBY
+            </button>
         </div>
     </div>
 
-    <!-- LOGIQUE -->
+    <!-- SCRIPT LOGIQUE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -278,6 +305,12 @@
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
         const barEl = document.getElementById('game-timer-bar');
+        
+        // Fonction de secours
+        window.forcePlay = () => {
+            videoEl.play();
+            document.getElementById('autoplay-overlay').classList.add('hidden');
+        };
 
         // Volume
         const savedVol = localStorage.getItem('userVolume');
@@ -306,7 +339,7 @@
             } catch(e) {}
         }
 
-        // --- FONCTION START MATCHMAKING (Bouton) ---
+        // --- FONCTION START MATCHMAKING ---
         window.startMatchmaking = () => {
             if(!userProfile) return;
 
@@ -319,25 +352,24 @@
 
             socket.on('connect', () => {
                 console.log("Socket connecté !");
-                document.getElementById('server-dot').classList.replace('bg-red-500', 'bg-green-500');
-                document.getElementById('status-text').innerText = "RECHERCHE...";
+                document.getElementById('socket-dot').classList.replace('bg-red-500', 'bg-green-500');
+                document.getElementById('lobby-status').innerText = "RECHERCHE...";
                 
-                // C'EST ICI QUE L'IDENTIFICATION SE FAIT (après le clic)
                 socket.emit('identify', userProfile);
             });
 
             // --- SOCKET EVENTS ---
 
             socket.on('waiting_opponent', () => {
-                document.getElementById('status-text').innerText = "EN ATTENTE...";
-                document.getElementById('status-subtext').innerText = "Recherche d'un adversaire...";
+                document.getElementById('lobby-status').innerText = "EN ATTENTE...";
+                document.getElementById('lobby-info').innerText = "Recherche d'un adversaire...";
             });
 
             socket.on('match_found', (data) => {
-                document.getElementById('status-text').innerText = "ADVERSAIRE TROUVÉ !";
-                document.getElementById('status-text').classList.add('text-green-500');
+                document.getElementById('lobby-status').innerText = "ADVERSAIRE TROUVÉ !";
+                document.getElementById('lobby-status').classList.add('text-green-500');
                 document.getElementById('lobby-spinner').classList.add('hidden');
-                document.getElementById('status-subtext').innerText = "Lancement imminent...";
+                document.getElementById('lobby-info').innerText = "Lancement imminent...";
                 
                 // Afficher VS
                 const vsDisplay = document.getElementById('vs-display');
@@ -359,6 +391,7 @@
                 // START GAME
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('autoplay-overlay').classList.add('hidden'); 
 
                 resetUI();
                 document.getElementById('current-round').innerText = data.round;
@@ -370,10 +403,10 @@
                 videoEl.currentTime = data.seekTime;
                 videoEl.volume = userVolume;
                 
-                // Tenter de jouer (Devrait marcher car on a cliqué sur "TROUVER UN ADVERSAIRE")
+                // Tenter de jouer
                 videoEl.play().catch(e => {
-                    console.log("Autoplay still blocked?", e);
-                    // Si vraiment bloqué, on peut réafficher un petit bouton discret ou juste laisser le disque
+                    console.log("Autoplay blocked - showing overlay", e);
+                    document.getElementById('autoplay-overlay').classList.remove('hidden');
                 });
 
                 diskEl.classList.remove('disk-paused');
@@ -386,6 +419,7 @@
                 document.getElementById('video-wrapper').classList.remove('hidden');
                 document.getElementById('vinyl-wrapper').classList.add('hidden');
                 document.getElementById('result-display').classList.remove('hidden');
+                document.getElementById('autoplay-overlay').classList.add('hidden');
                 
                 document.getElementById('res-anime').innerText = currentSongData.anime;
                 document.getElementById('res-song').innerText = currentSongData.song;
@@ -424,6 +458,7 @@
             clearInterval(timerInterval);
             barEl.style.width = "100%";
             const startTime = Date.now();
+            
             timerInterval = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000;
                 const percent = Math.max(0, 100 - (elapsed / durationSeconds * 100));
@@ -470,12 +505,15 @@
             if (!guess) return;
 
             let pointsEarned = 0;
+            // CHECK ANIME
             if (!animeFound) {
                 let match = isCloseMatch(guess, currentSongData.anime);
                 if (!match && currentSongData.alt) for(let a of currentSongData.alt) if(isCloseMatch(guess, a)) match=true;
                 if (match) { animeFound=true; pointsEarned+=1; document.getElementById('status-anime').classList.remove('hidden'); }
             }
+            // CHECK SONG
             if (!songFound && isCloseMatch(guess, currentSongData.song)) { songFound=true; pointsEarned+=1; document.getElementById('status-song').classList.remove('hidden'); }
+            // CHECK OP
             if (!opFound && currentSongData.num) {
                 const nums = guess.match(/\d+/g);
                 if (nums && nums.includes(currentSongData.num.toString())) { opFound=true; pointsEarned+=0.5; document.getElementById('status-op').classList.remove('hidden'); }
