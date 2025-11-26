@@ -27,8 +27,7 @@
                         'spin-slow': 'spin 4s linear infinite',
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                         'glitch': 'glitch 1s linear infinite',
-                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
                         shake: {
@@ -42,13 +41,9 @@
                             '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
                             '62%': { transform: 'translate(0,0) skew(5deg)' }
                         },
-                        popIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.5) rotate(-5deg)' },
-                            '100%': { opacity: '1', transform: 'scale(1) rotate(0deg)' }
-                        },
                         slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
                         }
                     }
                 }
@@ -84,7 +79,6 @@
         }
         
         .neon-text { text-shadow: 0 0 10px rgba(255, 46, 46, 0.7); }
-        .neon-border { box-shadow: 0 0 15px rgba(255, 46, 46, 0.3), inset 0 0 15px rgba(255, 46, 46, 0.1); }
 
         /* --- GAME ELEMENTS --- */
         .disk-spin { animation: spin 3s linear infinite; }
@@ -109,26 +103,18 @@
         .input-cyber.valid { border-color: #00f3ff; box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
         .input-cyber.error { border-color: #eab308; animation: shake 0.5s; }
 
-        /* Card Style for Result */
-        .cyber-card {
-            background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            position: relative;
-            overflow: hidden;
+        /* --- ETIQUETTE REVEAL (NOUVEAU DESIGN) --- */
+        .etiquette-container {
+            background: rgba(10, 10, 10, 0.9);
+            border-left: 4px solid #ff2e2e;
+            border-right: 4px solid #ff2e2e;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            clip-path: polygon(5% 0, 100% 0, 100% 100%, 0 100%, 0 20%);
+            backdrop-filter: blur(8px);
         }
-        .cyber-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, #ff2e2e, #eab308);
-        }
-        .cyber-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0; right: 0; width: 20px; height: 20px;
-            background: linear-gradient(-45deg, #ff2e2e 50%, transparent 50%);
+        .etiquette-header {
+            background: linear-gradient(90deg, transparent, rgba(255, 46, 46, 0.2), transparent);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
     </style>
@@ -191,40 +177,45 @@
     <!-- MAIN ARENA AREA -->
     <div class="relative flex-grow flex flex-col items-center justify-center">
         
-        <!-- VIDEO PLAYER & REVEAL OVERLAY -->
+        <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
-            <div class="w-full max-w-5xl aspect-video bg-black border-4 border-[#222] shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
-                
-                <!-- La vidéo joue ici -->
+            <div class="w-full max-w-5xl aspect-video bg-black border-4 border-gold-500 shadow-[0_0_100px_rgba(234,179,8,0.3)] overflow-hidden relative rounded-lg">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 
-                <!-- ETIQUETTE DE RESULTAT (Apparaît par dessus la vidéo) -->
-                <div id="result-overlay" class="absolute inset-0 flex flex-col items-center justify-end pb-12 text-center hidden z-20 bg-gradient-to-t from-black via-black/50 to-transparent">
+                <!-- ETIQUETTE DE RESULTAT (Overlay Transparent) -->
+                <div id="result-overlay" class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end pb-8 z-20 hidden">
                     
-                    <!-- Carte Stylisée -->
-                    <div class="cyber-card p-8 max-w-3xl w-full mx-4 transform transition-transform animate-pop-in">
-                        <!-- Header de la carte -->
-                        <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
-                            <div class="text-gold-500 font-mono text-xs tracking-[0.3em] uppercase flex items-center gap-2">
-                                <i class="fa-solid fa-database"></i> DÉCRYPTAGE TERMINÉ
+                    <!-- L'Etiquette elle-même -->
+                    <div class="etiquette-container max-w-3xl w-full mx-4 animate-slide-up">
+                        
+                        <!-- Header technique -->
+                        <div class="etiquette-header p-2 flex justify-between items-center">
+                            <div class="flex gap-2">
+                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                             </div>
-                            <div class="flex gap-1">
-                                <div class="w-2 h-2 bg-empire-red rounded-full animate-pulse"></div>
-                                <div class="w-2 h-2 bg-gold-500 rounded-full animate-pulse delay-75"></div>
-                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-150"></div>
+                            <div class="text-[10px] text-gray-400 font-mono uppercase tracking-widest">
+                                <i class="fa-solid fa-database mr-1"></i> DONNÉES RÉCUPÉRÉES
                             </div>
                         </div>
 
                         <!-- Contenu Principal -->
-                        <h2 id="res-anime" class="font-display text-5xl md:text-6xl text-white font-black mb-2 text-shadow-glow tracking-tighter leading-none animate-slide-up">ANIME NAME</h2>
-                        
-                        <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-6 animate-slide-up" style="animation-delay: 0.1s;">
-                            <div id="res-type" class="px-6 py-2 bg-empire-red text-white font-black font-manga text-2xl skew-x-[-10deg] shadow-lg border-l-4 border-white">OPENING 1</div>
+                        <div class="p-6 text-center relative overflow-hidden">
+                            <!-- Background pattern discret -->
+                            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')]"></div>
                             
-                            <div class="flex-1 h-0.5 bg-gray-700 w-full md:w-auto"></div>
+                            <h2 id="res-anime" class="relative font-display text-4xl md:text-6xl text-white font-black mb-2 text-shadow-glow tracking-tighter z-10">ANIME NAME</h2>
                             
-                            <p id="res-song" class="font-mono text-gray-300 text-xl tracking-widest uppercase bg-black/50 px-4 py-1 border border-gray-700 rounded">SONG TITLE</p>
+                            <div class="relative flex flex-col md:flex-row items-center justify-center gap-4 mt-4 z-10">
+                                <div id="res-type" class="bg-empire-red text-white px-4 py-1 font-black font-manga text-xl transform -skew-x-12 shadow-lg border border-white/20">OPENING 1</div>
+                                <div class="hidden md:block w-px h-8 bg-gray-600"></div>
+                                <p id="res-song" class="font-mono text-gold-400 text-lg tracking-[0.2em] uppercase">SONG TITLE</p>
+                            </div>
                         </div>
+
+                        <!-- Footer technique -->
+                        <div class="h-1 w-full bg-gradient-to-r from-transparent via-empire-red to-transparent"></div>
                     </div>
 
                 </div>
