@@ -139,10 +139,9 @@
         <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
             <div class="w-full h-full bg-black relative">
-                <!-- CORRECTION CORS: Suppression de crossorigin="anonymous" -->
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
-                <video id="preload-video" class="hidden" preload="auto"></video>
                 
+                <!-- ETIQUETTE DE RESULTAT (Overlay) -->
                 <div id="result-overlay" class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end pb-12 z-20 hidden bg-gradient-to-t from-black/80 via-transparent to-transparent h-1/2">
                     <div class="etiquette-container w-full mx-4 animate-slide-up rounded-lg overflow-hidden">
                         <div class="etiquette-header px-4 py-2 flex justify-between items-center">
@@ -304,7 +303,6 @@
         let localSongIndex = -1;
 
         const videoEl = document.getElementById('game-video');
-        const preloadVideoEl = document.getElementById('preload-video'); // PRELOAD ELEMENT
         const diskEl = document.getElementById('disk');
         const inputGuess = document.getElementById('input-guess');
         const statusText = document.getElementById('status-text');
@@ -635,16 +633,6 @@
                     if (gameState.deck && gameState.deck.length > 0) {
                         const songIdx = gameState.deck[gameState.round - 1];
                         setupRound(songIdx);
-                        
-                        // PRELOAD NEXT SONG (Optimization)
-                        if (gameState.round < 10) {
-                            const nextIdx = gameState.deck[gameState.round];
-                            const nextSong = OP_DATABASE[nextIdx];
-                            if(nextSong && preloadVideoEl) {
-                                preloadVideoEl.src = nextSong.url;
-                                preloadVideoEl.load();
-                            }
-                        }
                     }
                 } else if (gameState.phase === 'playing') {
                     startPlayback(gameState.startTime);
@@ -677,7 +665,17 @@
                 videoEl.oncanplaythrough = null;
                 videoEl.onerror = null;
             };
+            
             videoEl.oncanplaythrough = markAsLoaded;
+            
+            // FALLBACK TIMEOUT DE 8S POUR DEBLOQUER LA SITUATION SI UN JOUEUR LAG
+            setTimeout(() => {
+                if(!isLoaded) {
+                    console.warn("Video Timeout - Force Loading");
+                    markAsLoaded();
+                }
+            }, 8000);
+
             videoEl.onerror = () => {
                 console.warn("Video Error (404?):", videoEl.error);
                 isVideoBroken = true;
