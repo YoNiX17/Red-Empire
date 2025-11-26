@@ -15,7 +15,7 @@
                 extend: {
                     colors: {
                         gold: { 400: '#facc15', 500: '#eab308', 600: '#ca8a04' },
-                        empire: { red: '#ff2e2e', dark: '#050505', panel: '#0a0a0a' },
+                        empire: { red: '#ff2e2e', dark: '#0a0a0a' },
                         neon: { blue: '#00f3ff', purple: '#bc13fe' }
                     },
                     fontFamily: {
@@ -27,8 +27,7 @@
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
-                        'glitch': 'glitch 1s linear infinite',
-                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
                     },
                     keyframes: {
                         shake: {
@@ -36,11 +35,6 @@
                             '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
                             '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
                             '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        },
-                        glitch: {
-                            '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
-                            '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
-                            '62%': { transform: 'translate(0,0) skew(5deg)' }
                         },
                         slideUp: {
                             '0%': { transform: 'translateY(100%)', opacity: '0' },
@@ -62,27 +56,19 @@
         }
         @keyframes scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
 
-        .glass-hud { 
-            background: rgba(10, 10, 10, 0.9); 
-            backdrop-filter: blur(10px); 
-            border-bottom: 1px solid rgba(255, 46, 46, 0.3);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        }
+        .glass-hud { background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 46, 46, 0.3); }
         
-        .neon-text { text-shadow: 0 0 10px rgba(255, 46, 46, 0.7); }
-        .disk-spin { animation: spin 3s linear infinite; }
-        .disk-paused { animation-play-state: paused !important; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
+        /* --- CUSTOM INPUT --- */
         .input-cyber {
-            background: rgba(0,0,0,0.8); border: 2px solid #333;
-            transition: all 0.3s ease; color: white;
-            text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 2px;
+            background: rgba(20, 20, 20, 0.9); border: 2px solid #333; color: white;
+            font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease;
         }
-        .input-cyber:focus { border-color: #ff2e2e; box-shadow: 0 0 20px rgba(255, 46, 46, 0.4); outline: none; }
-        .input-cyber.valid { border-color: #00f3ff; box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
+        .input-cyber:focus { border-color: #ff2e2e; box-shadow: 0 0 15px rgba(255, 46, 46, 0.3); outline: none; }
+        .input-cyber.valid { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
         .input-cyber.error { border-color: #eab308; animation: shake 0.5s; }
 
+        /* --- REVEAL ETIQUETTE --- */
         .etiquette-container {
             background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(255, 255, 255, 0.1);
             border-bottom: 3px solid #ff2e2e; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
@@ -92,12 +78,17 @@
             background: linear-gradient(90deg, rgba(255, 46, 46, 0.1), transparent);
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
+
+        .disk-spin { animation: spin 3s linear infinite; }
+        .disk-paused { animation-play-state: paused !important; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
 
     <div class="scanline"></div>
 
+    <!-- TOP BAR (HUD) -->
     <nav class="h-20 glass-hud flex items-center justify-between px-6 z-50 relative">
         <button onclick="leaveMatch()" class="group flex items-center gap-3 text-gray-400 hover:text-red-500 transition-colors">
             <div class="w-8 h-8 rounded bg-black border border-gray-700 flex items-center justify-center group-hover:border-red-500">
@@ -106,14 +97,15 @@
             <span class="text-xs font-bold tracking-widest hidden md:inline">ABANDONNER</span>
         </button>
 
+        <!-- SCOREBOARD -->
         <div class="flex items-center gap-8 flex-1 justify-center">
             <div class="flex items-center gap-3 text-right relative">
                 <div class="hidden md:block">
-                    <div id="p1-name" class="font-display font-bold text-white text-xl leading-none neon-text">MOI</div>
-                    <div class="text-[10px] text-empire-red tracking-[0.2em] font-bold">RANKED</div>
+                    <div id="p1-name" class="font-display font-bold text-white text-xl leading-none">MOI</div>
+                    <div class="text-[10px] text-empire-red tracking-widest font-bold">RANKED</div>
                 </div>
                 <div class="relative">
-                    <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-empire-red object-cover bg-black shadow-[0_0_10px_rgba(255,46,46,0.5)]">
+                    <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-empire-red object-cover bg-gray-800 shadow-[0_0_10px_rgba(255,46,46,0.5)]">
                     <div class="absolute -bottom-2 -right-2 bg-black border border-empire-red text-white font-manga text-lg w-8 h-8 flex items-center justify-center rounded-full" id="p1-score">0</div>
                 </div>
             </div>
@@ -126,7 +118,7 @@
             <div class="flex items-center gap-3 flex-row-reverse text-left relative">
                 <div class="hidden md:block">
                     <div id="p2-name" class="font-display font-bold text-gray-400 text-xl leading-none">ADVERSAIRE</div>
-                    <div id="p2-status" class="text-[10px] text-gray-600 tracking-[0.2em] font-bold animate-pulse">ATTENTE...</div>
+                    <div id="p2-status" class="text-[10px] text-gray-600 tracking-widest animate-pulse">ATTENTE...</div>
                 </div>
                 <div class="relative">
                     <img id="p2-avatar" src="https://ui-avatars.com/api/?name=?" class="w-12 h-12 rounded border-2 border-gray-700 object-cover grayscale transition-all duration-500">
@@ -141,12 +133,15 @@
         </div>
     </nav>
 
+    <!-- MAIN ARENA AREA -->
     <div class="relative flex-grow flex flex-col items-center justify-center">
         
+        <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
             <div class="w-full h-full bg-black relative">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 
+                <!-- ETIQUETTE DE RESULTAT (Overlay) -->
                 <div id="result-overlay" class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end pb-12 z-20 hidden bg-gradient-to-t from-black/80 via-transparent to-transparent h-1/2">
                     <div class="etiquette-container w-full mx-4 animate-slide-up rounded-lg overflow-hidden">
                         <div class="etiquette-header px-4 py-2 flex justify-between items-center">
@@ -170,6 +165,7 @@
             </div>
         </div>
 
+        <!-- VINYL MODE -->
         <div id="vinyl-container" class="absolute inset-0 flex flex-col items-center justify-center z-0 transition-opacity duration-500">
             <div class="relative w-[350px] h-[350px]">
                 <div class="absolute inset-0 bg-empire-red rounded-full blur-[80px] opacity-20 animate-pulse"></div>
@@ -187,7 +183,7 @@
             
             <div class="w-full max-w-xl mt-12 px-8">
                 <div class="flex justify-between text-xs font-mono text-empire-red mb-2 uppercase tracking-[0.2em] font-bold">
-                    <span id="status-text" class="animate-pulse">INITIALISATION...</span>
+                    <span id="status-text" class="animate-pulse">EN ATTENTE...</span>
                     <span id="time-text">00.00</span>
                 </div>
                 <div class="h-2 bg-black rounded-sm overflow-hidden border border-gray-800 relative shadow-[0_0_10px_rgba(0,0,0,0.5)]">
@@ -196,6 +192,7 @@
             </div>
         </div>
 
+        <!-- INPUT ZONE -->
         <div class="absolute bottom-0 w-full bg-gradient-to-t from-black to-transparent p-6 pb-8 z-20">
             <div class="max-w-3xl mx-auto">
                 <div id="feedback-zone" class="flex justify-center gap-3 mb-3 min-h-[24px]">
@@ -211,10 +208,11 @@
         </div>
     </div>
 
-    <div id="lobby-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4">
+    <!-- LOBBY -->
+    <div id="lobby-overlay" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
         <div id="lobby-step-search" class="text-center max-w-md w-full">
             <h1 class="font-display text-6xl font-black text-white mb-2 tracking-tighter">RANKED <span class="text-empire-red">ARENA</span></h1>
-            <p class="text-gray-500 font-mono mb-12 tracking-widest text-sm">SYSTÈME DE DUEL SYNCHRONISÉ v2.0</p>
+            <p class="text-gray-500 font-mono mb-12 tracking-widest text-sm">SYSTÈME DE DUEL SYNCHRONISÉ</p>
             <div class="relative group cursor-pointer" onclick="startMatchmaking()">
                 <div class="absolute -inset-0.5 bg-gradient-to-r from-empire-red to-purple-600 rounded-lg blur opacity-50 group-hover:opacity-100 transition duration-200 animate-pulse"></div>
                 <button class="relative w-full py-6 bg-black border border-gray-800 rounded-lg text-2xl font-display font-bold text-white group-hover:text-white transition-colors uppercase tracking-widest flex items-center justify-center gap-4">
@@ -235,22 +233,21 @@
             </div>
             <h2 class="font-display text-3xl text-white mb-2">RECHERCHE D'ADVERSAIRE</h2>
             <p class="font-mono text-gray-500 text-sm tracking-[0.2em] mb-8">ANALYSE DU MMR EN COURS</p>
-            <button onclick="cancelQueue()" class="text-red-500 font-bold hover:text-white text-xs uppercase tracking-widest border-b border-red-900 pb-1 hover:border-white transition-colors">ANNULER LA RECHERCHE</button>
+            <button onclick="cancelQueue()" class="text-red-500 font-bold hover:text-white text-xs uppercase tracking-widest border-b border-red-900 pb-1 hover:border-white transition-colors">ANNULER</button>
         </div>
 
         <div id="lobby-step-found" class="hidden w-full h-full flex items-center justify-center relative bg-black overflow-hidden">
             <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(255,46,46,0.15),black)] animate-pulse"></div>
             <div class="scanline"></div>
             <div class="flex flex-col md:flex-row items-center gap-16 z-10 scale-125">
-                <div class="text-center transform translate-x-[-50px] opacity-0 animate-slide-in-left">
+                <div class="text-center transform translate-x-[-50px] opacity-0 animate-[slideInLeft_0.5s_forwards_0.2s]">
                     <img id="found-p1-img" src="" class="w-40 h-40 rounded-full border-4 border-empire-red shadow-[0_0_50px_#ff2e2e] object-cover">
                     <div class="font-display font-bold text-white mt-6 text-2xl tracking-widest">VOUS</div>
                 </div>
                 <div class="relative">
                     <div class="font-manga text-9xl text-white italic z-20 relative vs-text drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">VS</div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[50px] bg-empire-red blur-[50px] opacity-50"></div>
                 </div>
-                <div class="text-center transform translate-x-[50px] opacity-0 animate-slide-in-right">
+                <div class="text-center transform translate-x-[50px] opacity-0 animate-[slideInRight_0.5s_forwards_0.2s]">
                     <img id="found-p2-img" src="" class="w-40 h-40 rounded-full border-4 border-gray-500 shadow-[0_0_50px_#6b7280] object-cover grayscale" onload="this.classList.remove('grayscale')">
                     <div id="found-p2-name" class="font-display font-bold text-gray-300 mt-6 text-2xl tracking-widest">ADVERSAIRE</div>
                 </div>
@@ -258,11 +255,7 @@
         </div>
     </div>
 
-    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[200] hidden bg-red-600 text-white px-6 py-3 rounded shadow-lg font-bold animate-bounce">
-        <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="error-msg">Erreur</span>
-    </div>
-
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -292,23 +285,23 @@
         let isHost = false;
         let currentRound = 0;
         let currentSong = null;
+        let roundScore = 0;
         let hasJoinedQueue = false;
-        let currentSeekTime = 0;
-        let heartbeatInterval = null;
         let queueUnsubscribe = null;
         
         let animeFound = false;
         let opFound = false;
         let opAttempts = 0;
-        let isVideoBroken = false; 
         let localPhase = null;
         let localSongIndex = -1;
+        let currentSeekTime = 0;
 
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
         const inputGuess = document.getElementById('input-guess');
         const statusText = document.getElementById('status-text');
 
+        // --- HELPER FUNCTIONS ---
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
             if(b.length == 0) return a.length; 
@@ -347,6 +340,7 @@
             return false;
         }
 
+        // --- GAMEPLAY LOGIC ---
         window.submitGuess = () => {
             if (!currentSong || !matchId) return;
             const val = inputGuess.value.trim();
@@ -421,13 +415,14 @@
             inputGuess.disabled = false;
             inputGuess.placeholder = "NOM DE L'ANIME...";
             inputGuess.classList.remove('valid', 'error');
-            statusText.innerText = "ÉCOUTEZ !";
-            statusText.className = "animate-pulse text-empire-red";
+            statusText.innerText = "EN ATTENTE...";
+            statusText.className = "text-xs font-mono text-gray-500 mb-1 uppercase tracking-widest";
             document.getElementById('video-container').classList.add('opacity-0');
             document.getElementById('vinyl-container').classList.remove('opacity-0');
             diskEl.classList.remove('disk-paused');
         }
 
+        // --- MATCHMAKING ---
         window.startMatchmaking = async () => {
             if (!currentUser) return alert("Veuillez vous connecter !");
             const silence = document.getElementById('silence');
@@ -456,10 +451,12 @@
             queueUnsubscribe = onValue(queueRef, async (snap) => {
                 const players = snap.val();
                 if (!players) return;
+                
                 const now = Date.now();
                 const validUids = [];
                 const updates = {};
                 let needsCleanup = false;
+
                 Object.keys(players).forEach(key => {
                     const p = players[key];
                     if (!p || typeof p !== 'object' || !p.uid || (p.joinedAt && now - p.joinedAt > 120000)) {
@@ -469,47 +466,56 @@
                         validUids.push(key);
                     }
                 });
+
                 if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid && Object.keys(updates).length > 0) {
                     try { update(ref(db), updates); } catch(e) { console.log(e); }
                 }
+
                 validUids.sort((a, b) => (players[a]?.joinedAt || 0) - (players[b]?.joinedAt || 0));
+                
                 if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
                     const p1 = validUids[0]; 
                     const p2 = validUids[1]; 
+
                     if (currentUser.uid === p1) {
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
                         const p1Data = players[p1] || safeProfile;
                         const p2Data = players[p2] || { name: "Adversaire", avatar: "" };
+
                         const matchData = {
                             host: p1, 
                             players: {
-                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() },
-                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
                             },
                             gameState: { 
                                 phase: 'setup', 
                                 round: 1, 
                                 songIndex: 0, 
                                 startTime: 0,
-                                seekTime: Math.floor(Math.random() * 16) + 35,
+                                seekTime: Math.floor(Math.random() * 16) + 35, // 35-50s offset
                                 deck: generateDeck() 
                             },
                             created: serverTimestamp()
                         };
+
                         const globalUpdates = {};
                         globalUpdates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
                         globalUpdates[`blindtest/ranked/queue/${p1}`] = null;
-                        globalUpdates[`blindtest/ranked/queue/${p2}/matchId`] = newMatchId; 
+                        globalUpdates[`blindtest/ranked/queue/${p2}`] = null;
                         globalUpdates[`users/${p1}/currentMatch`] = newMatchId;
+                        globalUpdates[`users/${p2}/currentMatch`] = newMatchId;
+
                         try { await update(ref(db), globalUpdates); } catch (e) { console.error(e); remove(myEntry); location.reload(); }
                     }
                 }
+                
                 if (players[currentUser.uid] && players[currentUser.uid].matchId) {
                     const foundMatchId = players[currentUser.uid].matchId;
                     const p2Updates = {};
                     p2Updates[`blindtest/ranked/queue/${currentUser.uid}`] = null;
                     p2Updates[`users/${currentUser.uid}/currentMatch`] = foundMatchId;
-                    try { await update(ref(db), p2Updates); } catch(e) { console.error("P2 Update Error", e); }
+                    try { await update(ref(db), p2Updates); } catch(e) {}
                 }
             });
 
@@ -601,14 +607,10 @@
         function initGameSync(mId) {
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
-            if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(() => {
-                set(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
-            }, 5000);
+
             onValue(matchRef, (snap) => {
                 const data = snap.val();
                 if (!data) {
-                    clearInterval(heartbeatInterval);
                     alert("La partie est terminée !");
                     set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                     window.location.href = 'blindtest_ranked.html';
@@ -629,7 +631,10 @@
             if (gameState.phase !== localPhase || gameState.songIndex !== localSongIndex) {
                 localPhase = gameState.phase;
                 localSongIndex = gameState.songIndex;
+                
+                // SYNC: Get offset from server
                 if (gameState.seekTime) currentSeekTime = gameState.seekTime;
+                
                 if (gameState.phase === 'setup' || gameState.phase === 'loading') {
                     if (gameState.deck && gameState.deck.length > 0) {
                         const songIdx = gameState.deck[gameState.round - 1];
@@ -646,51 +651,42 @@
         function setupRound(songIdx) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
-            isVideoBroken = false; 
+            
             if (!currentSong) {
                 console.error("Song not found");
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 return;
             }
             statusText.innerText = "CHARGEMENT DU FLUX...";
+            statusText.classList.add('animate-pulse');
+            statusText.classList.remove('text-gray-500');
+            statusText.classList.add('text-empire-red');
+
             videoEl.oncanplaythrough = null;
             videoEl.onerror = null;
             videoEl.src = currentSong.url;
-            videoEl.currentTime = currentSeekTime || 0;
+            videoEl.currentTime = currentSeekTime || 0; // Use Host offset
             videoEl.volume = 0.5;
+            
             let isLoaded = false;
             const markAsLoaded = () => {
                 if(isLoaded) return;
                 isLoaded = true;
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 videoEl.oncanplaythrough = null;
-                videoEl.onerror = null;
             };
+            
             videoEl.oncanplaythrough = markAsLoaded;
-            videoEl.onerror = () => {
-                console.warn("Video Error (404?):", videoEl.error);
-                isVideoBroken = true;
-                statusText.innerText = "SIGNAL PERDU (404)";
-                const toast = document.getElementById('error-toast');
-                const msg = document.getElementById('error-msg');
-                if(toast && msg) {
-                    msg.innerText = "Vidéo indisponible - Round sans son";
-                    toast.classList.remove('hidden');
-                    setTimeout(() => toast.classList.add('hidden'), 2000);
-                }
-                markAsLoaded();
-            };
+            
+            // Fallback error (404) -> force load to not block game
+            videoEl.onerror = () => { console.warn("Video Error"); markAsLoaded(); };
+            
             if (videoEl.readyState >= 3) markAsLoaded();
             else videoEl.load();
-            
-            // Re-added Safety Timeout as requested (8s)
-            setTimeout(() => { 
-                if(!isLoaded) {
-                    console.warn("Timeout loading video - forcing start");
-                    markAsLoaded(); 
-                }
-            }, 8000);
 
+            // STRICT SYNC: NO TIMEOUT FALLBACK FOR LOADING
+            // The game WILL WAIT for both players to buffer.
+            
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
@@ -709,28 +705,29 @@
         }
 
         function startPlayback(targetStartTime) {
+            statusText.innerText = "ÉCOUTEZ !";
+            statusText.classList.remove('animate-pulse');
+            
             document.getElementById('video-container').classList.add('opacity-0');
             document.getElementById('vinyl-container').classList.remove('opacity-0');
             diskEl.classList.remove('disk-paused');
             inputGuess.disabled = false;
             inputGuess.focus();
+
             const now = Date.now();
             const delay = targetStartTime - now;
             const baseSeek = currentSeekTime || 0;
-            
-            // Cap delay at 3s max to avoid long waits
-            const adjustedDelay = Math.max(0, Math.min(delay, 3000));
-            
+
             if (delay > 0) {
                 setTimeout(() => { 
-                    if(!isVideoBroken) videoEl.play().catch(console.error); 
-                    startTimerBar(targetStartTime, 15000); 
-                }, adjustedDelay);
+                    videoEl.play().catch(console.error); 
+                    startTimerBar(targetStartTime, 20000); 
+                }, delay);
             } else {
                 const catchUp = Math.abs(delay) / 1000;
                 videoEl.currentTime = baseSeek + catchUp;
-                if(!isVideoBroken) videoEl.play().catch(console.error);
-                startTimerBar(targetStartTime, 15000);
+                videoEl.play().catch(console.error);
+                startTimerBar(targetStartTime, 20000);
             }
             if (isHost) {
                 setTimeout(() => {
@@ -738,7 +735,7 @@
                         phase: 'reveal',
                         startTime: Date.now()
                     });
-                }, 15000 + adjustedDelay);
+                }, 20000 + (delay > 0 ? delay : 0));
             }
         }
 
@@ -790,7 +787,7 @@
                         updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
                         await update(ref(db), updates);
                     }
-                }, 3000); // Reduced to 3s reveal
+                }, 4000);
             }
         }
 
