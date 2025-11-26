@@ -378,11 +378,13 @@
         let hasJoinedQueue = false;
         let currentSeekTime = 0;
         let heartbeatInterval = null;
+        let queueUnsubscribe = null; // NEW: Store queue subscription
         
         // Etats du Gameplay Local
         let animeFound = false;
         let opFound = false;
         let opAttempts = 0;
+        let isVideoBroken = false; // NEW: track broken video
 
         // --- DOM ---
         const videoEl = document.getElementById('game-video');
@@ -552,7 +554,8 @@
             onDisconnect(myEntry).remove();
 
             const queueRef = ref(db, 'blindtest/ranked/queue');
-            const unsubQueue = onValue(queueRef, async (snap) => {
+            // NEW: Assign to global variable
+            queueUnsubscribe = onValue(queueRef, async (snap) => {
                 const players = snap.val();
                 if (!players) return;
                 
@@ -571,8 +574,9 @@
                     }
                 });
 
+                // SAFETY CHECK: Ensure updates is not empty before calling update
                 if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid && Object.keys(updates).length > 0) {
-                    update(ref(db), updates).catch(e => console.log(e));
+                    try { update(ref(db), updates); } catch(e) { console.log(e); }
                 }
 
                 validUids.sort((a, b) => (players[a]?.joinedAt || 0) - (players[b]?.joinedAt || 0));
@@ -627,7 +631,7 @@
                 const mId = snap.val();
                 if (mId) {
                     matchId = mId;
-                    unsubQueue();
+                    // Unsub manually here not strictly needed as startMatchSequence will force kill it
                     offQueueSelf();
                     startMatchSequence(mId);
                 }
@@ -642,38 +646,22 @@
         }
 
         window.cancelQueue = () => {
+            if (queueUnsubscribe) queueUnsubscribe(); // Kill listener
             offQueueSelf();
             document.getElementById('lobby-step-queue').classList.add('hidden');
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
 
-        // --- QUITTE LE MATCH ET LE SUPPRIME ---
         window.leaveMatch = async () => {
-            if(!matchId || !currentUser) return window.location.href = 'blindtest_ranked.html';
-            
-            // 1. Remove self from players
-            const playerRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`);
-            await remove(playerRef);
-            
-            // 2. Remove currentMatch ref
-            await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
-            
-            // 3. Check if empty to delete match
-            const matchRef = ref(db, `blindtest/ranked/matches/${matchId}`);
-            const snap = await get(child(matchRef, 'players'));
-            if (!snap.exists() || snap.size === 0) {
-                await remove(matchRef);
+            if(matchId && currentUser) {
+                await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
+                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
             }
-            
             window.location.href = 'blindtest_ranked.html';
         };
 
-        // --- GESTION DE L'ABANDON (PAGE FERMÉE) ---
         window.addEventListener('beforeunload', () => {
-            if(matchId && currentUser) {
-                // Pas d'action ici pour permettre le reload, 
-                // le nettoyage se fera au chargement de la page si inactif trop longtemps.
-            }
+            // No active disconnect logic to allow reloads
         });
 
         function generateDeck() {
@@ -686,6 +674,12 @@
         }
 
         async function startMatchSequence(mId) {
+            // NEW: KILL QUEUE LISTENER
+            if (queueUnsubscribe) {
+                queueUnsubscribe();
+                queueUnsubscribe = null;
+            }
+
             document.getElementById('lobby-step-queue').classList.add('hidden');
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-found').classList.remove('hidden');
@@ -739,7 +733,6 @@
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
-            // --- HEARTBEAT SYSTEM (SEULEMENT POUR LE LOAD, PAS DE KICK) ---
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             heartbeatInterval = setInterval(() => {
                 update(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
@@ -748,7 +741,6 @@
             onValue(matchRef, (snap) => {
                 const data = snap.val();
                 
-                // DETECTION SUPPRESSION MATCH (Abandon adversaire ou fin)
                 if (!data) {
                     clearInterval(heartbeatInterval);
                     alert("La partie est terminée !");
@@ -796,17 +788,16 @@
         function setupRound(songIdx) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
+            isVideoBroken = false; // Reset flag
             
             if (!currentSong) {
-                console.error("Song not found for index", songIdx);
-                // Skip round if song not found to avoid freeze
+                console.error("Song not found");
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 return;
             }
 
             statusText.innerText = "CHARGEMENT DU FLUX...";
             
-            // Reset previous listeners to avoid stacking
             videoEl.oncanplaythrough = null;
             videoEl.onerror = null;
 
@@ -825,18 +816,20 @@
 
             videoEl.oncanplaythrough = markAsLoaded;
             
-            // ERROR HANDLING (404 Fix)
+            // NEW: 404 ERROR HANDLING
             videoEl.onerror = () => {
                 console.warn("Video Error (404?):", videoEl.error);
-                // Show toast
+                isVideoBroken = true;
+                statusText.innerText = "SIGNAL PERDU (404)";
                 const toast = document.getElementById('error-toast');
                 const msg = document.getElementById('error-msg');
                 if(toast && msg) {
-                    msg.innerText = "Erreur Vidéo - Round passé";
+                    msg.innerText = "Vidéo indisponible - Round sans son";
                     toast.classList.remove('hidden');
                     setTimeout(() => toast.classList.add('hidden'), 2000);
                 }
-                markAsLoaded(); // Force load to continue game flow
+                // Force proceed
+                markAsLoaded();
             };
 
             if (videoEl.readyState >= 3) markAsLoaded();
@@ -881,13 +874,13 @@
 
             if (delay > 0) {
                 setTimeout(() => { 
-                    videoEl.play().catch(console.error); 
+                    if(!isVideoBroken) videoEl.play().catch(console.error); 
                     startTimerBar(targetStartTime, 20000); 
                 }, delay);
             } else {
                 const catchUp = Math.abs(delay) / 1000;
                 videoEl.currentTime = baseSeek + catchUp;
-                videoEl.play().catch(console.error);
+                if(!isVideoBroken) videoEl.play().catch(console.error);
                 startTimerBar(targetStartTime, 20000);
             }
 
@@ -932,12 +925,11 @@
             if (isHost) {
                 setTimeout(async () => {
                     const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
-                    if (!currentState.exists()) return; // Match deleted
+                    if (!currentState.exists()) return; 
                     const state = currentState.val();
                     
                     if (state.round >= 10) {
                         alert("PARTIE TERMINÉE !");
-                        // FIN PROPRE: Supprimer match et rediriger
                         remove(ref(db, `blindtest/ranked/matches/${matchId}`));
                         set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                         window.location.href = 'blindtest_ranked.html';
@@ -977,10 +969,8 @@
                         if (matchSnap.exists()) {
                             const data = matchSnap.val();
                             const now = Date.now();
-                            const TIMEOUT = 45000; // 45s de tolérance (refresh/crash)
+                            const TIMEOUT = 45000; 
 
-                            // On vérifie si le match est "VIVANT"
-                            // Il est vivant si au moins UN joueur a donné signe de vie récemment
                             const pIds = Object.keys(data.players || {});
                             const activePlayers = pIds.filter(pid => {
                                 const lastSeen = data.players[pid].lastSeen || 0;
@@ -989,7 +979,6 @@
 
                             const isNew = (now - (data.created || 0)) < TIMEOUT;
                             
-                            // Si match récent OU joueurs actifs => OK
                             if (activePlayers.length > 0 || isNew) {
                                 isValid = true;
                             }
@@ -1001,7 +990,6 @@
                             startMatchSequence(mId);
                         } else {
                             console.log("Match mort détecté au chargement. Nettoyage.");
-                            // Si le match existe mais est mort (tous partis), on le supprime pour éviter que d'autres ne se bloquent
                             if (matchSnap.exists()) remove(matchRef);
                             set(currentMatchRef, null);
                         }
