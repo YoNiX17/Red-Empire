@@ -33,24 +33,16 @@
         body { background-color: #050505; color: #eee; overflow: hidden; }
         .manga-panel { border: 2px solid #333; background: #111; position: relative; }
         .glass-hud { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* Synchro Loader */
         .loader-bar { height: 4px; width: 0%; transition: width 0.2s linear; }
-        
-        /* VS Animation */
         @keyframes clash {
             0% { transform: scale(3) rotate(-10deg); opacity: 0; }
             50% { transform: scale(1) rotate(0deg); opacity: 1; }
             100% { transform: scale(1.1) rotate(5deg); opacity: 1; }
         }
         .vs-text { animation: clash 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-        /* Vinyl */
         .disk-spin { animation: spin 2s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* Custom Scrollbar */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #facc15; margin-top: -6px; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; }
@@ -60,13 +52,12 @@
 
     <!-- TOP BAR (HUD) -->
     <nav class="h-20 bg-black border-b border-gold-600/30 flex items-center justify-between px-6 z-50 relative shadow-[0_0_20px_rgba(234,179,8,0.1)]">
-        <a href="blindtest_ranked.html" class="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+        <button onclick="leaveMatch()" class="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> <span class="hidden md:inline font-bold">ABANDONNER</span>
-        </a>
+        </button>
 
-        <!-- SCOREBOARD CENTRAL 1v1 -->
+        <!-- SCOREBOARD -->
         <div class="flex items-center gap-4 md:gap-8 flex-1 justify-center">
-            
             <!-- Player 1 (ME) -->
             <div class="flex items-center gap-3 text-right">
                 <div class="hidden md:block">
@@ -90,7 +81,7 @@
             </div>
         </div>
 
-        <!-- Timer / Round Info -->
+        <!-- Round Info -->
         <div class="text-right">
             <div class="font-display font-black text-gold-500 text-2xl" id="round-counter">R1</div>
             <div class="text-xs text-gray-400">/ 10</div>
@@ -99,12 +90,10 @@
 
     <!-- MAIN ARENA AREA -->
     <div class="relative flex-grow flex flex-col bg-[#050505]">
-        
-        <!-- VIDEO PLAYER (HIDDEN BUT ACTIVE) -->
+        <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
             <div class="w-full max-w-4xl aspect-video bg-black border-4 border-gold-500 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden relative">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
-                <!-- Overlay Résultat -->
                 <div id="result-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center hidden backdrop-blur-sm">
                     <h2 id="res-anime" class="font-display text-4xl md:text-5xl text-white font-black mb-2 text-shadow-glow">ANIME NAME</h2>
                     <p id="res-song" class="font-mono text-gold-400 text-xl tracking-widest">SONG TITLE</p>
@@ -113,21 +102,17 @@
             </div>
         </div>
 
-        <!-- VINYL MODE (GUESSING PHASE) -->
+        <!-- VINYL MODE -->
         <div id="vinyl-container" class="absolute inset-0 flex flex-col items-center justify-center z-0 transition-opacity duration-500">
             <div class="relative w-72 h-72 md:w-96 md:h-96">
-                <!-- Disque -->
                 <div id="disk" class="w-full h-full rounded-full bg-[#111] border-[8px] border-[#222] shadow-[0_0_30px_#000] flex items-center justify-center disk-spin disk-paused relative">
                     <div class="absolute inset-0 rounded-full border-[30px] border-[#1a1a1a] opacity-50"></div>
                     <div class="w-32 h-32 rounded-full bg-gradient-to-br from-gold-600 to-yellow-800 border-4 border-black flex items-center justify-center shadow-inner z-10">
                         <i class="fa-solid fa-music text-4xl text-black opacity-50"></i>
                     </div>
                 </div>
-                <!-- Bras de lecture -->
                 <div class="absolute -top-10 -right-10 w-40 h-8 bg-gray-400 rotate-[30deg] origin-top-right border-2 border-black rounded-full shadow-xl z-20 pointer-events-none"></div>
             </div>
-            
-            <!-- Barre de chargement / Timer -->
             <div class="w-full max-w-xl mt-12 px-6">
                 <div class="flex justify-between text-xs font-mono text-gray-500 mb-1 uppercase tracking-widest">
                     <span id="status-text">EN ATTENTE...</span>
@@ -147,38 +132,31 @@
                     ENVOYER
                 </button>
             </div>
-            <!-- Feedback -->
             <div id="feedback-zone" class="h-8 mt-2 flex justify-center gap-4 text-xs font-bold font-mono tracking-widest uppercase opacity-0 transition-opacity">
                 <span id="fb-anime" class="text-green-500 hidden"><i class="fa-solid fa-check mr-1"></i>ANIME (+1)</span>
                 <span id="fb-song" class="text-gold-500 hidden"><i class="fa-solid fa-check mr-1"></i>TITRE (+1)</span>
                 <span id="fb-op" class="text-blue-500 hidden"><i class="fa-solid fa-check mr-1"></i>TYPE (+0.5)</span>
             </div>
         </div>
-
     </div>
 
     <!-- MATCHMAKING OVERLAY -->
     <div id="lobby-overlay" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
-        
-        <!-- CARD: SEARCH -->
         <div id="lobby-step-search" class="text-center max-w-md w-full">
             <h1 class="font-display text-5xl font-black text-white mb-2">RANKED <span class="text-gold-500">ARENA</span></h1>
             <p class="text-gray-400 font-mono mb-10">Duel 1v1 - Synchronisation Parfaite</p>
-            
             <div class="relative group">
                 <div class="absolute -inset-1 bg-gradient-to-r from-gold-600 to-red-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
                 <button onclick="startMatchmaking()" class="relative w-full py-6 bg-black border border-gray-700 rounded-lg text-2xl font-display font-bold text-white group-hover:text-gold-400 transition-colors uppercase tracking-widest">
                     <i class="fa-solid fa-magnifying-glass mr-3"></i> TROUVER UN ADVERSAIRE
                 </button>
             </div>
-            
             <div class="mt-6 flex justify-center gap-6 text-sm font-mono text-gray-500">
                 <span><i class="fa-solid fa-server text-green-500 mr-2"></i>SERVEUR: EUROPE</span>
                 <span><i class="fa-solid fa-user-group text-blue-500 mr-2"></i>EN LIGNE: <span id="online-count">...</span></span>
             </div>
         </div>
 
-        <!-- CARD: QUEUE (Searching...) -->
         <div id="lobby-step-queue" class="hidden text-center">
             <div class="w-24 h-24 border-4 border-t-gold-500 border-r-transparent border-b-gold-500 border-l-transparent rounded-full animate-spin mx-auto mb-8"></div>
             <h2 class="font-display text-2xl text-white animate-pulse">RECHERCHE EN COURS...</h2>
@@ -186,7 +164,6 @@
             <button onclick="cancelQueue()" class="mt-8 text-red-500 font-bold hover:underline text-xs uppercase">ANNULER</button>
         </div>
 
-        <!-- CARD: FOUND (VS Animation) -->
         <div id="lobby-step-found" class="hidden w-full h-full flex items-center justify-center relative bg-black">
             <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(234,179,8,0.1),black)]"></div>
             <div class="flex flex-col md:flex-row items-center gap-12 z-10 scale-150">
@@ -201,10 +178,8 @@
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- AUDIO CONTEXT UNLOCKER (Silent) -->
     <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
@@ -214,7 +189,6 @@
         import { getDatabase, ref, set, get, onValue, update, remove, runTransaction, onDisconnect, child, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { OP_DATABASE } from "./op_database.js";
 
-        // CONFIG (Même que auth.js)
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
@@ -235,7 +209,7 @@
         let myProfile = { name: "Joueur", avatar: "" };
         let matchId = null;
         let opponentId = null;
-        let isHost = false; // "Host" logique pour les triggers de round, déterminé par l'ordre alphabétique des ID
+        let isHost = false;
         let currentRound = 0;
         let currentSong = null;
         let roundScore = 0;
@@ -247,29 +221,20 @@
         const statusText = document.getElementById('status-text');
         
         // --- MATCHMAKING ---
-        
         window.startMatchmaking = async () => {
             if (!currentUser) return alert("Veuillez vous connecter !");
-            
-            // 1. Débloquer l'audio context (Contournement autoplay)
             const silence = document.getElementById('silence');
             silence.play().catch(() => {});
-            videoEl.play().catch(() => {}); // Tentative de play à vide pour "primer" la vidéo
+            videoEl.play().catch(() => {}); 
             videoEl.pause();
 
-            // 2. UI Queue
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-queue').classList.remove('hidden');
-
-            // 3. Lancer la boucle de gestion de file (Join & Listen)
             checkQueueLoop();
         };
 
-        // Fonction simplifiée de gestion de file
         async function checkQueueLoop() {
             const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
-            
-            // S'ajouter
             await set(myEntry, {
                 uid: currentUser.uid,
                 name: myProfile.name,
@@ -278,39 +243,30 @@
             });
             onDisconnect(myEntry).remove();
 
-            // Ecouter la file
             const queueRef = ref(db, 'blindtest/ranked/queue');
             const unsubQueue = onValue(queueRef, async (snap) => {
                 const players = snap.val();
                 if (!players) return;
                 
-                // Nettoyage préventif des données corrompues (si présentes)
-                // On ne garde que les entrées qui sont des objets valides avec un UID
                 const validUids = Object.keys(players).filter(key => {
                     const p = players[key];
                     return p && typeof p === 'object' && p.name && p.uid;
                 });
 
-                // Tri par ancienneté (Premier arrivé, premier servi)
                 validUids.sort((a, b) => {
                     const tA = players[a].joinedAt || Date.now();
                     const tB = players[b].joinedAt || Date.now();
                     return tA - tB;
                 });
                 
-                // Si je suis dans la file et qu'il y a au moins 2 joueurs valides
                 if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
-                    // LOGIQUE D'APPARIEMENT
-                    // On apparie les deux premiers
-                    const p1 = validUids[0];
-                    const p2 = validUids[1];
+                    const p1 = validUids[0]; // Host
+                    const p2 = validUids[1]; // Guest
 
-                    // Si je suis P1 (le plus ancien/Host), je crée la partie
                     if (currentUser.uid === p1) {
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
-                        
-                        // Création Match
                         const matchData = {
+                            host: p1, // Host ID explicite
                             players: {
                                 [p1]: { name: players[p1].name, avatar: players[p1].avatar, score: 0, status: 'connecting' },
                                 [p2]: { name: players[p2].name, avatar: players[p2].avatar, score: 0, status: 'connecting' }
@@ -320,18 +276,15 @@
                                 round: 1,
                                 songIndex: 0,
                                 startTime: 0,
-                                deck: generateDeck() // Deck généré par P1
+                                deck: generateDeck()
                             },
                             created: serverTimestamp()
                         };
 
-                        // Ecritures atomiques : Créer match + Vider file + Rediriger P2
                         const updates = {};
                         updates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
                         updates[`blindtest/ranked/queue/${p1}`] = null;
                         updates[`blindtest/ranked/queue/${p2}`] = null;
-                        
-                        // Signal pour P2 (via un noeud "invites" ou en écoutant "matches")
                         updates[`users/${p1}/currentMatch`] = newMatchId;
                         updates[`users/${p2}/currentMatch`] = newMatchId;
 
@@ -340,19 +293,14 @@
                 }
             });
 
-            // Ecouter si un match m'est attribué
             const myMatchRef = ref(db, `users/${currentUser.uid}/currentMatch`);
             onValue(myMatchRef, (snap) => {
                 const mId = snap.val();
                 if (mId) {
-                    // MATCH TROUVÉ !
                     matchId = mId;
-                    unsubQueue(); // Stop écoute file
-                    offQueueSelf(); // Retire disconnect handler de la file
-                    
-                    // Nettoyage de l'entrée currentMatch pour éviter boucle future
-                    set(myMatchRef, null); 
-                    
+                    unsubQueue();
+                    offQueueSelf();
+                    set(myMatchRef, null); // Clean trigger
                     startMatchSequence(mId);
                 }
             });
@@ -370,67 +318,79 @@
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
 
-        // --- DECK GENERATOR ---
+        window.leaveMatch = () => {
+            if(matchId) {
+                // Simple leave, maybe concede
+                window.location.href = 'blindtest_ranked.html';
+            } else {
+                window.location.href = 'blindtest_ranked.html';
+            }
+        };
+
         function generateDeck() {
             const indices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
-            // Fisher-Yates Shuffle
             for (let i = indices.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [indices[i], indices[j]] = [indices[j], indices[i]];
             }
-            return indices.slice(0, 10); // 10 rounds
+            return indices.slice(0, 10);
         }
 
         // --- INITIALISATION MATCH ---
         async function startMatchSequence(mId) {
-            // UI VS
+            // On cache le lobby
             document.getElementById('lobby-step-queue').classList.add('hidden');
+            document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-found').classList.remove('hidden');
 
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             const snap = await get(matchRef);
-            const data = snap.val();
+            
+            if(!snap.exists()) {
+                alert("Match introuvable ou annulé.");
+                window.location.href = 'blindtest_ranked.html';
+                return;
+            }
 
-            // Identifier Adversaire
+            const data = snap.val();
             const pIds = Object.keys(data.players);
             const enemyId = pIds.find(id => id !== currentUser.uid);
             opponentId = enemyId;
-            isHost = (currentUser.uid < enemyId); // Convention pour déterminer qui gère le timer
+            
+            // LOGIQUE HOST ROBUSTE : On utilise le champ 'host' de la DB
+            isHost = (data.host === currentUser.uid);
+            console.log("Je suis HOST ?", isHost);
 
-            // Remplir UI
+            // --- UPDATE HUD IMMEDIAT ---
+            // Important pour éviter le "gris"
             document.getElementById('found-p1-img').src = myProfile.avatar || "https://ui-avatars.com/api/?name=Me";
             document.getElementById('found-p2-img').src = data.players[enemyId].avatar || "https://ui-avatars.com/api/?name=Enemy";
             document.getElementById('found-p2-name').innerText = data.players[enemyId].name;
             
-            // --- CORRECTION HUD (Le bug "Gris/Connexion") ---
-            // On met à jour le HUD supérieur directement ici
             document.getElementById('p2-avatar').src = data.players[enemyId].avatar;
-            document.getElementById('p2-avatar').classList.remove('grayscale'); // Couleur !
-            document.getElementById('p2-name').innerText = data.players[enemyId].name; // Nom !
-            document.getElementById('p2-status').innerText = "EN LIGNE"; // Statut !
+            document.getElementById('p2-avatar').classList.remove('grayscale');
+            document.getElementById('p2-name').innerText = data.players[enemyId].name;
+            document.getElementById('p2-status').innerText = "EN LIGNE";
             document.getElementById('p2-status').classList.add('text-green-500');
 
-            
-            // Attendre 3s puis lancer l'interface de jeu
+            // Transition vers le jeu
             setTimeout(() => {
-                document.getElementById('lobby-overlay').classList.add('hidden'); // Disparition lobby
+                document.getElementById('lobby-overlay').classList.add('hidden');
                 initGameSync(mId);
             }, 3000);
         }
 
-
-        // --- ENGINE DE SYNCHRONISATION (LE CŒUR DU SYSTÈME) ---
+        // --- SYNC ENGINE ---
         function initGameSync(mId) {
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
-            
-            // On signale qu'on est "Ready" pour la synchro
+            // Je suis prêt à recevoir les ordres
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
             onValue(matchRef, (snap) => {
                 const data = snap.val();
-                if (!data) return; // Match fini ou annulé
+                if (!data) return;
 
-                // Mise à jour Scores UI
+                // Update Scores
                 const pIds = Object.keys(data.players);
                 pIds.forEach(id => {
                     const score = data.players[id].score;
@@ -444,37 +404,29 @@
 
         let localPhase = null;
         let localSongIndex = -1;
-        let syncInterval = null;
 
         function handleGameState(gameState, players) {
             document.getElementById('round-counter').innerText = `R${gameState.round}`;
             
-            // Détection Changement de Round/Phase
             if (gameState.phase !== localPhase || gameState.songIndex !== localSongIndex) {
                 localPhase = gameState.phase;
                 localSongIndex = gameState.songIndex;
-
-                console.log(`[SYNC] Nouvelle Phase: ${gameState.phase}`);
+                console.log(`[SYNC] Phase: ${gameState.phase}, Round: ${gameState.round}`);
 
                 if (gameState.phase === 'setup' || gameState.phase === 'loading') {
-                    // PHASE 1 : CHARGEMENT VIDÉO
-                    // Note: 'setup' est la phase initiale, 'loading' les rounds suivants
-                    // On traite les deux pareil pour charger la vidéo
                     if (gameState.deck && gameState.deck.length > 0) {
                         const songIdx = gameState.deck[gameState.round - 1];
                         setupRound(songIdx);
                     }
                 } else if (gameState.phase === 'playing') {
-                    // PHASE 2 : LECTURE (Synchro précise)
                     startPlayback(gameState.startTime);
                 } else if (gameState.phase === 'reveal') {
-                    // PHASE 3 : RÉSULTAT
                     showResult();
                 }
             }
         }
 
-        // 1. SETUP ROUND : Charger vidéo, ne pas jouer.
+        // --- PHASE 1 : CHARGEMENT ---
         function setupRound(songIdx) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
@@ -483,68 +435,64 @@
             statusText.innerText = "CHARGEMENT...";
             statusText.classList.add('animate-pulse');
 
-            // Reset Video
             videoEl.src = currentSong.url;
-            videoEl.currentTime = 0; // Ou un point random si voulu
+            videoEl.currentTime = 0;
             videoEl.volume = 0.5;
             
-            // Logique de chargement sécurisée
             let isLoaded = false;
-            
             const markAsLoaded = () => {
                 if(isLoaded) return;
                 isLoaded = true;
-                console.log("[VIDEO] Chargée ! Envoi status...");
+                console.log("[VIDEO] Loaded. Sending status...");
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 videoEl.oncanplaythrough = null;
             };
 
-            // Événement standard
             videoEl.oncanplaythrough = markAsLoaded;
-            
-            // Force load si déjà en cache
-            if (videoEl.readyState >= 3) {
-                markAsLoaded();
-            } else {
-                videoEl.load();
-            }
+            if (videoEl.readyState >= 3) markAsLoaded();
+            else videoEl.load();
 
-            // FALLBACK DE SÉCURITÉ (Fix le bug "Rien ne se lance")
-            // Si après 5 secondes, la vidéo n'a pas déclenché canplaythrough (navigateur strict), on force le 'loaded'.
+            // Fallback de sécurité (5s max)
             setTimeout(() => {
                 if(!isLoaded) {
-                    console.warn("[VIDEO] Timeout chargement - Force start");
+                    console.warn("[VIDEO] Timeout de chargement - Force Start");
                     markAsLoaded();
                 }
             }, 5000);
 
-            // LOGIQUE HOST : Surveiller si tout le monde est chargé
+            // --- LOGIQUE HOST ---
+            // Seul le host surveille tout le monde
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
                     const ps = s.val();
-                    const allLoaded = Object.values(ps).every(p => p.status === 'loaded');
                     
+                    // Debug : Voir qui n'est pas prêt
+                    const notReady = Object.entries(ps).filter(([id, p]) => p.status !== 'loaded');
+                    if(notReady.length > 0) {
+                        console.log("En attente de :", notReady.map(n => n[1].name));
+                    }
+
+                    const allLoaded = notReady.length === 0;
                     if (allLoaded) {
                         clearInterval(checkLoadInterval);
-                        console.log("[HOST] Tout le monde est prêt - Lancement dans 2s");
-                        // Tout le monde a la vidéo -> On lance le top départ (Maintenant + 2s)
+                        console.log("[HOST] Tout le monde prêt. Lancement.");
                         update(ref(db, `blindtest/ranked/matches/${matchId}/gameState`), {
                             phase: 'playing',
-                            startTime: Date.now() + 2000
+                            startTime: Date.now() + 2000 // +2s delay
                         });
                     }
-                }, 500);
+                }, 1000);
             }
         }
 
-        // 2. START PLAYBACK : La "Synchro Parfaite"
+        // --- PHASE 2 : LECTURE ---
         function startPlayback(targetStartTime) {
             statusText.innerText = "ÉCOUTEZ !";
             statusText.classList.remove('animate-pulse');
             
-            document.getElementById('video-container').classList.add('opacity-0'); // Caché
-            document.getElementById('vinyl-container').classList.remove('opacity-0'); // Visible
+            document.getElementById('video-container').classList.add('opacity-0');
+            document.getElementById('vinyl-container').classList.remove('opacity-0');
             diskEl.classList.remove('disk-paused');
             inputGuess.disabled = false;
             inputGuess.focus();
@@ -552,58 +500,48 @@
             const now = Date.now();
             const delay = targetStartTime - now;
             
-            console.log(`[PLAY] Démarrage. Délai: ${delay}ms`);
+            console.log(`[PLAY] Start dans ${delay}ms`);
 
             if (delay > 0) {
-                // On est en avance (cas normal), on attend
                 setTimeout(() => {
-                    videoEl.play().catch(e => console.error("Play error:", e));
-                    startTimerBar(targetStartTime, 20000); // 20s duration
+                    videoEl.play().catch(e => console.error(e));
+                    startTimerBar(targetStartTime, 20000);
                 }, delay);
             } else {
-                // On est en retard (lag), on seek pour rattraper
                 const seekTo = Math.abs(delay) / 1000;
                 videoEl.currentTime = seekTo;
-                videoEl.play().catch(e => console.error("Play error:", e));
+                videoEl.play().catch(e => console.error(e));
                 startTimerBar(targetStartTime, 20000);
             }
 
-            // HOST: Gérer la fin du round (20s)
             if (isHost) {
                 setTimeout(() => {
                     update(ref(db, `blindtest/ranked/matches/${matchId}/gameState`), {
                         phase: 'reveal',
                         startTime: Date.now()
                     });
-                }, 20000 + (delay > 0 ? delay : 0)); 
+                }, 20000 + (delay > 0 ? delay : 0));
             }
         }
 
         function startTimerBar(startTime, durationMs) {
             const bar = document.getElementById('timer-bar');
             bar.style.width = '100%';
-            
-            // Animation JS simple pour éviter les désynchronisations CSS
             const end = startTime + durationMs;
             const updateBar = () => {
                 const now = Date.now();
                 const remaining = end - now;
-                if (remaining <= 0) {
-                    bar.style.width = '0%';
-                    return;
-                }
+                if (remaining <= 0) { bar.style.width = '0%'; return; }
                 const pct = (remaining / durationMs) * 100;
                 bar.style.width = `${pct}%`;
-                
                 const secs = Math.ceil(remaining / 1000);
                 document.getElementById('time-text').innerText = `00.${secs.toString().padStart(2,'0')}`;
-
                 requestAnimationFrame(updateBar);
             };
             requestAnimationFrame(updateBar);
         }
 
-        // 3. REVEAL
+        // --- PHASE 3 : RESULTAT ---
         function showResult() {
             document.getElementById('video-container').classList.remove('opacity-0');
             document.getElementById('vinyl-container').classList.add('opacity-0');
@@ -614,54 +552,45 @@
             document.getElementById('res-anime').innerText = currentSong.anime;
             document.getElementById('res-song').innerText = currentSong.song;
             document.getElementById('res-type').innerText = `OP ${currentSong.num || 1}`;
-
-            // Reset flags
             document.getElementById('feedback-zone').style.opacity = '0';
 
-            // HOST: Passer au round suivant après 5s
             if (isHost) {
                 setTimeout(async () => {
                     const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
                     const state = currentState.val();
                     
                     if (state.round >= 10) {
-                        // FIN DE PARTIE
                         alert("PARTIE TERMINÉE !");
+                        // Clean queue/match here if needed
                         window.location.href = 'blindtest_ranked.html';
                     } else {
-                        // Next Round
-                        update(ref(db, `blindtest/ranked/matches/${matchId}/gameState`), {
-                            phase: 'loading',
-                            round: state.round + 1,
-                            songIndex: state.songIndex + 1, // Logique simplifiée, on suit le deck
-                            startTime: 0
-                        });
-                        // Reset player status
-                        update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loading' });
-                        update(ref(db, `blindtest/ranked/matches/${matchId}/players/${opponentId}`), { status: 'loading' });
+                        // Reset players status to 'loading' before switching phase
+                        const updates = {};
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading';
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/round`] = state.round + 1;
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1;
+                        updates[`blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/status`] = 'loading';
+                        updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
+                        
+                        // On force le reset status via updates groupés si possible, 
+                        // sinon on fait update game state qui trigger setupRound
+                        // Mieux : Host reset tout le monde
+                        await update(ref(db), updates);
                     }
                 }, 8000);
             }
         }
 
-        // --- GAMEPLAY (INPUT) ---
-        // (Copie simplifiée de blindtest.html)
+        // --- GAMEPLAY ---
         window.submitGuess = () => {
             const val = inputGuess.value.trim().toLowerCase();
             if (!val || !currentSong) return;
-            
-            // Logique de validation simple
-            // Pour un vrai ranked, utiliser Levenshtein comme dans blindtest.html
-            // Ici on simule pour l'exemple
             const isAnime = currentSong.anime.toLowerCase().includes(val);
             const isSong = currentSong.song.toLowerCase().includes(val);
 
             if (isAnime || isSong) {
-                // + Points
                 const scoreRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/score`);
                 runTransaction(scoreRef, (score) => (score || 0) + 10);
-                
-                // Feedback
                 document.getElementById('feedback-zone').style.opacity = '1';
                 if (isAnime) document.getElementById('fb-anime').classList.remove('hidden');
                 inputGuess.value = "";
@@ -676,7 +605,7 @@
             document.getElementById('feedback-zone').style.opacity = '0';
         }
 
-        // --- INIT AUTH ---
+        // --- INIT & RECONNEXION AUTO ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -685,11 +614,16 @@
                 document.getElementById('p1-name').innerText = user.displayName;
                 document.getElementById('p1-avatar').src = user.photoURL;
                 
-                // Trigger premier état
-                if (!matchId) {
-                   // Si on recharge la page et qu'on a un match en cours ?
-                   // On pourrait check 'currentMatch' ici.
-                }
+                // AUTO-REJOIN : Vérifier si une partie est active
+                const currentMatchRef = ref(db, `users/${user.uid}/currentMatch`);
+                get(currentMatchRef).then(snap => {
+                    if (snap.exists()) {
+                        const mId = snap.val();
+                        console.log("Match en cours détecté :", mId);
+                        matchId = mId;
+                        startMatchSequence(mId);
+                    }
+                });
             } else {
                 window.location.href = 'blindtest_ranked.html';
             }
