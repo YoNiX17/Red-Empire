@@ -213,6 +213,7 @@
         let currentRound = 0;
         let currentSong = null;
         let roundScore = 0;
+        let hasJoinedQueue = false;
         
         // --- ELEMENTS DOM ---
         const videoEl = document.getElementById('game-video');
@@ -230,17 +231,26 @@
 
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-queue').classList.remove('hidden');
+            
+            // Anti-spam clic
+            if(hasJoinedQueue) return;
+            hasJoinedQueue = true;
+            
             checkQueueLoop();
         };
 
         async function checkQueueLoop() {
             const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
-            await set(myEntry, {
+            
+            // S'assurer d'avoir un profil propre
+            const safeProfile = {
                 uid: currentUser.uid,
-                name: myProfile.name,
-                avatar: myProfile.avatar,
+                name: myProfile.name || "Joueur",
+                avatar: myProfile.avatar || "https://ui-avatars.com/api/?name=P",
                 joinedAt: serverTimestamp()
-            });
+            };
+
+            await set(myEntry, safeProfile);
             onDisconnect(myEntry).remove();
 
             const queueRef = ref(db, 'blindtest/ranked/queue');
@@ -248,28 +258,56 @@
                 const players = snap.val();
                 if (!players) return;
                 
-                const validUids = Object.keys(players).filter(key => {
+                const now = Date.now();
+                const ZOMBIE_TIMEOUT = 120 * 1000; // 2 minutes
+
+                // 1. Filtrage et nettoyage des zombies
+                const validUids = [];
+                const updates = {};
+                let needsCleanup = false;
+
+                Object.keys(players).forEach(key => {
                     const p = players[key];
-                    return p && typeof p === 'object' && p.name && p.uid;
+                    // Si entrée mal formée ou trop vieille (zombie)
+                    if (!p || typeof p !== 'object' || !p.uid || (p.joinedAt && now - p.joinedAt > ZOMBIE_TIMEOUT)) {
+                        // Marquer pour suppression
+                        updates[`blindtest/ranked/queue/${key}`] = null;
+                        needsCleanup = true;
+                    } else {
+                        validUids.push(key);
+                    }
                 });
 
+                // Exécuter le nettoyage si je suis le premier valide (pour éviter conflits)
+                if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid) {
+                    update(ref(db), updates).catch(e => console.log("Cleanup error", e));
+                }
+
+                // 2. Tri par ancienneté
                 validUids.sort((a, b) => {
-                    const tA = players[a].joinedAt || Date.now();
-                    const tB = players[b].joinedAt || Date.now();
+                    const tA = players[a]?.joinedAt || 0;
+                    const tB = players[b]?.joinedAt || 0;
                     return tA - tB;
                 });
                 
+                // 3. Logique de Match
                 if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
-                    const p1 = validUids[0]; // Host
+                    const p1 = validUids[0]; // Host (plus ancien)
                     const p2 = validUids[1]; // Guest
 
+                    // Seul le P1 (Host) crée le match pour éviter doublons
                     if (currentUser.uid === p1) {
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
+                        
+                        // Protection contre les données undefined
+                        const p1Data = players[p1] || safeProfile;
+                        const p2Data = players[p2] || { name: "Adversaire", avatar: "" };
+
                         const matchData = {
-                            host: p1, // Host ID explicite
+                            host: p1, 
                             players: {
-                                [p1]: { name: players[p1].name, avatar: players[p1].avatar, score: 0, status: 'connecting' },
-                                [p2]: { name: players[p2].name, avatar: players[p2].avatar, score: 0, status: 'connecting' }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
                             },
                             gameState: {
                                 phase: 'setup',
@@ -281,18 +319,28 @@
                             created: serverTimestamp()
                         };
 
-                        const updates = {};
-                        updates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
-                        updates[`blindtest/ranked/queue/${p1}`] = null;
-                        updates[`blindtest/ranked/queue/${p2}`] = null;
-                        updates[`users/${p1}/currentMatch`] = newMatchId;
-                        updates[`users/${p2}/currentMatch`] = newMatchId;
+                        const globalUpdates = {};
+                        globalUpdates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
+                        globalUpdates[`blindtest/ranked/queue/${p1}`] = null;
+                        globalUpdates[`blindtest/ranked/queue/${p2}`] = null;
+                        globalUpdates[`users/${p1}/currentMatch`] = newMatchId;
+                        globalUpdates[`users/${p2}/currentMatch`] = newMatchId;
 
-                        await update(ref(db), updates);
+                        try {
+                            await update(ref(db), globalUpdates);
+                        } catch (e) {
+                            console.error("ERREUR CREATION MATCH:", e);
+                            // En cas d'échec critique, se retirer de la file pour débloquer
+                            remove(myEntry);
+                            hasJoinedQueue = false;
+                            alert("Erreur matchmaking. Veuillez réessayer.");
+                            location.reload();
+                        }
                     }
                 }
             });
 
+            // Ecouteur de départ de match
             const myMatchRef = ref(db, `users/${currentUser.uid}/currentMatch`);
             onValue(myMatchRef, (snap) => {
                 const mId = snap.val();
@@ -300,7 +348,7 @@
                     matchId = mId;
                     unsubQueue();
                     offQueueSelf();
-                    set(myMatchRef, null); // Clean trigger
+                    set(myMatchRef, null); 
                     startMatchSequence(mId);
                 }
             });
@@ -310,6 +358,7 @@
              const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
              onDisconnect(myEntry).cancel();
              remove(myEntry);
+             hasJoinedQueue = false;
         }
 
         window.cancelQueue = () => {
@@ -347,8 +396,13 @@
             const snap = await get(matchRef);
             
             if(!snap.exists()) {
-                alert("Match introuvable ou annulé.");
-                window.location.href = 'blindtest_ranked.html';
+                console.log("Match non trouvé, retry...");
+                setTimeout(() => {
+                     if(!snap.exists()) {
+                        alert("Match introuvable ou annulé.");
+                        window.location.href = 'blindtest_ranked.html';
+                     }
+                }, 1000);
                 return;
             }
 
