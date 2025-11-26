@@ -362,7 +362,6 @@
         let currentSong = null;
         let hasJoinedQueue = false;
         let currentSeekTime = 0;
-        let heartbeatInterval = null;
         
         // Etats du Gameplay Local
         let animeFound = false;
@@ -556,7 +555,6 @@
                     }
                 });
 
-                // CORRECTION UPDATE FAILED: Vérifier que 'updates' n'est pas vide
                 if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid && Object.keys(updates).length > 0) {
                     update(ref(db), updates).catch(e => console.log(e));
                 }
@@ -575,8 +573,8 @@
                         const matchData = {
                             host: p1, 
                             players: {
-                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() },
-                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
                             },
                             gameState: { 
                                 phase: 'setup', 
@@ -635,21 +633,24 @@
 
         // --- QUITTE LE MATCH ET LE SUPPRIME ---
         window.leaveMatch = async () => {
-            if(matchId && currentUser) {
-                // Si on quitte volontairement, on supprime le match pour tout le monde
-                await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
-                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+            if(!matchId || !currentUser) return window.location.href = 'blindtest_ranked.html';
+            
+            // 1. Remove self from players
+            const playerRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`);
+            await remove(playerRef);
+            
+            // 2. Remove currentMatch ref
+            await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+            
+            // 3. Check if empty to delete match
+            const matchRef = ref(db, `blindtest/ranked/matches/${matchId}`);
+            const snap = await get(child(matchRef, 'players'));
+            if (!snap.exists() || snap.size === 0) {
+                await remove(matchRef);
             }
+            
             window.location.href = 'blindtest_ranked.html';
         };
-
-        // --- GESTION DE L'ABANDON (PAGE FERMÉE) ---
-        window.addEventListener('beforeunload', () => {
-            if(matchId && currentUser) {
-                // Suppression synchrone pas possible ici, mais on tente le remove via disconnect
-                // Note: La logique onDisconnect gérée dans startMatchSequence est plus robuste
-            }
-        });
 
         function generateDeck() {
             const indices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
@@ -666,12 +667,6 @@
             document.getElementById('lobby-step-found').classList.remove('hidden');
 
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
-            
-            // --- GESTION DE DECONNEXION BRUTALE ---
-            // Si je me déconnecte, je supprime tout le match pour annuler la partie
-            onDisconnect(matchRef).remove(); 
-            onDisconnect(ref(db, `users/${currentUser.uid}/currentMatch`)).remove();
-
             const snap = await get(matchRef);
             
             if(!snap.exists()) {
@@ -720,38 +715,18 @@
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
-            // --- HEARTBEAT SYSTEM ---
-            if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(() => {
-                update(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
-            }, 5000);
-
             onValue(matchRef, (snap) => {
                 const data = snap.val();
                 
-                // DETECTION SUPPRESSION MATCH (Abandon adversaire)
+                // DETECTION SUPPRESSION MATCH (Abandon adversaire ou match fini)
                 if (!data) {
-                    clearInterval(heartbeatInterval);
-                    alert("L'adversaire a quitté la partie !");
+                    alert("La partie est terminée ou l'adversaire a quitté !");
                     set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                     window.location.href = 'blindtest_ranked.html';
                     return;
                 }
 
-                // DETECTION JOUEUR INACTIF (TIMEOUT 20s)
                 const pIds = Object.keys(data.players);
-                const enemyId = pIds.find(id => id !== currentUser.uid);
-                if (data.players[enemyId]) {
-                    const lastSeen = data.players[enemyId].lastSeen || 0;
-                    // Si l'adversaire n'a pas donné signe de vie depuis 20s et que je suis l'hôte
-                    if (Date.now() - lastSeen > 20000 && isHost) {
-                        console.warn("Adversaire inactif détecté ! Suppression...");
-                        // Try catch pour éviter crash si déjà supprimé
-                        try { remove(matchRef); } catch(e) {}
-                        return;
-                    }
-                }
-
                 pIds.forEach(id => {
                     const score = data.players[id].score;
                     if (id === currentUser.uid) document.getElementById('p1-score').innerText = score;
