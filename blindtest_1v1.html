@@ -328,7 +328,7 @@
         </div>
     </div>
 
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
@@ -556,7 +556,8 @@
                     }
                 });
 
-                if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid) {
+                // CORRECTION UPDATE FAILED: Vérifier que 'updates' n'est pas vide
+                if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid && Object.keys(updates).length > 0) {
                     update(ref(db), updates).catch(e => console.log(e));
                 }
 
@@ -737,15 +738,16 @@
                     return;
                 }
 
-                // DETECTION JOUEUR INACTIF (TIMEOUT 15s)
+                // DETECTION JOUEUR INACTIF (TIMEOUT 20s)
                 const pIds = Object.keys(data.players);
                 const enemyId = pIds.find(id => id !== currentUser.uid);
                 if (data.players[enemyId]) {
                     const lastSeen = data.players[enemyId].lastSeen || 0;
-                    // Si l'adversaire n'a pas donné signe de vie depuis 15s et que je suis l'hôte
-                    if (Date.now() - lastSeen > 15000 && isHost) {
+                    // Si l'adversaire n'a pas donné signe de vie depuis 20s et que je suis l'hôte
+                    if (Date.now() - lastSeen > 20000 && isHost) {
                         console.warn("Adversaire inactif détecté ! Suppression...");
-                        remove(matchRef); // Cela déclenchera l'alerte "L'adversaire a quitté" pour moi aussi via le if(!data)
+                        // Try catch pour éviter crash si déjà supprimé
+                        try { remove(matchRef); } catch(e) {}
                         return;
                     }
                 }
