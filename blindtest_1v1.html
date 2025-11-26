@@ -182,7 +182,7 @@
         <div id="lobby-step-queue" class="hidden text-center">
             <div class="w-24 h-24 border-4 border-t-gold-500 border-r-transparent border-b-gold-500 border-l-transparent rounded-full animate-spin mx-auto mb-8"></div>
             <h2 class="font-display text-2xl text-white animate-pulse">RECHERCHE EN COURS...</h2>
-            <p class="font-mono text-gold-500 mt-2 text-sm tracking-widest">ELO MATCHING</p>
+            <p class="font-mono text-gold-500 mt-2 text-sm tracking-widest">JOUEURS EN FILE: <span id="queue-count-display" class="text-white font-bold">1</span></p>
             <button onclick="cancelQueue()" class="mt-8 text-red-500 font-bold hover:underline text-xs uppercase">ANNULER</button>
         </div>
 
@@ -265,11 +265,12 @@
             checkQueueLoop();
         };
 
-        // Fonction simplifiée de gestion de file
+        // Fonction principale de gestion de file (avec auto-nettoyage)
         async function checkQueueLoop() {
+            console.log("Recherche d'adversaire pour :", currentUser.uid);
             const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
             
-            // S'ajouter
+            // S'ajouter à la file
             await set(myEntry, {
                 uid: currentUser.uid,
                 name: myProfile.name,
@@ -278,35 +279,49 @@
             });
             onDisconnect(myEntry).remove();
 
-            // Ecouter la file
+            // Écouter les changements dans la file
             const queueRef = ref(db, 'blindtest/ranked/queue');
             const unsubQueue = onValue(queueRef, async (snap) => {
                 const players = snap.val();
-                if (!players) return;
                 
-                // Nettoyage préventif des données corrompues (si présentes)
-                // On ne garde que les entrées qui sont des objets valides avec un UID
+                if (!players) {
+                    document.getElementById('queue-count-display').innerText = "1";
+                    return;
+                }
+                
+                // --- FILTRAGE ET NETTOYAGE ---
                 const validUids = Object.keys(players).filter(key => {
                     const p = players[key];
-                    return p && typeof p === 'object' && p.name && p.uid;
+                    // Si l'entrée est corrompue (pas d'UID ou clé bizarre 'matchFound'), on la supprime
+                    if (!p || typeof p !== 'object' || !p.uid || key === 'matchFound') {
+                        console.warn("Suppression entrée corrompue :", key);
+                        remove(ref(db, `blindtest/ranked/queue/${key}`));
+                        return false;
+                    }
+                    return true;
                 });
 
-                // Tri par ancienneté (Premier arrivé, premier servi)
+                // Mise à jour UI compteur
+                document.getElementById('queue-count-display').innerText = validUids.length;
+                console.log("Joueurs valides en file :", validUids);
+
+                // Tri par ancienneté
                 validUids.sort((a, b) => {
                     const tA = players[a].joinedAt || Date.now();
                     const tB = players[b].joinedAt || Date.now();
                     return tA - tB;
                 });
                 
-                // Si je suis dans la file et qu'il y a au moins 2 joueurs valides
+                // Si on a au moins 2 joueurs valides et que JE suis dans la liste
                 if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
-                    // LOGIQUE D'APPARIEMENT
-                    // On apparie les deux premiers
                     const p1 = validUids[0];
                     const p2 = validUids[1];
 
-                    // Si je suis P1 (le plus ancien/Host), je crée la partie
+                    console.log("Match potentiel :", p1, "vs", p2);
+
+                    // Si je suis P1 (le plus ancien), c'est moi qui crée la partie
                     if (currentUser.uid === p1) {
+                        console.log("Je suis l'Hôte. Création de la partie...");
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
                         
                         // Création Match
@@ -335,17 +350,22 @@
                         updates[`users/${p1}/currentMatch`] = newMatchId;
                         updates[`users/${p2}/currentMatch`] = newMatchId;
 
-                        await update(ref(db), updates);
+                        try {
+                            await update(ref(db), updates);
+                            console.log("Partie créée avec succès !");
+                        } catch (e) {
+                            console.error("Erreur création partie :", e);
+                        }
                     }
                 }
             });
 
-            // Ecouter si un match m'est attribué
+            // Ecouter si un match m'est attribué (Redirection)
             const myMatchRef = ref(db, `users/${currentUser.uid}/currentMatch`);
             onValue(myMatchRef, (snap) => {
                 const mId = snap.val();
                 if (mId) {
-                    // MATCH TROUVÉ !
+                    console.log("MATCH TROUVÉ ! ID:", mId);
                     matchId = mId;
                     unsubQueue(); // Stop écoute file
                     offQueueSelf(); // Retire disconnect handler de la file
