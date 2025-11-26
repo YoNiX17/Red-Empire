@@ -245,6 +245,7 @@
         const diskEl = document.getElementById('disk');
         const inputGuess = document.getElementById('input-guess');
         const statusText = document.getElementById('status-text');
+        let heartbeatInterval = null;
         
         // --- MATCHMAKING ---
         
@@ -270,12 +271,19 @@
             console.log("Recherche d'adversaire pour :", currentUser.uid);
             const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
             
-            // S'ajouter à la file
+            // HEARTBEAT SYSTEM : Je dis que je suis vivant toutes les 2s
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                update(myEntry, { lastSeen: Date.now() });
+            }, 2000);
+
+            // S'ajouter à la file avec les infos initiales
             await set(myEntry, {
                 uid: currentUser.uid,
                 name: myProfile.name,
                 avatar: myProfile.avatar,
-                joinedAt: serverTimestamp()
+                joinedAt: serverTimestamp(),
+                lastSeen: Date.now()
             });
             onDisconnect(myEntry).remove();
 
@@ -289,12 +297,20 @@
                     return;
                 }
                 
+                const now = Date.now();
+
                 // --- FILTRAGE ET NETTOYAGE ---
                 const validUids = Object.keys(players).filter(key => {
                     const p = players[key];
-                    // Si l'entrée est corrompue (pas d'UID ou clé bizarre 'matchFound'), on la supprime
+                    // Si l'entrée est corrompue
                     if (!p || typeof p !== 'object' || !p.uid || key === 'matchFound') {
                         console.warn("Suppression entrée corrompue :", key);
+                        remove(ref(db, `blindtest/ranked/queue/${key}`));
+                        return false;
+                    }
+                    // GHOST BUSTING : Si inactif > 10s, on supprime
+                    if (p.lastSeen && (now - p.lastSeen > 10000)) {
+                        console.warn("Fantôme détecté (Timeout) :", p.name);
                         remove(ref(db, `blindtest/ranked/queue/${key}`));
                         return false;
                     }
@@ -367,6 +383,7 @@
                 if (mId) {
                     console.log("MATCH TROUVÉ ! ID:", mId);
                     matchId = mId;
+                    if(heartbeatInterval) clearInterval(heartbeatInterval); // Stop heartbeat
                     unsubQueue(); // Stop écoute file
                     offQueueSelf(); // Retire disconnect handler de la file
                     
@@ -386,6 +403,7 @@
 
         window.cancelQueue = () => {
             offQueueSelf();
+            if(heartbeatInterval) clearInterval(heartbeatInterval);
             document.getElementById('lobby-step-queue').classList.add('hidden');
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
