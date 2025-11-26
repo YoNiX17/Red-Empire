@@ -655,7 +655,6 @@
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
 
-        // --- QUITTE LE MATCH ET LE SUPPRIME ---
         window.leaveMatch = async () => {
             if(matchId && currentUser) {
                 await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
@@ -911,11 +910,13 @@
         }
 
         function showResult() {
+            // REVEAL MODIFIÉ : On affiche la vidéo mais avec une étiquette par dessus
             document.getElementById('video-container').classList.remove('opacity-0');
             document.getElementById('vinyl-container').classList.add('opacity-0');
             diskEl.classList.add('disk-paused');
             inputGuess.disabled = true;
 
+            // On affiche l'étiquette transparente (pas le vieux fond noir)
             document.getElementById('result-overlay').classList.remove('hidden');
             document.getElementById('res-anime').innerText = currentSong.anime;
             document.getElementById('res-song').innerText = currentSong.song;
