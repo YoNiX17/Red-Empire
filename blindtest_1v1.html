@@ -328,7 +328,12 @@
         </div>
     </div>
 
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <!-- ERROR NOTIFICATION -->
+    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[200] hidden bg-red-600 text-white px-6 py-3 rounded shadow-lg font-bold animate-bounce">
+        <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="error-msg">Erreur</span>
+    </div>
+
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
@@ -362,6 +367,7 @@
         let currentSong = null;
         let hasJoinedQueue = false;
         let currentSeekTime = 0;
+        let heartbeatInterval = null;
         
         // Etats du Gameplay Local
         let animeFound = false;
@@ -573,8 +579,8 @@
                         const matchData = {
                             host: p1, 
                             players: {
-                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
-                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() }
                             },
                             gameState: { 
                                 phase: 'setup', 
@@ -694,16 +700,30 @@
                 matchDisplayEl.innerText = mId.substring(mId.length - 4);
             }
 
-            document.getElementById('found-p1-img').src = myProfile.avatar || "https://ui-avatars.com/api/?name=Me";
-            document.getElementById('found-p2-img').src = data.players[enemyId].avatar || "https://ui-avatars.com/api/?name=Enemy";
-            document.getElementById('found-p2-name').innerText = data.players[enemyId].name;
+            const foundP1Img = document.getElementById('found-p1-img');
+            if(foundP1Img) foundP1Img.src = myProfile.avatar || "https://ui-avatars.com/api/?name=Me";
             
-            document.getElementById('p2-avatar').src = data.players[enemyId].avatar;
-            document.getElementById('p2-avatar').classList.remove('grayscale');
-            document.getElementById('p2-name').innerText = data.players[enemyId].name;
-            document.getElementById('p2-status').innerText = "EN LIGNE";
-            document.getElementById('p2-status').classList.remove('text-gray-600');
-            document.getElementById('p2-status').classList.add('text-green-500');
+            const foundP2Img = document.getElementById('found-p2-img');
+            if(foundP2Img) foundP2Img.src = data.players[enemyId].avatar || "https://ui-avatars.com/api/?name=Enemy";
+            
+            const foundP2Name = document.getElementById('found-p2-name');
+            if(foundP2Name) foundP2Name.innerText = data.players[enemyId].name;
+            
+            const p2Avatar = document.getElementById('p2-avatar');
+            if(p2Avatar) {
+                p2Avatar.src = data.players[enemyId].avatar;
+                p2Avatar.classList.remove('grayscale');
+            }
+
+            const p2Name = document.getElementById('p2-name');
+            if(p2Name) p2Name.innerText = data.players[enemyId].name;
+
+            const p2Status = document.getElementById('p2-status');
+            if(p2Status) {
+                p2Status.innerText = "EN LIGNE";
+                p2Status.classList.remove('text-gray-600');
+                p2Status.classList.add('text-green-500');
+            }
 
             setTimeout(() => {
                 document.getElementById('lobby-overlay').classList.add('hidden');
@@ -715,12 +735,19 @@
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
+            // --- HEARTBEAT SYSTEM ---
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                update(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
+            }, 5000);
+
             onValue(matchRef, (snap) => {
                 const data = snap.val();
                 
-                // DETECTION SUPPRESSION MATCH (Abandon adversaire ou match fini)
+                // DETECTION SUPPRESSION MATCH (Abandon adversaire)
                 if (!data) {
-                    alert("La partie est terminée ou l'adversaire a quitté !");
+                    clearInterval(heartbeatInterval);
+                    alert("L'adversaire a quitté la partie !");
                     set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                     window.location.href = 'blindtest_ranked.html';
                     return;
@@ -765,9 +792,20 @@
         function setupRound(songIdx) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
-            if (!currentSong) return;
+            
+            if (!currentSong) {
+                console.error("Song not found for index", songIdx);
+                // Skip round if song not found to avoid freeze
+                update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
+                return;
+            }
 
             statusText.innerText = "CHARGEMENT DU FLUX...";
+            
+            // Reset previous listeners to avoid stacking
+            videoEl.oncanplaythrough = null;
+            videoEl.onerror = null;
+
             videoEl.src = currentSong.url;
             videoEl.currentTime = currentSeekTime || 0;
             videoEl.volume = 0.5;
@@ -778,18 +816,39 @@
                 isLoaded = true;
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 videoEl.oncanplaythrough = null;
+                videoEl.onerror = null;
             };
 
             videoEl.oncanplaythrough = markAsLoaded;
+            
+            // ERROR HANDLING (404 Fix)
+            videoEl.onerror = () => {
+                console.warn("Video Error (404?):", videoEl.error);
+                // Show toast
+                const toast = document.getElementById('error-toast');
+                const msg = document.getElementById('error-msg');
+                if(toast && msg) {
+                    msg.innerText = "Erreur Vidéo - Round passé";
+                    toast.classList.remove('hidden');
+                    setTimeout(() => toast.classList.add('hidden'), 2000);
+                }
+                markAsLoaded(); // Force load to continue game flow
+            };
+
             if (videoEl.readyState >= 3) markAsLoaded();
             else videoEl.load();
 
-            setTimeout(() => { if(!isLoaded) markAsLoaded(); }, 5000);
+            setTimeout(() => { 
+                if(!isLoaded) {
+                    console.warn("Timeout loading video");
+                    markAsLoaded(); 
+                }
+            }, 5000);
 
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
-                    if (!s.exists()) { clearInterval(checkLoadInterval); return; } // Match deleted
+                    if (!s.exists()) { clearInterval(checkLoadInterval); return; } 
                     
                     const ps = s.val();
                     const allLoaded = Object.values(ps).every(p => p.status === 'loaded');
