@@ -729,7 +729,8 @@
 
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             heartbeatInterval = setInterval(() => {
-                update(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
+                // FIX: Using set instead of update for primitives
+                set(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
             }, 5000);
 
             onValue(matchRef, (snap) => {
@@ -843,7 +844,7 @@
                         clearInterval(checkLoadInterval);
                         update(ref(db, `blindtest/ranked/matches/${matchId}/gameState`), {
                             phase: 'playing',
-                            startTime: Date.now() + 1000
+                            startTime: Date.now() + 2000
                         });
                     }
                 }, 1000);
@@ -867,7 +868,7 @@
 
             setTimeout(() => { 
                 if(!isVideoBroken) videoEl.play().catch(console.error); 
-                startTimerBar(targetStartTime, 15000); 
+                startTimerBar(targetStartTime, 20000); 
             }, adjustedDelay);
 
             if (isHost) {
