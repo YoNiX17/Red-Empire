@@ -66,12 +66,21 @@
         
         /* --- VISUAL FX --- */
         .scanline {
-            width: 100%; height: 100px; z-index: 10;
+            width: 100%;
+            height: 100px;
+            z-index: 10;
             background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 46, 46, 0.1) 50%, rgba(0,0,0,0) 100%);
-            opacity: 0.1; background-size: 100% 4px;
-            animation: scanline 10s linear infinite; pointer-events: none; position: absolute; top: 0;
+            opacity: 0.1;
+            background-size: 100% 4px;
+            animation: scanline 10s linear infinite;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
         }
-        @keyframes scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
+        @keyframes scanline {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
 
         .glass-hud { 
             background: rgba(10, 10, 10, 0.9); 
@@ -614,7 +623,9 @@
                     const p2Updates = {};
                     p2Updates[`blindtest/ranked/queue/${currentUser.uid}`] = null;
                     p2Updates[`users/${currentUser.uid}/currentMatch`] = foundMatchId;
-                    await update(ref(db), p2Updates);
+                    
+                    // FIX: TRY CATCH TO PREVENT ERROR
+                    try { await update(ref(db), p2Updates); } catch(e) { console.error("P2 Update Error", e); }
                 }
             });
 
@@ -644,6 +655,7 @@
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
 
+        // --- QUITTE LE MATCH ET LE SUPPRIME ---
         window.leaveMatch = async () => {
             if(matchId && currentUser) {
                 await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
@@ -899,13 +911,11 @@
         }
 
         function showResult() {
-            // REVEAL MODIFIÉ : On affiche la vidéo mais avec une étiquette par dessus
             document.getElementById('video-container').classList.remove('opacity-0');
             document.getElementById('vinyl-container').classList.add('opacity-0');
             diskEl.classList.add('disk-paused');
             inputGuess.disabled = true;
 
-            // On affiche l'étiquette transparente (pas le vieux fond noir)
             document.getElementById('result-overlay').classList.remove('hidden');
             document.getElementById('res-anime').innerText = currentSong.anime;
             document.getElementById('res-song').innerText = currentSong.song;
