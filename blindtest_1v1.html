@@ -28,6 +28,8 @@
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                         'glitch': 'glitch 1s linear infinite',
                         'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
                     },
                     keyframes: {
                         shake: {
@@ -44,6 +46,14 @@
                         slideUp: {
                             '0%': { transform: 'translateY(100%)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideInLeft: {
+                            '0%': { transform: 'translateX(-100px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        slideInRight: {
+                            '0%': { transform: 'translateX(100px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
                         }
                     }
                 }
@@ -270,6 +280,62 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- MATCHMAKING OVERLAY -->
+    <div id="lobby-overlay" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4">
+        <!-- CARD: SEARCH -->
+        <div id="lobby-step-search" class="text-center max-w-md w-full">
+            <h1 class="font-display text-6xl font-black text-white mb-2 tracking-tighter">RANKED <span class="text-empire-red">ARENA</span></h1>
+            <p class="text-gray-500 font-mono mb-12 tracking-widest text-sm">SYSTÈME DE DUEL SYNCHRONISÉ v2.0</p>
+            
+            <div class="relative group cursor-pointer" onclick="startMatchmaking()">
+                <div class="absolute -inset-0.5 bg-gradient-to-r from-empire-red to-purple-600 rounded-lg blur opacity-50 group-hover:opacity-100 transition duration-200 animate-pulse"></div>
+                <button class="relative w-full py-6 bg-black border border-gray-800 rounded-lg text-2xl font-display font-bold text-white group-hover:text-white transition-colors uppercase tracking-widest flex items-center justify-center gap-4">
+                    <i class="fa-solid fa-bolt text-empire-red"></i> TROUVER UN MATCH
+                </button>
+            </div>
+            
+            <div class="mt-8 flex justify-center gap-8 text-xs font-mono text-gray-600">
+                <span class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> SERVEUR EU-WEST</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-users"></i> <span id="online-count">...</span> EN LIGNE</span>
+            </div>
+        </div>
+
+        <!-- CARD: QUEUE -->
+        <div id="lobby-step-queue" class="hidden text-center">
+            <div class="relative w-32 h-32 mx-auto mb-8">
+                <div class="absolute inset-0 border-4 border-empire-red/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-t-empire-red border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center font-mono text-empire-red font-bold text-xl animate-pulse">...</div>
+            </div>
+            <h2 class="font-display text-3xl text-white mb-2">RECHERCHE D'ADVERSAIRE</h2>
+            <p class="font-mono text-gray-500 text-sm tracking-[0.2em] mb-8">ANALYSE DU MMR EN COURS</p>
+            <button onclick="cancelQueue()" class="text-red-500 font-bold hover:text-white text-xs uppercase tracking-widest border-b border-red-900 pb-1 hover:border-white transition-colors">ANNULER LA RECHERCHE</button>
+        </div>
+
+        <!-- CARD: FOUND -->
+        <div id="lobby-step-found" class="hidden w-full h-full flex items-center justify-center relative bg-black overflow-hidden">
+            <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(255,46,46,0.15),black)] animate-pulse"></div>
+            <div class="scanline"></div>
+            
+            <div class="flex flex-col md:flex-row items-center gap-16 z-10 scale-125">
+                <div class="text-center transform translate-x-[-50px] opacity-0 animate-slide-in-left">
+                    <img id="found-p1-img" src="" class="w-40 h-40 rounded-full border-4 border-empire-red shadow-[0_0_50px_#ff2e2e] object-cover">
+                    <div class="font-display font-bold text-white mt-6 text-2xl tracking-widest">VOUS</div>
+                </div>
+                
+                <div class="relative">
+                    <div class="font-manga text-9xl text-white italic z-20 relative vs-text drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">VS</div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[50px] bg-empire-red blur-[50px] opacity-50"></div>
+                </div>
+
+                <div class="text-center transform translate-x-[50px] opacity-0 animate-slide-in-right">
+                    <img id="found-p2-img" src="" class="w-40 h-40 rounded-full border-4 border-gray-500 shadow-[0_0_50px_#6b7280] object-cover grayscale" onload="this.classList.remove('grayscale')">
+                    <div id="found-p2-name" class="font-display font-bold text-gray-300 mt-6 text-2xl tracking-widest">ADVERSAIRE</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ERROR NOTIFICATION -->
@@ -505,7 +571,6 @@
                     }
                 });
 
-                // CORRECTION UPDATE FAILED: Vérification stricte de l'objet updates
                 if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid && Object.keys(updates).length > 0) {
                     update(ref(db), updates).catch(e => console.log(e));
                 }
@@ -584,11 +649,22 @@
 
         // --- QUITTE LE MATCH ET LE SUPPRIME ---
         window.leaveMatch = async () => {
-            if(matchId && currentUser) {
-                // On supprime tout proprement
-                await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
-                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+            if(!matchId || !currentUser) return window.location.href = 'blindtest_ranked.html';
+            
+            // 1. Remove self from players
+            const playerRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`);
+            await remove(playerRef);
+            
+            // 2. Remove currentMatch ref
+            await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+            
+            // 3. Check if empty to delete match
+            const matchRef = ref(db, `blindtest/ranked/matches/${matchId}`);
+            const snap = await get(child(matchRef, 'players'));
+            if (!snap.exists() || snap.size === 0) {
+                await remove(matchRef);
             }
+            
             window.location.href = 'blindtest_ranked.html';
         };
 
