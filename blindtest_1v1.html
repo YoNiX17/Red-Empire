@@ -23,21 +23,7 @@
                     },
                     animation: {
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 4s linear infinite',
-                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
-                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                    },
-                    keyframes: {
-                        shake: {
-                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(100%)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
-                        }
+                        'spin-slow': 'spin 3s linear infinite',
                     }
                 }
             }
@@ -46,82 +32,49 @@
     <style>
         body { background-color: #050505; color: #eee; overflow: hidden; }
         .manga-panel { border: 2px solid #333; background: #111; position: relative; }
-        
-        /* --- SCANLINES EFFECT --- */
-        .scanline {
-            width: 100%; height: 100px; z-index: 10;
-            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 46, 46, 0.1) 50%, rgba(0,0,0,0) 100%);
-            opacity: 0.1; background-size: 100% 4px;
-            animation: scanline 10s linear infinite; pointer-events: none; position: absolute; top: 0;
-        }
-        @keyframes scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
-
-        .glass-hud { background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 46, 46, 0.3); }
-        
-        /* --- CUSTOM INPUT --- */
-        .input-cyber {
-            background: rgba(20, 20, 20, 0.8); border: 2px solid #333; color: white;
-            font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.3s ease;
-        }
-        .input-cyber:focus { border-color: #ff2e2e; box-shadow: 0 0 15px rgba(255, 46, 46, 0.3); outline: none; }
-        .input-cyber.valid { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
-        .input-cyber.error { border-color: #eab308; animation: shake 0.5s; }
-
-        /* --- REVEAL ETIQUETTE --- */
-        .etiquette-container {
-            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.6));
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(4px);
-        }
-
+        .glass-hud { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
         .loader-bar { height: 4px; width: 0%; transition: width 0.2s linear; }
-        
-        /* ANIMATIONS */
         @keyframes clash {
             0% { transform: scale(3) rotate(-10deg); opacity: 0; }
             50% { transform: scale(1) rotate(0deg); opacity: 1; }
             100% { transform: scale(1.1) rotate(5deg); opacity: 1; }
         }
         .vs-text { animation: clash 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        .disk-spin { animation: spin 3s linear infinite; }
+        .disk-spin { animation: spin 2s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #facc15; margin-top: -6px; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; }
     </style>
 </head>
-<body class="h-screen flex flex-col font-mono bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-
-    <div class="scanline"></div>
+<body class="h-screen flex flex-col font-mono">
 
     <!-- TOP BAR (HUD) -->
-    <nav class="h-20 glass-hud flex items-center justify-between px-6 z-50 relative shadow-[0_0_20px_rgba(234,179,8,0.1)]">
+    <nav class="h-20 bg-black border-b border-gold-600/30 flex items-center justify-between px-6 z-50 relative shadow-[0_0_20px_rgba(234,179,8,0.1)]">
         <button onclick="leaveMatch()" class="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
             <i class="fa-solid fa-arrow-left"></i> <span class="hidden md:inline font-bold">ABANDONNER</span>
         </button>
 
         <!-- SCOREBOARD -->
-        <div class="flex items-center gap-4 md:gap-12 flex-1 justify-center">
+        <div class="flex items-center gap-4 md:gap-8 flex-1 justify-center">
             <!-- Player 1 (ME) -->
             <div class="flex items-center gap-3 text-right">
                 <div class="hidden md:block">
-                    <div id="p1-name" class="font-display font-bold text-white text-xl leading-none" style="text-shadow: 0 0 10px rgba(255,46,46,0.7);">MOI</div>
-                    <div class="text-[10px] text-empire-red tracking-widest font-bold">RANKED</div>
+                    <div id="p1-name" class="font-display font-bold text-gold-400 text-lg leading-none">MOI</div>
+                    <div class="text-xs text-gray-500">RANKED</div>
                 </div>
-                <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-empire-red object-cover bg-gray-800 shadow-[0_0_10px_#ff2e2e]">
+                <img id="p1-avatar" src="" class="w-12 h-12 rounded border-2 border-gold-500 object-cover bg-gray-800">
                 <div class="font-manga text-4xl text-white w-12 text-center" id="p1-score">0</div>
             </div>
 
-            <div class="font-manga text-4xl text-white italic px-2 opacity-50">VS</div>
+            <div class="font-manga text-2xl text-red-600 italic px-2">VS</div>
 
             <!-- Player 2 (OPPONENT) -->
             <div class="flex items-center gap-3 flex-row-reverse text-left">
                 <div class="hidden md:block">
-                    <div id="p2-name" class="font-display font-bold text-gray-400 text-xl leading-none">ADVERSAIRE</div>
-                    <div id="p2-status" class="text-[10px] text-gray-500 tracking-widest">CONNEXION...</div>
+                    <div id="p2-name" class="font-display font-bold text-gray-400 text-lg leading-none">ADVERSAIRE</div>
+                    <div id="p2-status" class="text-xs text-gray-500">CONNEXION...</div>
                 </div>
                 <img id="p2-avatar" src="https://ui-avatars.com/api/?name=?" class="w-12 h-12 rounded border-2 border-gray-600 object-cover grayscale transition-all duration-500">
                 <div class="font-manga text-4xl text-gray-500 w-12 text-center" id="p2-score">0</div>
@@ -130,38 +83,21 @@
 
         <!-- Round Info -->
         <div class="text-right">
-            <div class="font-display font-black text-gold-500 text-3xl" id="round-counter">R1</div>
-            <div class="text-[10px] text-gray-400">MANCHE / 10</div>
+            <div class="font-display font-black text-gold-500 text-2xl" id="round-counter">R1</div>
+            <div class="text-xs text-gray-400">/ 10</div>
         </div>
     </nav>
 
     <!-- MAIN ARENA AREA -->
-    <div class="relative flex-grow flex flex-col bg-[#050505] items-center justify-center">
-        
+    <div class="relative flex-grow flex flex-col bg-[#050505]">
         <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
-            <div class="w-full h-full bg-black relative">
+            <div class="w-full max-w-4xl aspect-video bg-black border-4 border-gold-500 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden relative">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
-                
-                <!-- ETIQUETTE DE RESULTAT (Overlay Transparent en bas) -->
-                <div id="result-overlay" class="absolute inset-x-0 bottom-0 flex flex-col justify-end z-20 hidden h-full">
-                    <div class="etiquette-container w-full pt-6 pb-12 px-8 animate-slide-up text-center">
-                        <div class="max-w-4xl mx-auto">
-                            <div class="flex justify-center gap-2 mb-2">
-                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            </div>
-                            
-                            <h2 id="res-anime" class="font-display text-4xl md:text-6xl text-white font-black mb-2 tracking-tight leading-none text-shadow-lg">ANIME NAME</h2>
-                            
-                            <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-2">
-                                <div id="res-type" class="bg-empire-red text-white px-4 py-1 font-black font-manga text-xl transform -skew-x-12 shadow-lg">OPENING 1</div>
-                                <div class="hidden md:block w-px h-6 bg-gray-600"></div>
-                                <p id="res-song" class="font-mono text-gold-400 text-lg tracking-[0.2em] uppercase">SONG TITLE</p>
-                            </div>
-                        </div>
-                    </div>
+                <div id="result-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center hidden backdrop-blur-sm">
+                    <h2 id="res-anime" class="font-display text-4xl md:text-5xl text-white font-black mb-2 text-shadow-glow">ANIME NAME</h2>
+                    <p id="res-song" class="font-mono text-gold-400 text-xl tracking-widest">SONG TITLE</p>
+                    <div id="res-type" class="mt-4 px-3 py-1 bg-white text-black font-bold font-manga skew-x-[-10deg]">OPENING 1</div>
                 </div>
             </div>
         </div>
@@ -169,62 +105,50 @@
         <!-- VINYL MODE -->
         <div id="vinyl-container" class="absolute inset-0 flex flex-col items-center justify-center z-0 transition-opacity duration-500">
             <div class="relative w-72 h-72 md:w-96 md:h-96">
-                <div class="absolute inset-0 bg-empire-red rounded-full blur-[80px] opacity-20 animate-pulse"></div>
-                <div id="disk" class="w-full h-full rounded-full bg-[#111] border-[4px] border-[#333] shadow-[0_0_30px_#000] flex items-center justify-center disk-spin disk-paused relative z-10">
-                    <div class="absolute inset-0 rounded-full border-[40px] border-[#1a1a1a] opacity-50"></div>
-                    <div class="w-32 h-32 rounded-full bg-gradient-to-br from-empire-red to-red-900 border-4 border-black flex items-center justify-center shadow-inner z-10">
-                        <i class="fa-solid fa-music text-4xl text-white opacity-80"></i>
+                <div id="disk" class="w-full h-full rounded-full bg-[#111] border-[8px] border-[#222] shadow-[0_0_30px_#000] flex items-center justify-center disk-spin disk-paused relative">
+                    <div class="absolute inset-0 rounded-full border-[30px] border-[#1a1a1a] opacity-50"></div>
+                    <div class="w-32 h-32 rounded-full bg-gradient-to-br from-gold-600 to-yellow-800 border-4 border-black flex items-center justify-center shadow-inner z-10">
+                        <i class="fa-solid fa-music text-4xl text-black opacity-50"></i>
                     </div>
                 </div>
                 <div class="absolute -top-10 -right-10 w-40 h-8 bg-gray-400 rotate-[30deg] origin-top-right border-2 border-black rounded-full shadow-xl z-20 pointer-events-none"></div>
             </div>
-            
-            <!-- Barre de chargement / Timer -->
-            <div class="w-full max-w-xl mt-12 px-6 z-10">
-                <div class="flex justify-between text-xs font-mono text-empire-red mb-2 uppercase tracking-widest font-bold">
-                    <span id="status-text" class="animate-pulse">EN ATTENTE...</span>
+            <div class="w-full max-w-xl mt-12 px-6">
+                <div class="flex justify-between text-xs font-mono text-gray-500 mb-1 uppercase tracking-widest">
+                    <span id="status-text">EN ATTENTE...</span>
                     <span id="time-text">00.00</span>
                 </div>
-                <div class="h-2 bg-black rounded-full overflow-hidden border border-gray-800 shadow-[0_0_10px_rgba(255,46,46,0.3)]">
-                    <div id="timer-bar" class="h-full bg-gradient-to-r from-empire-red to-orange-500 w-0"></div>
+                <div class="h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                    <div id="timer-bar" class="h-full bg-gradient-to-r from-gold-600 to-yellow-400 w-0"></div>
                 </div>
             </div>
         </div>
 
         <!-- INPUT ZONE -->
-        <div class="absolute bottom-0 w-full bg-gradient-to-t from-black to-transparent p-6 pb-8 z-20">
-            <div class="max-w-3xl mx-auto">
-                <!-- Feedback Badges -->
-                <div id="feedback-zone" class="flex justify-center gap-3 mb-3 min-h-[24px]">
-                    <span id="fb-anime" class="hidden bg-green-500/20 text-green-400 border border-green-500/50 px-3 py-0.5 rounded text-[10px] font-bold font-mono tracking-widest uppercase backdrop-blur-sm"><i class="fa-solid fa-check mr-1.5"></i>ANIME (+1 PTS)</span>
-                    <span id="fb-op" class="hidden bg-blue-500/20 text-blue-400 border border-blue-500/50 px-3 py-0.5 rounded text-[10px] font-bold font-mono tracking-widest uppercase backdrop-blur-sm"><i class="fa-solid fa-star mr-1.5"></i>OP (+0.5 PTS)</span>
-                </div>
-
-                <div class="flex gap-0 relative group">
-                    <div class="absolute -inset-1 bg-gradient-to-r from-empire-red to-orange-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                    <input type="text" id="input-guess" 
-                           placeholder="NOM DE L'ANIME..." 
-                           class="input-cyber relative flex-1 text-xl px-6 py-4 rounded-l-lg" 
-                           autocomplete="off"
-                           onkeydown="if(event.key === 'Enter') submitGuess()">
-                    <button id="btn-submit" onclick="submitGuess()" class="relative bg-empire-red hover:bg-red-600 text-white font-black font-display text-lg px-8 py-4 rounded-r-lg transition-all uppercase border-l border-black/20">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
+        <div class="mt-auto bg-[#0a0a0a] border-t border-white/10 p-6 z-20">
+            <div class="max-w-3xl mx-auto flex gap-4">
+                <input type="text" id="input-guess" placeholder="NOM DE L'ANIME..." class="flex-1 bg-[#151515] border-2 border-[#333] text-white font-manga text-2xl px-6 py-4 uppercase tracking-wider focus:border-gold-500 focus:outline-none transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed" autocomplete="off">
+                <button id="btn-submit" onclick="submitGuess()" class="bg-gold-600 hover:bg-gold-500 text-black font-black font-display text-xl px-8 py-4 rounded transition-transform hover:scale-105 disabled:opacity-50 disabled:scale-100 uppercase">
+                    ENVOYER
+                </button>
+            </div>
+            <div id="feedback-zone" class="h-8 mt-2 flex justify-center gap-4 text-xs font-bold font-mono tracking-widest uppercase opacity-0 transition-opacity">
+                <span id="fb-anime" class="text-green-500 hidden"><i class="fa-solid fa-check mr-1"></i>ANIME (+1)</span>
+                <span id="fb-song" class="text-gold-500 hidden"><i class="fa-solid fa-check mr-1"></i>TITRE (+1)</span>
+                <span id="fb-op" class="text-blue-500 hidden"><i class="fa-solid fa-check mr-1"></i>TYPE (+0.5)</span>
             </div>
         </div>
     </div>
 
     <!-- MATCHMAKING OVERLAY -->
     <div id="lobby-overlay" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
-        <!-- SEARCH -->
         <div id="lobby-step-search" class="text-center max-w-md w-full">
-            <h1 class="font-display text-6xl font-black text-white mb-2 tracking-tighter">RANKED <span class="text-empire-red">ARENA</span></h1>
-            <p class="text-gray-400 font-mono mb-10 tracking-widest text-sm">SYSTÈME DE DUEL SYNCHRONISÉ</p>
+            <h1 class="font-display text-5xl font-black text-white mb-2">RANKED <span class="text-gold-500">ARENA</span></h1>
+            <p class="text-gray-400 font-mono mb-10">Duel 1v1 - Synchronisation Parfaite</p>
             <div class="relative group">
-                <div class="absolute -inset-1 bg-gradient-to-r from-empire-red to-orange-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                <button onclick="startMatchmaking()" class="relative w-full py-6 bg-black border border-gray-700 rounded-lg text-2xl font-display font-bold text-white group-hover:text-white transition-colors uppercase tracking-widest flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-bolt text-empire-red"></i> TROUVER UN ADVERSAIRE
+                <div class="absolute -inset-1 bg-gradient-to-r from-gold-600 to-red-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                <button onclick="startMatchmaking()" class="relative w-full py-6 bg-black border border-gray-700 rounded-lg text-2xl font-display font-bold text-white group-hover:text-gold-400 transition-colors uppercase tracking-widest">
+                    <i class="fa-solid fa-magnifying-glass mr-3"></i> TROUVER UN ADVERSAIRE
                 </button>
             </div>
             <div class="mt-6 flex justify-center gap-6 text-sm font-mono text-gray-500">
@@ -233,23 +157,21 @@
             </div>
         </div>
 
-        <!-- QUEUE -->
         <div id="lobby-step-queue" class="hidden text-center">
-            <div class="w-24 h-24 border-4 border-t-empire-red border-r-transparent border-b-empire-red border-l-transparent rounded-full animate-spin mx-auto mb-8"></div>
+            <div class="w-24 h-24 border-4 border-t-gold-500 border-r-transparent border-b-gold-500 border-l-transparent rounded-full animate-spin mx-auto mb-8"></div>
             <h2 class="font-display text-2xl text-white animate-pulse">RECHERCHE EN COURS...</h2>
-            <p class="font-mono text-gold-500 mt-2 text-sm tracking-widest">ANALYSE MMR</p>
-            <button onclick="cancelQueue()" class="mt-8 text-red-500 font-bold hover:text-white text-xs uppercase tracking-widest border-b border-red-900 pb-1">ANNULER</button>
+            <p class="font-mono text-gold-500 mt-2 text-sm tracking-widest">ELO MATCHING</p>
+            <button onclick="cancelQueue()" class="mt-8 text-red-500 font-bold hover:underline text-xs uppercase">ANNULER</button>
         </div>
 
-        <!-- FOUND -->
         <div id="lobby-step-found" class="hidden w-full h-full flex items-center justify-center relative bg-black">
-            <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(255,46,46,0.15),black)]"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(234,179,8,0.1),black)]"></div>
             <div class="flex flex-col md:flex-row items-center gap-12 z-10 scale-150">
                 <div class="text-center transform translate-x-10 animate-[slideInLeft_0.5s_forwards]">
-                    <img id="found-p1-img" src="" class="w-32 h-32 rounded-full border-4 border-empire-red shadow-[0_0_30px_#ff2e2e]">
+                    <img id="found-p1-img" src="" class="w-32 h-32 rounded-full border-4 border-gold-500 shadow-[0_0_30px_#eab308]">
                     <div class="font-display font-bold text-white mt-4 text-xl">VOUS</div>
                 </div>
-                <div class="font-manga text-8xl text-white italic vs-text z-20 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">VS</div>
+                <div class="font-manga text-8xl text-red-600 italic vs-text z-20 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">VS</div>
                 <div class="text-center transform -translate-x-10 animate-[slideInRight_0.5s_forwards]">
                     <img id="found-p2-img" src="" class="w-32 h-32 rounded-full border-4 border-gray-500 shadow-[0_0_30px_#6b7280]">
                     <div id="found-p2-name" class="font-display font-bold text-gray-300 mt-4 text-xl">ADVERSAIRE</div>
@@ -258,7 +180,7 @@
         </div>
     </div>
 
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
@@ -293,152 +215,11 @@
         let roundScore = 0;
         let hasJoinedQueue = false;
         
-        // ETAT GAMEPLAY LOCAL
-        let animeFound = false;
-        let opFound = false;
-        let opAttempts = 0;
-        
         // --- ELEMENTS DOM ---
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
         const inputGuess = document.getElementById('input-guess');
         const statusText = document.getElementById('status-text');
-
-        // --- LEVENSHTEIN ---
-        function levenshtein(a, b) {
-            if(a.length == 0) return b.length; 
-            if(b.length == 0) return a.length; 
-            var matrix = [];
-            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
-            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
-            for(var i = 1; i <= b.length; i++){
-                for(var j = 1; j <= a.length; j++){
-                    if(b.charAt(i-1) == a.charAt(j-1)){
-                        matrix[i][j] = matrix[i-1][j-1];
-                    } else {
-                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
-                    }
-                }
-            }
-            return matrix[b.length][a.length];
-        }
-
-        function isCloseMatch(input, target) {
-            if (!target) return false;
-            const normInput = input.toLowerCase().trim();
-            const normTarget = target.toLowerCase().trim();
-            
-            if (normInput === normTarget) return true;
-            if (normTarget.includes(normInput) && normInput.length > 3) return true; 
-            
-            const distance = levenshtein(normInput, normTarget);
-            const maxLength = Math.max(normInput.length, normTarget.length);
-            const similarity = 1 - (distance / maxLength);
-            return similarity > 0.7; // 70% de similarité
-        }
-
-        function checkAlts(input, alts) {
-            if (!alts) return false;
-            for (let alias of alts) {
-                if (isCloseMatch(input, alias)) return true;
-            }
-            return false;
-        }
-        
-        // --- GAMEPLAY LOGIC (2 ETAPES) ---
-        window.submitGuess = () => {
-            if (!currentSong) return;
-            const val = inputGuess.value.trim();
-            if (!val) return;
-
-            // Etape 1 : Anime
-            if (!animeFound) {
-                if (isCloseMatch(val, currentSong.anime) || checkAlts(val, currentSong.alt)) {
-                    // SUCCESS ANIME
-                    animeFound = true;
-                    addScore(1); // +1 point
-                    
-                    document.getElementById('fb-anime').classList.remove('hidden');
-                    inputGuess.value = "";
-                    inputGuess.placeholder = "QUEL OP ? (1, 2...)";
-                    inputGuess.classList.add('valid');
-                    setTimeout(() => inputGuess.classList.remove('valid'), 500);
-                    
-                    statusText.innerText = "ANIME TROUVÉ ! QUEL OPENING ?";
-                    statusText.classList.remove('text-empire-red');
-                    statusText.classList.add('text-green-400');
-                    
-                    opAttempts = 0;
-                } else {
-                    triggerShake();
-                }
-            } 
-            // Etape 2 : Numéro OP
-            else if (!opFound && opAttempts < 2) {
-                const numbers = val.match(/\d+/);
-                const guessedNum = numbers ? parseInt(numbers[0]) : null;
-                
-                if (guessedNum === currentSong.num) {
-                    // SUCCESS OP
-                    opFound = true;
-                    addScore(0.5); // +0.5 point
-                    
-                    document.getElementById('fb-op').classList.remove('hidden');
-                    inputGuess.value = "";
-                    inputGuess.placeholder = "PARFAIT ! ATTENTE...";
-                    inputGuess.disabled = true;
-                    inputGuess.classList.add('valid');
-                    
-                    statusText.innerText = "MAXIMUM POINTS !";
-                    statusText.classList.remove('text-green-400');
-                    statusText.classList.add('text-blue-400');
-                } else {
-                    opAttempts++;
-                    triggerShake();
-                    if (opAttempts >= 2) {
-                        inputGuess.value = "";
-                        inputGuess.placeholder = "RATÉ POUR L'OP !";
-                        inputGuess.disabled = true;
-                        inputGuess.classList.add('error');
-                    } else {
-                        inputGuess.value = "";
-                        inputGuess.placeholder = "NON... 1 ESSAI RESTANT !";
-                    }
-                }
-            }
-        };
-
-        function addScore(points) {
-            const scoreRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/score`);
-            runTransaction(scoreRef, (score) => (score || 0) + points);
-        }
-
-        function triggerShake() {
-            inputGuess.classList.add('error');
-            setTimeout(() => inputGuess.classList.remove('error'), 500);
-        }
-
-        function resetUI() {
-            document.getElementById('result-overlay').classList.add('hidden');
-            document.getElementById('fb-anime').classList.add('hidden');
-            document.getElementById('fb-op').classList.add('hidden');
-            
-            animeFound = false;
-            opFound = false;
-            opAttempts = 0;
-            
-            inputGuess.value = "";
-            inputGuess.disabled = false;
-            inputGuess.placeholder = "NOM DE L'ANIME...";
-            inputGuess.classList.remove('valid', 'error');
-            
-            statusText.innerText = "EN ATTENTE...";
-            statusText.className = "animate-pulse text-empire-red font-bold";
-            
-            document.getElementById('video-container').classList.add('opacity-0');
-            document.getElementById('vinyl-container').classList.remove('opacity-0');
-            diskEl.classList.remove('disk-paused');
-        }
         
         // --- MATCHMAKING ---
         window.startMatchmaking = async () => {
@@ -451,6 +232,7 @@
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-queue').classList.remove('hidden');
             
+            // Anti-spam clic
             if(hasJoinedQueue) return;
             hasJoinedQueue = true;
             
@@ -459,12 +241,16 @@
 
         async function checkQueueLoop() {
             const myEntry = ref(db, `blindtest/ranked/queue/${currentUser.uid}`);
-            await set(myEntry, {
+            
+            // S'assurer d'avoir un profil propre
+            const safeProfile = {
                 uid: currentUser.uid,
-                name: myProfile.name,
-                avatar: myProfile.avatar,
+                name: myProfile.name || "Joueur",
+                avatar: myProfile.avatar || "https://ui-avatars.com/api/?name=P",
                 joinedAt: serverTimestamp()
-            });
+            };
+
+            await set(myEntry, safeProfile);
             onDisconnect(myEntry).remove();
 
             const queueRef = ref(db, 'blindtest/ranked/queue');
@@ -472,51 +258,89 @@
                 const players = snap.val();
                 if (!players) return;
                 
-                const validUids = Object.keys(players).filter(key => {
+                const now = Date.now();
+                const ZOMBIE_TIMEOUT = 120 * 1000; // 2 minutes
+
+                // 1. Filtrage et nettoyage des zombies
+                const validUids = [];
+                const updates = {};
+                let needsCleanup = false;
+
+                Object.keys(players).forEach(key => {
                     const p = players[key];
-                    return p && typeof p === 'object' && p.name && p.uid;
+                    // Si entrée mal formée ou trop vieille (zombie)
+                    if (!p || typeof p !== 'object' || !p.uid || (p.joinedAt && now - p.joinedAt > ZOMBIE_TIMEOUT)) {
+                        // Marquer pour suppression
+                        updates[`blindtest/ranked/queue/${key}`] = null;
+                        needsCleanup = true;
+                    } else {
+                        validUids.push(key);
+                    }
                 });
 
+                // Exécuter le nettoyage si je suis le premier valide (pour éviter conflits)
+                if (needsCleanup && validUids.length > 0 && validUids[0] === currentUser.uid) {
+                    update(ref(db), updates).catch(e => console.log("Cleanup error", e));
+                }
+
+                // 2. Tri par ancienneté
                 validUids.sort((a, b) => {
-                    const tA = players[a].joinedAt || Date.now();
-                    const tB = players[b].joinedAt || Date.now();
+                    const tA = players[a]?.joinedAt || 0;
+                    const tB = players[b]?.joinedAt || 0;
                     return tA - tB;
                 });
                 
+                // 3. Logique de Match
                 if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
-                    const p1 = validUids[0]; 
-                    const p2 = validUids[1]; 
+                    const p1 = validUids[0]; // Host (plus ancien)
+                    const p2 = validUids[1]; // Guest
 
+                    // Seul le P1 (Host) crée le match pour éviter doublons
                     if (currentUser.uid === p1) {
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
                         
+                        // Protection contre les données undefined
+                        const p1Data = players[p1] || safeProfile;
+                        const p2Data = players[p2] || { name: "Adversaire", avatar: "" };
+
                         const matchData = {
+                            host: p1, 
                             players: {
-                                [p1]: { name: players[p1].name, avatar: players[p1].avatar, score: 0, status: 'connecting' },
-                                [p2]: { name: players[p2].name, avatar: players[p2].avatar, score: 0, status: 'connecting' }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
                             },
                             gameState: {
                                 phase: 'setup',
                                 round: 1,
                                 songIndex: 0,
                                 startTime: 0,
-                                deck: generateDeck() 
+                                deck: generateDeck()
                             },
                             created: serverTimestamp()
                         };
 
-                        const updates = {};
-                        updates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
-                        updates[`blindtest/ranked/queue/${p1}`] = null;
-                        updates[`blindtest/ranked/queue/${p2}`] = null;
-                        updates[`users/${p1}/currentMatch`] = newMatchId;
-                        updates[`users/${p2}/currentMatch`] = newMatchId;
+                        const globalUpdates = {};
+                        globalUpdates[`blindtest/ranked/matches/${newMatchId}`] = matchData;
+                        globalUpdates[`blindtest/ranked/queue/${p1}`] = null;
+                        globalUpdates[`blindtest/ranked/queue/${p2}`] = null;
+                        globalUpdates[`users/${p1}/currentMatch`] = newMatchId;
+                        globalUpdates[`users/${p2}/currentMatch`] = newMatchId;
 
-                        await update(ref(db), updates);
+                        try {
+                            await update(ref(db), globalUpdates);
+                        } catch (e) {
+                            console.error("ERREUR CREATION MATCH:", e);
+                            // En cas d'échec critique, se retirer de la file pour débloquer
+                            remove(myEntry);
+                            hasJoinedQueue = false;
+                            alert("Erreur matchmaking. Veuillez réessayer.");
+                            location.reload();
+                        }
                     }
                 }
             });
 
+            // Ecouteur de départ de match
             const myMatchRef = ref(db, `users/${currentUser.uid}/currentMatch`);
             onValue(myMatchRef, (snap) => {
                 const mId = snap.val();
@@ -544,7 +368,12 @@
         };
 
         window.leaveMatch = () => {
-            window.location.href = 'blindtest_ranked.html';
+            if(matchId) {
+                // Simple leave, maybe concede
+                window.location.href = 'blindtest_ranked.html';
+            } else {
+                window.location.href = 'blindtest_ranked.html';
+            }
         };
 
         function generateDeck() {
@@ -556,19 +385,38 @@
             return indices.slice(0, 10);
         }
 
+        // --- INITIALISATION MATCH ---
         async function startMatchSequence(mId) {
+            // On cache le lobby
             document.getElementById('lobby-step-queue').classList.add('hidden');
+            document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-found').classList.remove('hidden');
 
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             const snap = await get(matchRef);
-            const data = snap.val();
+            
+            if(!snap.exists()) {
+                console.log("Match non trouvé, retry...");
+                setTimeout(() => {
+                     if(!snap.exists()) {
+                        alert("Match introuvable ou annulé.");
+                        window.location.href = 'blindtest_ranked.html';
+                     }
+                }, 1000);
+                return;
+            }
 
+            const data = snap.val();
             const pIds = Object.keys(data.players);
             const enemyId = pIds.find(id => id !== currentUser.uid);
             opponentId = enemyId;
-            isHost = (currentUser.uid < enemyId); 
+            
+            // LOGIQUE HOST ROBUSTE : On utilise le champ 'host' de la DB
+            isHost = (data.host === currentUser.uid);
+            console.log("Je suis HOST ?", isHost);
 
+            // --- UPDATE HUD IMMEDIAT ---
+            // Important pour éviter le "gris"
             document.getElementById('found-p1-img').src = myProfile.avatar || "https://ui-avatars.com/api/?name=Me";
             document.getElementById('found-p2-img').src = data.players[enemyId].avatar || "https://ui-avatars.com/api/?name=Enemy";
             document.getElementById('found-p2-name').innerText = data.players[enemyId].name;
@@ -577,24 +425,26 @@
             document.getElementById('p2-avatar').classList.remove('grayscale');
             document.getElementById('p2-name').innerText = data.players[enemyId].name;
             document.getElementById('p2-status').innerText = "EN LIGNE";
-            document.getElementById('p2-status').classList.remove('text-gray-500');
             document.getElementById('p2-status').classList.add('text-green-500');
-            
+
+            // Transition vers le jeu
             setTimeout(() => {
                 document.getElementById('lobby-overlay').classList.add('hidden');
                 initGameSync(mId);
             }, 3000);
         }
 
+        // --- SYNC ENGINE ---
         function initGameSync(mId) {
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
-            
+            // Je suis prêt à recevoir les ordres
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
             onValue(matchRef, (snap) => {
                 const data = snap.val();
-                if (!data) return; 
+                if (!data) return;
 
+                // Update Scores
                 const pIds = Object.keys(data.players);
                 pIds.forEach(id => {
                     const score = data.players[id].score;
@@ -606,16 +456,21 @@
             });
         }
 
+        let localPhase = null;
+        let localSongIndex = -1;
+
         function handleGameState(gameState, players) {
             document.getElementById('round-counter').innerText = `R${gameState.round}`;
             
             if (gameState.phase !== localPhase || gameState.songIndex !== localSongIndex) {
                 localPhase = gameState.phase;
                 localSongIndex = gameState.songIndex;
+                console.log(`[SYNC] Phase: ${gameState.phase}, Round: ${gameState.round}`);
 
                 if (gameState.phase === 'setup' || gameState.phase === 'loading') {
                     if (gameState.deck && gameState.deck.length > 0) {
-                        setupRound(gameState.deck[gameState.round - 1]);
+                        const songIdx = gameState.deck[gameState.round - 1];
+                        setupRound(songIdx);
                     }
                 } else if (gameState.phase === 'playing') {
                     startPlayback(gameState.startTime);
@@ -625,6 +480,7 @@
             }
         }
 
+        // --- PHASE 1 : CHARGEMENT ---
         function setupRound(songIdx) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
@@ -634,56 +490,81 @@
             statusText.classList.add('animate-pulse');
 
             videoEl.src = currentSong.url;
-            videoEl.currentTime = 0; 
+            videoEl.currentTime = 0;
             videoEl.volume = 0.5;
             
-            videoEl.oncanplaythrough = () => {
+            let isLoaded = false;
+            const markAsLoaded = () => {
+                if(isLoaded) return;
+                isLoaded = true;
+                console.log("[VIDEO] Loaded. Sending status...");
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
-                videoEl.oncanplaythrough = null; 
+                videoEl.oncanplaythrough = null;
             };
-            
-            videoEl.load();
 
+            videoEl.oncanplaythrough = markAsLoaded;
+            if (videoEl.readyState >= 3) markAsLoaded();
+            else videoEl.load();
+
+            // Fallback de sécurité (5s max)
+            setTimeout(() => {
+                if(!isLoaded) {
+                    console.warn("[VIDEO] Timeout de chargement - Force Start");
+                    markAsLoaded();
+                }
+            }, 5000);
+
+            // --- LOGIQUE HOST ---
+            // Seul le host surveille tout le monde
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
                     const ps = s.val();
-                    const allLoaded = Object.values(ps).every(p => p.status === 'loaded');
                     
+                    // Debug : Voir qui n'est pas prêt
+                    const notReady = Object.entries(ps).filter(([id, p]) => p.status !== 'loaded');
+                    if(notReady.length > 0) {
+                        console.log("En attente de :", notReady.map(n => n[1].name));
+                    }
+
+                    const allLoaded = notReady.length === 0;
                     if (allLoaded) {
                         clearInterval(checkLoadInterval);
+                        console.log("[HOST] Tout le monde prêt. Lancement.");
                         update(ref(db, `blindtest/ranked/matches/${matchId}/gameState`), {
                             phase: 'playing',
-                            startTime: Date.now() + 3000
+                            startTime: Date.now() + 2000 // +2s delay
                         });
                     }
-                }, 500);
+                }, 1000);
             }
         }
 
+        // --- PHASE 2 : LECTURE ---
         function startPlayback(targetStartTime) {
             statusText.innerText = "ÉCOUTEZ !";
             statusText.classList.remove('animate-pulse');
-            statusText.classList.add('text-empire-red');
             
-            document.getElementById('video-container').classList.add('opacity-0'); 
-            document.getElementById('vinyl-container').classList.remove('opacity-0'); 
+            document.getElementById('video-container').classList.add('opacity-0');
+            document.getElementById('vinyl-container').classList.remove('opacity-0');
             diskEl.classList.remove('disk-paused');
             inputGuess.disabled = false;
             inputGuess.focus();
 
             const now = Date.now();
             const delay = targetStartTime - now;
+            
+            console.log(`[PLAY] Start dans ${delay}ms`);
 
             if (delay > 0) {
                 setTimeout(() => {
-                    videoEl.play();
-                    startTimerBar(targetStartTime, 20000); 
+                    videoEl.play().catch(e => console.error(e));
+                    startTimerBar(targetStartTime, 20000);
                 }, delay);
             } else {
                 const seekTo = Math.abs(delay) / 1000;
                 videoEl.currentTime = seekTo;
-                videoEl.play();
+                videoEl.play().catch(e => console.error(e));
                 startTimerBar(targetStartTime, 20000);
             }
 
@@ -700,26 +581,21 @@
         function startTimerBar(startTime, durationMs) {
             const bar = document.getElementById('timer-bar');
             bar.style.width = '100%';
-            
             const end = startTime + durationMs;
             const updateBar = () => {
                 const now = Date.now();
                 const remaining = end - now;
-                if (remaining <= 0) {
-                    bar.style.width = '0%';
-                    return;
-                }
+                if (remaining <= 0) { bar.style.width = '0%'; return; }
                 const pct = (remaining / durationMs) * 100;
                 bar.style.width = `${pct}%`;
-                
                 const secs = Math.ceil(remaining / 1000);
                 document.getElementById('time-text').innerText = `00.${secs.toString().padStart(2,'0')}`;
-
                 requestAnimationFrame(updateBar);
             };
             requestAnimationFrame(updateBar);
         }
 
+        // --- PHASE 3 : RESULTAT ---
         function showResult() {
             document.getElementById('video-container').classList.remove('opacity-0');
             document.getElementById('vinyl-container').classList.add('opacity-0');
@@ -739,22 +615,51 @@
                     
                     if (state.round >= 10) {
                         alert("PARTIE TERMINÉE !");
+                        // Clean queue/match here if needed
                         window.location.href = 'blindtest_ranked.html';
                     } else {
+                        // Reset players status to 'loading' before switching phase
                         const updates = {};
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading'; // Fix: Use consistent naming (was 'setup' in prev code for init, but 'loading' here is fine if logic handles it) - Wait, base code uses 'loading' for next rounds? Let's check handleGameState. Ah, it handles both setup and loading the same way. Good.
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading';
                         updates[`blindtest/ranked/matches/${matchId}/gameState/round`] = state.round + 1;
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1; // Or follow deck
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1;
                         updates[`blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/status`] = 'loading';
                         updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
                         
+                        // On force le reset status via updates groupés si possible, 
+                        // sinon on fait update game state qui trigger setupRound
+                        // Mieux : Host reset tout le monde
                         await update(ref(db), updates);
                     }
                 }, 8000);
             }
         }
 
-        // --- INIT AUTH ---
+        // --- GAMEPLAY ---
+        window.submitGuess = () => {
+            const val = inputGuess.value.trim().toLowerCase();
+            if (!val || !currentSong) return;
+            const isAnime = currentSong.anime.toLowerCase().includes(val);
+            const isSong = currentSong.song.toLowerCase().includes(val);
+
+            if (isAnime || isSong) {
+                const scoreRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/score`);
+                runTransaction(scoreRef, (score) => (score || 0) + 10);
+                document.getElementById('feedback-zone').style.opacity = '1';
+                if (isAnime) document.getElementById('fb-anime').classList.remove('hidden');
+                inputGuess.value = "";
+            }
+        };
+
+        function resetUI() {
+            document.getElementById('result-overlay').classList.add('hidden');
+            document.getElementById('fb-anime').classList.add('hidden');
+            document.getElementById('fb-song').classList.add('hidden');
+            document.getElementById('fb-op').classList.add('hidden');
+            document.getElementById('feedback-zone').style.opacity = '0';
+        }
+
+        // --- INIT & RECONNEXION AUTO ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -763,10 +668,12 @@
                 document.getElementById('p1-name').innerText = user.displayName;
                 document.getElementById('p1-avatar').src = user.photoURL;
                 
+                // AUTO-REJOIN : Vérifier si une partie est active
                 const currentMatchRef = ref(db, `users/${user.uid}/currentMatch`);
                 get(currentMatchRef).then(snap => {
                     if (snap.exists()) {
                         const mId = snap.val();
+                        console.log("Match en cours détecté :", mId);
                         matchId = mId;
                         startMatchSequence(mId);
                     }
