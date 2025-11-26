@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <!-- VS & MATCH ID (CORRECTION ICI: Élément rajouté) -->
+            <!-- VS & MATCH ID -->
             <div class="flex flex-col items-center">
                 <div class="font-manga text-4xl text-white italic skew-x-[-10deg] text-shadow-lg opacity-80">VS</div>
                 <div class="text-[10px] text-gray-500 mt-1 tracking-widest">MATCH #<span id="match-display-id">----</span></div>
@@ -362,6 +362,7 @@
         let currentSong = null;
         let hasJoinedQueue = false;
         let currentSeekTime = 0;
+        let heartbeatInterval = null;
         
         // Etats du Gameplay Local
         let animeFound = false;
@@ -398,13 +399,10 @@
             const normInput = input.toLowerCase().trim();
             const normTarget = target.toLowerCase().trim();
             
-            // Match exact
             if (normInput === normTarget) return true;
             
-            // Inclusion stricte : L'input doit être une partie significative de la cible
             if (normInput.length >= 4 && normTarget.includes(normInput) && (normInput.length / normTarget.length > 0.6)) return true;
             
-            // Levenshtein (Tolérance ~20%)
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
@@ -423,18 +421,14 @@
         // --- GAMEPLAY LOGIC ---
         window.submitGuess = () => {
             if (!currentSong || !matchId) return;
-            
             const val = inputGuess.value.trim();
             if (!val) return;
 
-            // --- ETAPE 1 : DEVINE L'ANIME ---
             if (!animeFound) {
                 if (isCloseMatch(val, currentSong.anime) || checkAlts(val, currentSong.alt)) {
-                    // SUCCÈS ANIME
                     animeFound = true;
                     addScore(1);
                     
-                    // UI Updates
                     document.getElementById('fb-anime').classList.remove('hidden');
                     inputGuess.value = "";
                     inputGuess.placeholder = "QUEL OP ? (Ex: 1, 2...)";
@@ -444,13 +438,11 @@
                     statusText.innerText = "ANIME TROUVÉ ! QUEL OPENING ?";
                     statusText.classList.remove('text-empire-red');
                     statusText.classList.add('text-green-400');
-                    
                     opAttempts = 0;
                 } else {
                     triggerShake();
                 }
             } 
-            // --- ETAPE 2 : DEVINE L'OP ---
             else if (!opFound && opAttempts < 2) {
                 const numbers = val.match(/\d+/);
                 const guessedNum = numbers ? parseInt(numbers[0]) : null;
@@ -471,7 +463,6 @@
                 } else {
                     opAttempts++;
                     triggerShake();
-                    
                     if (opAttempts >= 2) {
                         inputGuess.value = "";
                         inputGuess.placeholder = "RATÉ POUR L'OP !";
@@ -583,10 +574,9 @@
                         const matchData = {
                             host: p1, 
                             players: {
-                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting' },
-                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
+                                [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() },
+                                [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting', lastSeen: Date.now() }
                             },
-                            // SEEK TIME INITIAL (35-50s)
                             gameState: { 
                                 phase: 'setup', 
                                 round: 1, 
@@ -642,10 +632,23 @@
             document.getElementById('lobby-step-search').classList.remove('hidden');
         };
 
-        window.leaveMatch = () => {
-            if(matchId) set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+        // --- QUITTE LE MATCH ET LE SUPPRIME ---
+        window.leaveMatch = async () => {
+            if(matchId && currentUser) {
+                // Si on quitte volontairement, on supprime le match pour tout le monde
+                await remove(ref(db, `blindtest/ranked/matches/${matchId}`));
+                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+            }
             window.location.href = 'blindtest_ranked.html';
         };
+
+        // --- GESTION DE L'ABANDON (PAGE FERMÉE) ---
+        window.addEventListener('beforeunload', () => {
+            if(matchId && currentUser) {
+                // Suppression synchrone pas possible ici, mais on tente le remove via disconnect
+                // Note: La logique onDisconnect gérée dans startMatchSequence est plus robuste
+            }
+        });
 
         function generateDeck() {
             const indices = Array.from({length: OP_DATABASE.length}, (_, i) => i);
@@ -662,13 +665,19 @@
             document.getElementById('lobby-step-found').classList.remove('hidden');
 
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
+            
+            // --- GESTION DE DECONNEXION BRUTALE ---
+            // Si je me déconnecte, je supprime tout le match pour annuler la partie
+            onDisconnect(matchRef).remove(); 
+            onDisconnect(ref(db, `users/${currentUser.uid}/currentMatch`)).remove();
+
             const snap = await get(matchRef);
             
             if(!snap.exists()) {
                 setTimeout(async () => {
                      const retrySnap = await get(matchRef);
                      if(!retrySnap.exists()) {
-                        alert("Match introuvable.");
+                        alert("Match introuvable ou annulé.");
                         set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                         window.location.href = 'blindtest_ranked.html';
                      } else setupMatchData(retrySnap.val(), mId);
@@ -684,7 +693,6 @@
             opponentId = enemyId;
             isHost = (data.host === currentUser.uid);
 
-            // CORRECTION : Vérification de l'élément avant de set le texte
             const matchDisplayEl = document.getElementById('match-display-id');
             if(matchDisplayEl) {
                 matchDisplayEl.innerText = mId.substring(mId.length - 4);
@@ -711,11 +719,37 @@
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
+            // --- HEARTBEAT SYSTEM ---
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(() => {
+                update(child(matchRef, `players/${currentUser.uid}/lastSeen`), Date.now());
+            }, 5000);
+
             onValue(matchRef, (snap) => {
                 const data = snap.val();
-                if (!data) return;
+                
+                // DETECTION SUPPRESSION MATCH (Abandon adversaire)
+                if (!data) {
+                    clearInterval(heartbeatInterval);
+                    alert("L'adversaire a quitté la partie !");
+                    set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+                    window.location.href = 'blindtest_ranked.html';
+                    return;
+                }
 
+                // DETECTION JOUEUR INACTIF (TIMEOUT 15s)
                 const pIds = Object.keys(data.players);
+                const enemyId = pIds.find(id => id !== currentUser.uid);
+                if (data.players[enemyId]) {
+                    const lastSeen = data.players[enemyId].lastSeen || 0;
+                    // Si l'adversaire n'a pas donné signe de vie depuis 15s et que je suis l'hôte
+                    if (Date.now() - lastSeen > 15000 && isHost) {
+                        console.warn("Adversaire inactif détecté ! Suppression...");
+                        remove(matchRef); // Cela déclenchera l'alerte "L'adversaire a quitté" pour moi aussi via le if(!data)
+                        return;
+                    }
+                }
+
                 pIds.forEach(id => {
                     const score = data.players[id].score;
                     if (id === currentUser.uid) document.getElementById('p1-score').innerText = score;
@@ -736,7 +770,6 @@
                 localPhase = gameState.phase;
                 localSongIndex = gameState.songIndex;
                 
-                // Récupérer le seekTime
                 if (gameState.seekTime) currentSeekTime = gameState.seekTime;
 
                 if (gameState.phase === 'setup' || gameState.phase === 'loading') {
@@ -759,7 +792,6 @@
 
             statusText.innerText = "CHARGEMENT DU FLUX...";
             videoEl.src = currentSong.url;
-            // Utiliser le seekTime global (défini par le host via gameState)
             videoEl.currentTime = currentSeekTime || 0;
             videoEl.volume = 0.5;
             
@@ -780,6 +812,8 @@
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
+                    if (!s.exists()) { clearInterval(checkLoadInterval); return; } // Match deleted
+                    
                     const ps = s.val();
                     const allLoaded = Object.values(ps).every(p => p.status === 'loaded');
                     
@@ -803,8 +837,6 @@
 
             const now = Date.now();
             const delay = targetStartTime - now;
-
-            // Si retard, on ajoute le décalage au seekTime de base
             const baseSeek = currentSeekTime || 0;
 
             if (delay > 0) {
@@ -860,14 +892,17 @@
             if (isHost) {
                 setTimeout(async () => {
                     const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
+                    if (!currentState.exists()) return; // Match deleted
                     const state = currentState.val();
                     
                     if (state.round >= 10) {
                         alert("PARTIE TERMINÉE !");
+                        // FIN PROPRE: Supprimer match et rediriger
+                        remove(ref(db, `blindtest/ranked/matches/${matchId}`));
                         set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                         window.location.href = 'blindtest_ranked.html';
                     } else {
-                        const nextSeek = Math.floor(Math.random() * 16) + 35; // 35-50s
+                        const nextSeek = Math.floor(Math.random() * 16) + 35; 
                         
                         const updates = {};
                         updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading';
@@ -892,17 +927,15 @@
                 document.getElementById('p1-avatar').src = user.photoURL;
                 
                 const currentMatchRef = ref(db, `users/${user.uid}/currentMatch`);
-                get(currentMatchRef).then(async (snap) => { // Async wrapper
+                get(currentMatchRef).then(async (snap) => { 
                     if (snap.exists()) {
                         const mId = snap.val();
-                        // Check validity
                         const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
                         const matchSnap = await get(matchRef);
                         
                         let isValid = false;
                         if (matchSnap.exists()) {
                             const data = matchSnap.val();
-                            // Check age (e.g., 15 mins max for a 1v1 game)
                             if (data.created && (Date.now() - data.created < 15 * 60 * 1000)) {
                                 isValid = true;
                             }
