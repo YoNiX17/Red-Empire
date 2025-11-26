@@ -874,6 +874,7 @@
             }
         }
 
+        // --- INIT & RECONNEXION AUTO ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -883,10 +884,30 @@
                 document.getElementById('p1-avatar').src = user.photoURL;
                 
                 const currentMatchRef = ref(db, `users/${user.uid}/currentMatch`);
-                get(currentMatchRef).then(snap => {
+                get(currentMatchRef).then(async (snap) => { // Async wrapper
                     if (snap.exists()) {
-                        matchId = snap.val();
-                        startMatchSequence(matchId);
+                        const mId = snap.val();
+                        // Check validity
+                        const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
+                        const matchSnap = await get(matchRef);
+                        
+                        let isValid = false;
+                        if (matchSnap.exists()) {
+                            const data = matchSnap.val();
+                            // Check age (e.g., 15 mins max for a 1v1 game)
+                            if (data.created && (Date.now() - data.created < 15 * 60 * 1000)) {
+                                isValid = true;
+                            }
+                        }
+
+                        if (isValid) {
+                            console.log("Reconnexion au match en cours :", mId);
+                            matchId = mId;
+                            startMatchSequence(mId);
+                        } else {
+                            console.log("Match expiré ou introuvable, nettoyage.");
+                            set(currentMatchRef, null);
+                        }
                     }
                 });
             } else {
