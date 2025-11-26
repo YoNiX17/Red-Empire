@@ -261,46 +261,8 @@
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-queue').classList.remove('hidden');
 
-            const queueRef = ref(db, 'blindtest/ranked/queue');
-            
-            // 3. Transaction atomique pour trouver un match
-            const result = await runTransaction(queueRef, (queueData) => {
-                if (queueData) {
-                    // Quelqu'un est dans la file !
-                    const keys = Object.keys(queueData);
-                    if (keys.length > 0) {
-                        const enemyUid = keys[0];
-                        if (enemyUid === currentUser.uid) return; // C'est moi-même (bug)
-
-                        // On prend cet adversaire, on le retire de la file
-                        const enemyData = queueData[enemyUid];
-                        delete queueData[enemyUid]; 
-                        return { matchFound: true, enemy: enemyData, queue: queueData };
-                    }
-                }
-                // Personne... on s'ajoute
-                if (!queueData) queueData = {};
-                queueData[currentUser.uid] = {
-                    uid: currentUser.uid,
-                    name: myProfile.name,
-                    avatar: myProfile.avatar,
-                    timestamp: Date.now()
-                };
-                return { matchFound: false, queue: queueData };
-            });
-
-            if (result.committed) {
-                const data = result.snapshot.val(); // Ce qui a été écrit/retourné n'est pas direct ici dans la logique custom, firebase retourne le noeud complet
-                // Simplification : On vérifie si on a trouvé un match via une écriture secondaire ou écouteur
-                // Mieux : On s'ajoute et on écoute. Si on a "matché" dans la transaction, on crée la room.
-                
-                // RE-LOGIQUE PLUS ROBUSTE CLIENT-SIDE :
-                // 1. S'ajouter à la file.
-                // 2. Si la file a >= 2 personnes, le PREMIER arrivé (Host) crée le match et supprime les deux de la file.
-                
-                // Annulation de la transaction complexe précédente pour une logique plus simple avec écouteur :
-                checkQueueLoop();
-            }
+            // 3. Lancer la boucle de gestion de file (Join & Listen)
+            checkQueueLoop();
         };
 
         // Fonction simplifiée de gestion de file
@@ -322,16 +284,28 @@
                 const players = snap.val();
                 if (!players) return;
                 
-                const uids = Object.keys(players).sort((a, b) => players[a].joinedAt - players[b].joinedAt);
-                
-                // Si je suis dans la file et qu'il y a au moins 2 joueurs
-                if (uids.length >= 2 && uids.includes(currentUser.uid)) {
-                    // LOGIQUE D'APPARIEMENT
-                    // On apparie uids[0] et uids[1]
-                    const p1 = uids[0];
-                    const p2 = uids[1];
+                // Nettoyage préventif des données corrompues (si présentes)
+                // On ne garde que les entrées qui sont des objets valides avec un UID
+                const validUids = Object.keys(players).filter(key => {
+                    const p = players[key];
+                    return p && typeof p === 'object' && p.name && p.uid;
+                });
 
-                    // Si je suis P1 (le plus ancien), je crée la partie
+                // Tri par ancienneté (Premier arrivé, premier servi)
+                validUids.sort((a, b) => {
+                    const tA = players[a].joinedAt || Date.now();
+                    const tB = players[b].joinedAt || Date.now();
+                    return tA - tB;
+                });
+                
+                // Si je suis dans la file et qu'il y a au moins 2 joueurs valides
+                if (validUids.length >= 2 && validUids.includes(currentUser.uid)) {
+                    // LOGIQUE D'APPARIEMENT
+                    // On apparie les deux premiers
+                    const p1 = validUids[0];
+                    const p2 = validUids[1];
+
+                    // Si je suis P1 (le plus ancien/Host), je crée la partie
                     if (currentUser.uid === p1) {
                         const newMatchId = `ranked_${Date.now()}_${p1}_${p2}`;
                         
@@ -358,8 +332,6 @@
                         updates[`blindtest/ranked/queue/${p2}`] = null;
                         
                         // Signal pour P2 (via un noeud "invites" ou en écoutant "matches")
-                        // Ici, on va utiliser le fait que P2 écoute la queue, mais c'est risqué.
-                        // Mieux : On écrit dans un noeud 'active_games' pour chaque user
                         updates[`users/${p1}/currentMatch`] = newMatchId;
                         updates[`users/${p2}/currentMatch`] = newMatchId;
 
