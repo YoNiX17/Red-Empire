@@ -146,7 +146,11 @@
                 </div>
             </div>
 
-            <div class="font-manga text-4xl text-white italic skew-x-[-10deg] text-shadow-lg opacity-80">VS</div>
+            <!-- VS & MATCH ID (CORRECTION ICI: Élément rajouté) -->
+            <div class="flex flex-col items-center">
+                <div class="font-manga text-4xl text-white italic skew-x-[-10deg] text-shadow-lg opacity-80">VS</div>
+                <div class="text-[10px] text-gray-500 mt-1 tracking-widest">MATCH #<span id="match-display-id">----</span></div>
+            </div>
 
             <!-- Player 2 (OPPONENT) -->
             <div class="flex items-center gap-3 flex-row-reverse text-left relative">
@@ -398,17 +402,14 @@
             if (normInput === normTarget) return true;
             
             // Inclusion stricte : L'input doit être une partie significative de la cible
-            // Règle : Doit faire au moins 4 caractères ET représenter au moins 60% de la longueur cible
-            // Ex: "One" (3 chars) dans "One Piece" (9 chars) -> 33% -> REJETÉ
-            // Ex: "Dragon Ball" (11 chars) dans "Dragon Ball Super" (17 chars) -> 64% -> ACCEPTÉ
             if (normInput.length >= 4 && normTarget.includes(normInput) && (normInput.length / normTarget.length > 0.6)) return true;
             
-            // Levenshtein (Tolérance ~20% pour éviter les faux positifs larges)
+            // Levenshtein (Tolérance ~20%)
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
             
-            return similarity > 0.8; // Seuil monté à 0.8 (était 0.75)
+            return similarity > 0.8;
         }
 
         function checkAlts(input, alts) {
@@ -683,7 +684,12 @@
             opponentId = enemyId;
             isHost = (data.host === currentUser.uid);
 
-            document.getElementById('match-display-id').innerText = mId.substring(mId.length - 4);
+            // CORRECTION : Vérification de l'élément avant de set le texte
+            const matchDisplayEl = document.getElementById('match-display-id');
+            if(matchDisplayEl) {
+                matchDisplayEl.innerText = mId.substring(mId.length - 4);
+            }
+
             document.getElementById('found-p1-img').src = myProfile.avatar || "https://ui-avatars.com/api/?name=Me";
             document.getElementById('found-p2-img').src = data.players[enemyId].avatar || "https://ui-avatars.com/api/?name=Enemy";
             document.getElementById('found-p2-name').innerText = data.players[enemyId].name;
