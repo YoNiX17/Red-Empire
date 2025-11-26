@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Red Empire | Ranked 1v1</title>
+    <link rel="icon" href="data:,"> <!-- Empêche l'erreur 404 favicon -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
@@ -28,6 +29,8 @@
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                         'glitch': 'glitch 1s linear infinite',
                         'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
                     },
                     keyframes: {
                         shake: {
@@ -44,6 +47,14 @@
                         slideUp: {
                             '0%': { transform: 'translateY(100%)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideInLeft: {
+                            '0%': { transform: 'translateX(-100px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        slideInRight: {
+                            '0%': { transform: 'translateX(100px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
                         }
                     }
                 }
@@ -910,7 +921,6 @@
                     
                     if (state.round >= 10) {
                         alert("PARTIE TERMINÉE !");
-                        // FIN PROPRE: Supprimer match et rediriger
                         remove(ref(db, `blindtest/ranked/matches/${matchId}`));
                         set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
                         window.location.href = 'blindtest_ranked.html';
