@@ -556,7 +556,8 @@
                                 [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting' }
                             },
                             gameState: { phase: 'setup', round: 1, songIndex: 0, startTime: 0, deck: generateDeck() },
-                            created: serverTimestamp()
+                            created: serverTimestamp(),
+                            lastActivity: Date.now() // Initialisation du Heartbeat
                         };
 
                         const globalUpdates = {};
@@ -617,26 +618,45 @@
             return indices.slice(0, 10);
         }
 
+        // --- NEW: LOGIQUE ANTI-ZOMBIE ---
         async function startMatchSequence(mId) {
+            const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
+            
+            // 1. Vérifier si le match existe
+            const snap = await get(matchRef);
+            if (!snap.exists()) {
+                console.log("Match introuvable - Nettoyage");
+                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+                location.reload();
+                return;
+            }
+
+            const data = snap.val();
+            
+            // 2. Vérification Heartbeat (Plus personne depuis 15s ?)
+            // On utilise lastActivity. Si absent, on utilise 'created'.
+            const lastActive = data.lastActivity || data.created || 0;
+            const now = Date.now();
+            
+            // Si le match est inactif depuis plus de 15 secondes
+            if (now - lastActive > 15000) {
+                console.log("Match ZOMBIE détecté (>15s inactivité). Suppression...");
+                // On supprime le match de la DB pour tout le monde
+                await remove(matchRef);
+                // On nettoie notre propre référence
+                await set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+                // On recharge la page pour revenir au menu
+                alert("Le match précédent était abandonné. Retour au lobby.");
+                location.reload();
+                return;
+            }
+
+            // Si tout va bien, on lance l'UI
             document.getElementById('lobby-step-queue').classList.add('hidden');
             document.getElementById('lobby-step-search').classList.add('hidden');
             document.getElementById('lobby-step-found').classList.remove('hidden');
 
-            const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
-            const snap = await get(matchRef);
-            
-            if(!snap.exists()) {
-                setTimeout(async () => {
-                     const retrySnap = await get(matchRef);
-                     if(!retrySnap.exists()) {
-                        alert("Match introuvable.");
-                        set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
-                        window.location.href = 'blindtest_ranked.html';
-                     } else setupMatchData(retrySnap.val(), mId);
-                }, 1500);
-                return;
-            }
-            setupMatchData(snap.val(), mId);
+            setupMatchData(data, mId);
         }
         
         function setupMatchData(data, mId) {
@@ -667,9 +687,18 @@
             const matchRef = ref(db, `blindtest/ranked/matches/${mId}`);
             update(child(matchRef, `players/${currentUser.uid}`), { status: 'ready' });
 
+            // --- HEARTBEAT LOOP (NEW) ---
+            // Si je suis l'hôte, je mets à jour 'lastActivity' toutes les 5 secondes
+            // pour dire "Je suis là, ne supprime pas le match !"
+            if (isHost) {
+                setInterval(() => {
+                    update(matchRef, { lastActivity: Date.now() });
+                }, 5000);
+            }
+
             onValue(matchRef, (snap) => {
                 const data = snap.val();
-                if (!data) return;
+                if (!data) return; // Match supprimé (par l'autre joueur peut-être) -> La page plantera ou rechargera si on gère pas, mais pour l'instant c'est ok.
 
                 const pIds = Object.keys(data.players);
                 pIds.forEach(id => {
@@ -733,6 +762,8 @@
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
                     const ps = s.val();
+                    if (!ps) { clearInterval(checkLoadInterval); return; } // Sécurité
+
                     const allLoaded = Object.values(ps).every(p => p.status === 'loaded');
                     
                     if (allLoaded) {
@@ -805,6 +836,8 @@
             if (isHost) {
                 setTimeout(async () => {
                     const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
+                    if (!currentState.exists()) return; // Sécurité si match supprimé
+
                     const state = currentState.val();
                     
                     if (state.round >= 10) {
@@ -818,6 +851,9 @@
                         updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1;
                         updates[`blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/status`] = 'loading';
                         updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
+                        // On update aussi lastActivity pour éviter timeout
+                        updates[`blindtest/ranked/matches/${matchId}/lastActivity`] = Date.now();
+                        
                         await update(ref(db), updates);
                     }
                 }, 8000);
