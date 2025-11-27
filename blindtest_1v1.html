@@ -163,18 +163,18 @@
     </nav>
 
     <!-- MAIN ARENA AREA -->
-    <!-- AJOUT DE 'pb-32 md:pb-48' POUR RELEVER LE CONTENU -->
-    <div class="relative flex-grow flex flex-col items-center justify-center pb-32 md:pb-48">
+    <!-- MODIF: Padding augmenté (pb-64) pour remonter le lecteur drastiquement -->
+    <div class="relative flex-grow flex flex-col items-center justify-center pb-40 md:pb-64">
         
-        <!-- VIDEO PLAYER (MODIFIÉ: max-h réduit pour éviter chevauchement) -->
+        <!-- VIDEO PLAYER -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
-            <!-- Changement: w-[95%] et max-h-[60vh] md:max-h-[70vh] -->
-            <div class="w-[95%] max-w-[1800px] aspect-video max-h-[60vh] md:max-h-[70vh] bg-black border-2 border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
+            <!-- MODIF: Hauteur réduite (max-h-[55vh]) pour éviter le chevauchement -->
+            <div class="w-[95%] max-w-[1800px] aspect-video max-h-[50vh] md:max-h-[60vh] bg-black border-2 border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 
-                <!-- NOUVEL OVERLAY : PANNEAU DA (Bottom Panel) -->
+                <!-- OVERLAY: PANNEAU DA (Bottom Panel) -->
                 <div id="result-overlay" class="absolute inset-x-0 bottom-0 z-50 hidden">
-                    <div class="bg-black/90 backdrop-blur-md border-t-4 border-empire-red p-6 animate-slide-up flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_-10px_50px_rgba(0,0,0,0.8)]">
+                    <div class="bg-black/95 backdrop-blur-xl border-t-4 border-empire-red p-6 animate-slide-up flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_-10px_50px_rgba(0,0,0,0.8)]">
                         
                         <!-- Left: Anime Name -->
                         <div class="flex-1 text-center md:text-left min-w-0">
@@ -202,15 +202,15 @@
         <!-- VINYL MODE (GUESSING PHASE) -->
         <div id="vinyl-container" class="absolute inset-0 flex flex-col items-center justify-center z-0 transition-opacity duration-500">
             <!-- Disque -->
-            <div class="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px]">
+            <div class="relative w-[250px] h-[250px] md:w-[350px] md:h-[350px]">
                 <div class="absolute inset-0 bg-empire-red rounded-full blur-[100px] opacity-20 animate-pulse"></div>
                 <div id="disk" class="w-full h-full rounded-full bg-[#0a0a0a] border-[4px] border-[#333] shadow-2xl flex items-center justify-center disk-spin disk-paused relative z-10">
                     <div class="absolute inset-0 rounded-full border-[50px] border-[#111] opacity-50"></div>
                     <div class="absolute inset-20 rounded-full border-[2px] border-[#222] opacity-30"></div>
                     
                     <!-- Center Label -->
-                    <div class="w-32 h-32 rounded-full bg-gradient-to-br from-empire-red to-red-900 border-4 border-black flex items-center justify-center shadow-inner z-20">
-                        <i class="fa-solid fa-music text-4xl text-white drop-shadow-md"></i>
+                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-empire-red to-red-900 border-4 border-black flex items-center justify-center shadow-inner z-20">
+                        <i class="fa-solid fa-music text-3xl md:text-4xl text-white drop-shadow-md"></i>
                     </div>
                 </div>
                 <!-- Bras -->
@@ -220,7 +220,7 @@
             </div>
             
             <!-- Timer Bar -->
-            <div class="w-full max-w-2xl mt-16 px-8">
+            <div class="w-full max-w-xl mt-12 px-8">
                 <div class="flex justify-between text-xs font-mono text-empire-red mb-2 uppercase tracking-[0.2em] font-bold">
                     <span id="status-text" class="animate-pulse">INITIALISATION...</span>
                     <span id="time-text">00.00</span>
@@ -232,7 +232,7 @@
         </div>
 
         <!-- INPUT ZONE -->
-        <div class="absolute bottom-0 w-full bg-gradient-to-t from-black to-transparent p-8 pb-12 z-20">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-black via-black to-transparent p-8 pb-12 z-20">
             <div class="max-w-4xl mx-auto">
                 <!-- Feedback Badges -->
                 <div id="feedback-zone" class="flex justify-center gap-4 mb-4 min-h-[30px]">
@@ -254,8 +254,9 @@
                     </button>
                 </div>
                 
-                <div class="text-center mt-4 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
-                    Appuyez sur <span class="text-gray-400 font-bold">[ENTRÉE]</span> pour valider
+                <div class="text-center mt-4 flex justify-between px-2 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
+                    <span>ESSAIS RESTANTS : <span id="attempts-display" class="text-white font-bold">3</span></span>
+                    <span>Appuyez sur <span class="text-gray-400 font-bold">[ENTRÉE]</span> pour valider</span>
                 </div>
             </div>
         </div>
@@ -354,6 +355,9 @@
         
         // Etats du Gameplay Local
         let animeFound = false;
+        let animeExhausted = false; // NOUVEAU: Si 3 erreurs anime
+        let animeAttempts = 0;      // NOUVEAU: Compteur essais anime
+        
         let opFound = false;
         let opAttempts = 0;
 
@@ -362,6 +366,7 @@
         const diskEl = document.getElementById('disk');
         const inputGuess = document.getElementById('input-guess');
         const statusText = document.getElementById('status-text');
+        const attemptsDisplay = document.getElementById('attempts-display'); // NOUVEAU
 
         // --- ALGORITHMES FUZZY MATCH ---
         function levenshtein(a, b) {
@@ -407,15 +412,15 @@
             return false;
         }
 
-        // --- GAMEPLAY LOGIC (UPDATED) ---
+        // --- GAMEPLAY LOGIC (MODIFIÉE) ---
         window.submitGuess = () => {
             if (!currentSong || !matchId) return;
             
             const val = inputGuess.value.trim();
             if (!val) return;
 
-            // --- ETAPE 1 : DEVINE L'ANIME ---
-            if (!animeFound) {
+            // --- PHASE 1 : DEVINE L'ANIME ---
+            if (!animeFound && !animeExhausted) {
                 if (isCloseMatch(val, currentSong.anime) || checkAlts(val, currentSong.alt)) {
                     // SUCCÈS ANIME
                     animeFound = true;
@@ -424,8 +429,9 @@
                     // UI Updates
                     document.getElementById('fb-anime').classList.remove('hidden');
                     inputGuess.value = "";
-                    inputGuess.placeholder = "QUEL OP ? (Ex: 1, 2...)";
+                    inputGuess.placeholder = "QUEL OP ? (Ex: 1, 2...) (1 ESSAI)";
                     inputGuess.classList.add('valid');
+                    attemptsDisplay.innerText = "1"; // Reset pour OP (1 essai)
                     setTimeout(() => inputGuess.classList.remove('valid'), 500);
                     
                     // Feedback Sonore ou Visuel
@@ -436,11 +442,28 @@
                     opAttempts = 0; // Reset tentatives OP
                 } else {
                     // ECHEC ANIME
+                    animeAttempts++;
+                    const remaining = 3 - animeAttempts;
+                    attemptsDisplay.innerText = remaining;
                     triggerShake();
+                    
+                    if (animeAttempts >= 3) {
+                        // ÉCHEC TOTAL ANIME -> PASSAGE FORCÉ À L'OP
+                        animeExhausted = true;
+                        inputGuess.value = "";
+                        inputGuess.placeholder = "ANIME RATÉ... QUEL OP ? (1 ESSAI)";
+                        attemptsDisplay.innerText = "1"; // Reset pour OP
+                        statusText.innerText = "ANIME RATÉ... TENTEZ L'OP !";
+                        statusText.className = "text-yellow-500 font-bold animate-pulse";
+                        inputGuess.classList.add('error');
+                    } else {
+                        inputGuess.value = "";
+                        inputGuess.placeholder = `NON... (${remaining} ESSAIS)`;
+                    }
                 }
             } 
-            // --- ETAPE 2 : DEVINE L'OP (Si anime trouvé) ---
-            else if (!opFound && opAttempts < 2) {
+            // --- PHASE 2 : DEVINE L'OP (Si anime trouvé OU épuisé) ---
+            else if ((animeFound || animeExhausted) && !opFound && opAttempts < 1) {
                 // Extraction du chiffre dans la réponse (ex: "op 2", "opening 2", "2")
                 const numbers = val.match(/\d+/);
                 const guessedNum = numbers ? parseInt(numbers[0]) : null;
@@ -461,19 +484,17 @@
                     statusText.classList.remove('text-green-400');
                     statusText.classList.add('text-blue-400');
                 } else {
-                    // ECHEC OP
+                    // ECHEC OP (1 seul essai)
                     opAttempts++;
+                    attemptsDisplay.innerText = "0";
                     triggerShake();
                     
-                    if (opAttempts >= 2) {
-                        inputGuess.value = "";
-                        inputGuess.placeholder = "RATÉ POUR L'OP !";
-                        inputGuess.disabled = true;
-                        inputGuess.classList.add('error');
-                    } else {
-                        inputGuess.value = "";
-                        inputGuess.placeholder = "NON... 1 ESSAI RESTANT !";
-                    }
+                    inputGuess.value = "";
+                    inputGuess.placeholder = "RATÉ POUR L'OP !";
+                    inputGuess.disabled = true;
+                    inputGuess.classList.add('error');
+                    statusText.innerText = "MANCHE TERMINÉE POUR VOUS";
+                    statusText.className = "text-gray-500 font-bold";
                 }
             }
         };
@@ -497,8 +518,12 @@
             
             // Reset Input State
             animeFound = false;
+            animeExhausted = false; // Reset state
+            animeAttempts = 0;      // Reset attempts
             opFound = false;
             opAttempts = 0;
+            
+            attemptsDisplay.innerText = "3"; // Reset display
             
             inputGuess.value = "";
             inputGuess.disabled = false;
