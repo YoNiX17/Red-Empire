@@ -69,47 +69,82 @@
         ::-webkit-scrollbar-track { background: #030303; }
         ::-webkit-scrollbar-thumb { background: #ca8a04; border-radius: 3px; }
 
-        /* --- RANK REVEAL ANIMATIONS (INTEGRATED) --- */
-        #reveal-stage { position: relative; width: 500px; height: 500px; display: flex; justify-content: center; align-items: center; perspective: 1000px; z-index: 10; }
-        #rank-main { width: 320px; height: 320px; object-fit: contain; z-index: 20; opacity: 0; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); will-change: transform, opacity, filter; }
-        #rank-ghost { position: absolute; width: 320px; height: 320px; object-fit: contain; z-index: 15; opacity: 0; pointer-events: none; mix-blend-mode: screen; filter: blur(2px) brightness(2); }
-        .shockwave-ring { position: absolute; width: 300px; height: 300px; border-radius: 50%; border: 2px solid white; opacity: 0; z-index: 5; pointer-events: none; }
-        #screen-flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 50; mix-blend-mode: overlay; }
-        .spark { position: absolute; background: white; width: 4px; height: 4px; border-radius: 50%; opacity: 0; pointer-events: none; z-index: 18; }
+        /* ========================================= */
+        /* === ANIMATIONS RANK REVEAL (MERGED) === */
+        /* ========================================= */
+        
+        #reveal-stage { position: relative; width: 600px; height: 600px; display: flex; justify-content: center; align-items: center; z-index: 10; }
 
-        @keyframes mythic-slam {
-            0% { opacity: 0; transform: scale(4) rotate(-10deg); filter: brightness(3) blur(10px); }
-            40% { opacity: 1; transform: scale(0.9); filter: brightness(1) blur(0px); }
-            60% { transform: scale(1.05); }
-            80% { transform: scale(0.98); }
-            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        /* SHARDS */
+        .rank-assembly-wrapper { position: relative; width: 350px; height: 350px; filter: drop-shadow(0 30px 60px rgba(0,0,0,0.6)); }
+        .rank-shard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; will-change: transform, opacity, filter; opacity: 0; filter: drop-shadow(0px 0px 0px rgba(0,0,0,0)); transition: clip-path 0.5s ease; }
+
+        /* STYLES DE DECOUPE */
+        /* SLASH */
+        .style-slash .shard-1 { clip-path: polygon(0 0, 100% 0, 100% 40%, 0 65%); z-index: 2; } 
+        .style-slash .shard-2 { clip-path: polygon(0 65%, 100% 40%, 100% 100%, 0 100%); z-index: 1; } 
+        .style-slash .shard-3, .style-slash .shard-4 { display: none; } 
+
+        /* PILLAR */
+        .style-pillar .shard-1 { clip-path: polygon(0 0, 25% 0, 35% 100%, 0 100%); z-index: 2; } 
+        .style-pillar .shard-2 { clip-path: polygon(25% 0, 75% 0, 65% 100%, 35% 100%); z-index: 3; } 
+        .style-pillar .shard-3 { clip-path: polygon(75% 0, 100% 0, 100% 100%, 65% 100%); z-index: 2; } 
+        .style-pillar .shard-4 { display: none; }
+
+        /* IMPERIAL */
+        .style-imperial .shard-1 { clip-path: polygon(0 0, 50% 0, 50% 50%, 0 50%); z-index: 2; } 
+        .style-imperial .shard-2 { clip-path: polygon(50% 0, 100% 0, 100% 50%, 50% 50%); z-index: 2; } 
+        .style-imperial .shard-3 { clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%); z-index: 2; } 
+        .style-imperial .shard-4 { clip-path: polygon(0 50%, 50% 50%, 50% 100%, 0 100%); z-index: 2; } 
+
+        /* GEMSTONE */
+        .style-gemstone .shard-1 { clip-path: polygon(50% 50%, 0 0, 100% 0); z-index: 3; } 
+        .style-gemstone .shard-2 { clip-path: polygon(50% 50%, 0 0, 0 100%, 50% 100%); z-index: 2; } 
+        .style-gemstone .shard-3 { clip-path: polygon(50% 50%, 100% 0, 100% 100%, 50% 100%); z-index: 2; }
+        .style-gemstone .shard-4 { display: none; }
+
+        /* ANIMATIONS */
+        @keyframes slash-in-top { 0% { opacity: 0; transform: translate(-100px, -50px); } 100% { opacity: 1; transform: translate(-10px, -5px); } }
+        @keyframes slash-in-bot { 0% { opacity: 0; transform: translate(100px, 50px); } 100% { opacity: 1; transform: translate(10px, 5px); } }
+
+        @keyframes pillar-in-left { 0% { opacity: 0; transform: translateX(-150px) scale(0.9); } 100% { opacity: 1; transform: translateX(-15px); } }
+        @keyframes pillar-in-center { 0% { opacity: 0; transform: translateY(-150px) scale(1.1); filter: brightness(2); } 100% { opacity: 1; transform: translateY(-15px); } }
+        @keyframes pillar-in-right { 0% { opacity: 0; transform: translateX(150px) scale(0.9); } 100% { opacity: 1; transform: translateX(15px); } }
+
+        @keyframes imp-in-tl { 0% { opacity: 0; transform: translate(-100px, -100px); } 100% { opacity: 1; transform: translate(-10px, -10px); } }
+        @keyframes imp-in-tr { 0% { opacity: 0; transform: translate(100px, -100px); } 100% { opacity: 1; transform: translate(10px, -10px); } }
+        @keyframes imp-in-br { 0% { opacity: 0; transform: translate(100px, 100px); } 100% { opacity: 1; transform: translate(10px, 10px); } }
+        @keyframes imp-in-bl { 0% { opacity: 0; transform: translate(-100px, 100px); } 100% { opacity: 1; transform: translate(-10px, 10px); } }
+
+        @keyframes gem-in-1 { 0% { opacity: 0; transform: translateY(-150px) rotate(10deg); } 100% { opacity: 1; transform: translateY(-20px) rotate(0deg); } }
+        @keyframes gem-in-2 { 0% { opacity: 0; transform: translate(-100px, 100px) rotate(-10deg); } 100% { opacity: 1; transform: translate(-10px, 10px) rotate(0deg); } }
+        @keyframes gem-in-3 { 0% { opacity: 0; transform: translate(100px, 100px) rotate(10deg); } 100% { opacity: 1; transform: translate(10px, 10px) rotate(0deg); } }
+
+        @keyframes tension-shake {
+            0% { transform: translate(0, 0) scale(1.02); filter: brightness(1.2); }
+            25% { transform: translate(1px, 1px) scale(1.02); }
+            50% { transform: translate(-1px, -1px) scale(1.03); filter: brightness(1.5); }
+            75% { transform: translate(1px, -1px) scale(1.02); }
+            100% { transform: translate(0, 0) scale(1.02); }
         }
-        .anim-slam { animation: mythic-slam 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
-        @keyframes ghost-expand { 0% { opacity: 0.8; transform: scale(0.9); } 100% { opacity: 0; transform: scale(2); } }
-        .anim-ghost { animation: ghost-expand 0.5s ease-out forwards; }
-
-        @keyframes shockwave-burst { 0% { opacity: 1; transform: scale(0.5); border-width: 50px; } 100% { opacity: 0; transform: scale(2.5); border-width: 0px; } }
-        .anim-shockwave { animation: shockwave-burst 0.6s ease-out forwards; }
-
-        @keyframes heavy-shake {
-            0%, 100% { transform: translate(0, 0); }
-            10%, 30%, 50%, 70%, 90% { transform: translate(-5px, -5px); }
-            20%, 40%, 60%, 80% { transform: translate(5px, 5px); }
-        }
-        .anim-shake { animation: heavy-shake 0.3s ease-out; }
+        .anim-tension { animation: tension-shake 0.1s infinite; }
 
         @keyframes idle-float {
-            0%, 100% { transform: translateY(0); filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
-            50% { transform: translateY(-15px); filter: drop-shadow(0 30px 50px rgba(0,0,0,0.6)); }
+            0%, 100% { transform: translateY(0); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); }
+            50% { transform: translateY(-10px); filter: drop-shadow(0 40px 60px rgba(0,0,0,0.3)); }
         }
         .anim-idle { animation: idle-float 4s ease-in-out infinite; }
 
-        @keyframes spark-fly {
-            0% { opacity: 1; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
-        }
-        .anim-spark { animation: spark-fly 0.6s ease-out forwards; }
+        /* FX */
+        #screen-flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 50; mix-blend-mode: overlay; }
+        .shockwave-ring { position: absolute; width: 350px; height: 350px; border-radius: 50%; border: 4px solid white; opacity: 0; z-index: 5; pointer-events: none; }
+        @keyframes shock-burst { 0% { opacity: 1; transform: scale(0.5); border-width: 50px; } 100% { opacity: 0; transform: scale(2.5); border-width: 0px; } }
+        .anim-shock { animation: shock-burst 0.4s ease-out forwards; }
+        .spark { position: absolute; background: white; width: 3px; height: 3px; opacity: 0; pointer-events: none; z-index: 18; border-radius: 2px; }
+        @keyframes spark-explode { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); } }
+        .anim-spark { animation: spark-explode 0.6s ease-out forwards; }
+        @keyframes text-reveal { 0% { opacity: 0; transform: translateY(20px); letter-spacing: 1em; } 100% { opacity: 1; transform: translateY(0); letter-spacing: normal; } }
+        .anim-text { animation: text-reveal 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
     </style>
 </head>
@@ -180,10 +215,9 @@
     <section class="flex-grow max-w-7xl mx-auto px-6 lg:px-8 pb-24 w-full relative z-10 flex flex-col justify-center">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             
-            <!-- CARD 1: DUEL (1v1) - ACTIF -->
+            <!-- CARD 1: DUEL (1v1) -->
             <div class="mode-card active glass-panel rounded-2xl h-full flex flex-col group" data-aos="fade-up" data-aos-delay="0">
                 <div class="absolute top-0 right-0 px-4 py-1 bg-gold-500 text-black text-xs font-bold font-mono rounded-bl-xl z-20">POPULAIRE</div>
-                
                 <div class="h-56 bg-gradient-to-b from-gold-900/40 to-black relative overflow-hidden flex items-center justify-center">
                     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                     <div class="relative z-10 flex items-center gap-4 scale-110 group-hover:scale-125 transition-transform duration-500">
@@ -192,22 +226,19 @@
                         <i class="fa-solid fa-user text-4xl text-white"></i>
                     </div>
                 </div>
-                
                 <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
                     <h2 class="font-display text-3xl font-bold text-white mb-2 group-hover:text-gold-400 transition-colors">DUEL</h2>
                     <span class="text-xs font-mono text-gold-600 uppercase tracking-widest mb-4 block">1 CONTRE 1</span>
                     <p class="text-gray-400 text-sm mb-8 flex-grow leading-relaxed">
-                        Le test ultime de compétence individuelle. Pas d'excuses, pas de coéquipiers. Juste vous et votre savoir.
+                        Le test ultime de compétence individuelle. Pas d'excuses, pas de coéquipiers.
                     </p>
-                    
-                    <!-- LIEN DIRECT VERS LA FILE D'ATTENTE -->
                     <a href="blindtest_1v1.html" class="w-full py-4 bg-white text-black hover:bg-gold-400 font-black font-display uppercase tracking-wider rounded shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] transition-all transform hover:-translate-y-1 block">
                         COMBATTRE
                     </a>
                 </div>
             </div>
 
-            <!-- CARD 2: DUO (2v2) - LOCKED -->
+            <!-- CARD 2: DUO (2v2) -->
             <div class="mode-card locked-card glass-panel rounded-2xl h-full flex flex-col relative" data-aos="fade-up" data-aos-delay="150">
                 <div class="absolute top-4 right-4 text-gray-600 z-20"><i class="fa-solid fa-lock text-2xl"></i></div>
                 <div class="h-56 bg-gray-900/30 flex items-center justify-center">
@@ -216,12 +247,12 @@
                 <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
                     <h2 class="font-display text-3xl font-bold text-gray-600 mb-2">DUO</h2>
                     <span class="text-xs font-mono text-gray-700 uppercase tracking-widest mb-4 block">2 CONTRE 2</span>
-                    <p class="text-gray-600 text-sm mb-8 flex-grow">La synergie parfaite. Trouvez votre binôme et grimpez le classement ensemble.</p>
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">La synergie parfaite. Trouvez votre binôme.</p>
                     <div class="mt-auto py-3 bg-gray-900 rounded border border-white/5 text-gray-600 text-xs font-mono uppercase font-bold">BIENTÔT DISPONIBLE</div>
                 </div>
             </div>
 
-            <!-- CARD 3: SQUAD (5v5) - LOCKED -->
+            <!-- CARD 3: SQUAD (5v5) -->
             <div class="mode-card locked-card glass-panel rounded-2xl h-full flex flex-col relative" data-aos="fade-up" data-aos-delay="300">
                 <div class="absolute top-4 right-4 text-gray-600 z-20"><i class="fa-solid fa-lock text-2xl"></i></div>
                 <div class="h-56 bg-gray-900/30 flex items-center justify-center">
@@ -230,7 +261,7 @@
                 <div class="p-8 flex flex-col flex-grow text-center border-t border-white/5">
                     <h2 class="font-display text-3xl font-bold text-gray-600 mb-2">SQUAD</h2>
                     <span class="text-xs font-mono text-gray-700 uppercase tracking-widest mb-4 block">5 CONTRE 5</span>
-                    <p class="text-gray-600 text-sm mb-8 flex-grow">Guerre totale. Stratégie d'équipe et rôles définis pour dominer l'arène.</p>
+                    <p class="text-gray-600 text-sm mb-8 flex-grow">Guerre totale.</p>
                     <div class="mt-auto py-3 bg-gray-900 rounded border border-white/5 text-gray-600 text-xs font-mono uppercase font-bold">SAISON 2</div>
                 </div>
             </div>
@@ -247,15 +278,23 @@
 
             <div id="reveal-stage">
                 <div id="shockwave" class="shockwave-ring"></div>
-                <img id="rank-ghost" src="" alt="">
-                <img id="rank-main" src="" alt="">
+                
+                <!-- CONTAINER DES FRAGMENTS (4 MAX) -->
+                <div id="rank-assembly" class="rank-assembly-wrapper style-slash">
+                    <img id="shard-1" class="rank-shard shard-1" src="" alt="">
+                    <img id="shard-2" class="rank-shard shard-2" src="" alt="">
+                    <img id="shard-3" class="rank-shard shard-3" src="" alt="">
+                    <img id="shard-4" class="rank-shard shard-4" src="" alt="">
+                </div>
+
                 <div id="particles-layer" class="absolute inset-0 pointer-events-none flex justify-center items-center"></div>
             </div>
 
             <!-- TEXTE DU RANG -->
-            <div class="text-center z-20 -mt-8">
+            <div class="text-center z-20 -mt-8 w-full px-4">
                 <h3 class="text-gold-500 font-mono text-xl tracking-[0.5em] mb-2 uppercase animate-pulse">Promotion !</h3>
-                <h2 id="anim-rank-name" class="font-teko text-8xl uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 transition-all duration-300 opacity-0 scale-90">
+                <!-- FIX: whitespace-nowrap -->
+                <h2 id="anim-rank-name" class="font-teko text-7xl md:text-9xl uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 transition-all duration-300 opacity-0 scale-90 whitespace-nowrap w-full">
                     <!-- JS -->
                 </h2>
                 <div id="rank-line" class="h-1 w-0 bg-white mx-auto mt-2 shadow-[0_0_20px_white] transition-all duration-700"></div>
@@ -298,7 +337,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { eloEngine, RANKS } from "./elo_engine.js"; // Import avec RANKS pour l'animation
+        import { eloEngine, RANKS } from "./elo_engine.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -327,17 +366,21 @@
 
         // ANIMATION ELEMENTS
         const revealOverlay = document.getElementById('rank-reveal-overlay');
-        const rankMain = document.getElementById('rank-main');
-        const rankGhost = document.getElementById('rank-ghost');
+        const shards = [
+            document.getElementById('shard-1'),
+            document.getElementById('shard-2'),
+            document.getElementById('shard-3'),
+            document.getElementById('shard-4')
+        ];
+        const assembly = document.getElementById('rank-assembly');
         const shockwave = document.getElementById('shockwave');
         const bgGlow = document.getElementById('bg-glow');
         const flash = document.getElementById('screen-flash');
-        const stage = document.getElementById('reveal-stage');
         const animNameEl = document.getElementById('anim-rank-name');
         const animLineEl = document.getElementById('rank-line');
         const particlesContainer = document.getElementById('particles-layer');
 
-        let currentRankId = null; // Pour suivre le rang précédent
+        let isAnimating = false;
 
         window.closeReveal = () => {
             revealOverlay.classList.add('hidden');
@@ -355,18 +398,18 @@
                     
                     const newRankInfo = eloEngine.getRankInfo(elo);
                     
-                    // DETECTION PASSAGE DE RANG (PROMOTION)
-                    if (currentRankId !== null && currentRankId !== newRankInfo.id) {
-                        // On vérifie si c'est une montée (nouveau minElo > ancien minElo)
-                        const oldRank = RANKS.find(r => r.id === currentRankId);
+                    // CHECK PROMOTION VIA LOCAL STORAGE
+                    const storedRankId = localStorage.getItem('last_rank_id');
+                    
+                    if (storedRankId && storedRankId !== newRankInfo.id) {
+                        const oldRank = RANKS.find(r => r.id === storedRankId);
                         if (oldRank && newRankInfo.minElo > oldRank.minElo) {
-                            // C'est une promotion !
                             playRevealAnimation(newRankInfo);
                         }
                     }
                     
-                    // Mise à jour state local
-                    currentRankId = newRankInfo.id;
+                    // SAVE NEW RANK
+                    localStorage.setItem('last_rank_id', newRankInfo.id);
                     updateRankUI(newRankInfo);
                 });
                 
@@ -378,130 +421,160 @@
         });
 
         function updateRankUI(info) {
-            // Text Elements
             nameEl.innerText = info.name;
             nameEl.style.color = info.color;
             lpEl.innerText = `${info.lp} LP`;
             totalEl.innerText = `ELO TOTAL: ${info.totalElo}`;
-            
-            // Image
             imgEl.src = info.img;
-
-            // Barre
             barEl.style.width = `${info.progressPercent}%`;
             barEl.style.backgroundColor = info.color;
             barEl.style.boxShadow = `0 0 15px ${info.color}`;
-            
-            // Glow
             glowEl.style.backgroundColor = info.color;
-
-            // Next Rank
-            if (info.nextRank) {
-                nextEl.innerText = `VERS ${info.nextRank.name}`;
-            } else {
-                nextEl.innerText = "RANG MAXIMUM ATTEINT";
-            }
+            if (info.nextRank) nextEl.innerText = `VERS ${info.nextRank.name}`;
+            else nextEl.innerText = "RANG MAXIMUM ATTEINT";
         }
 
-        // --- ANIMATION LOGIC (From rank_reveal.html) ---
+        // --- ANIMATION LOGIC (INTEGRATED) ---
         function playRevealAnimation(rank) {
             revealOverlay.classList.remove('hidden');
             
-            // 1. RESET
-            rankMain.classList.remove('anim-slam', 'anim-idle');
-            rankMain.classList.add('anim-out');
-            
-            animNameEl.style.opacity = 0;
-            animNameEl.style.transform = 'translateY(20px)';
-            animLineEl.style.width = '0px';
-            bgGlow.style.opacity = 0;
+            // STYLE MAPPING
+            let style = 'slash';
+            if (rank.id === 'silver' || rank.id === 'gold') style = 'pillar';
+            if (rank.id === 'diamond') style = 'imperial';
+            if (rank.id === 'master') style = 'gemstone';
 
-            // 2. LOAD & TRIGGER
-            const imgLoader = new Image();
-            imgLoader.src = rank.img;
-            
-            imgLoader.onload = () => {
-                setTimeout(() => {
-                    rankMain.src = rank.img;
-                    rankGhost.src = rank.img;
+            // 1. CLEANUP
+            shards.forEach(s => {
+                s.style.transition = 'all 0.3s cubic-bezier(0.5, 0, 1, 0.5)';
+                s.style.opacity = 0;
+                s.style.transform = 'scale(0.8)';
+                s.classList.remove('anim-idle');
+            });
+            assembly.classList.remove('anim-idle');
+            animNameEl.style.opacity = 0; animNameEl.style.transform = 'translateY(20px)';
+            animLineEl.style.width = '0px'; bgGlow.style.opacity = 0;
+
+            // 2. LOAD & START
+            setTimeout(() => {
+                assembly.className = `rank-assembly-wrapper style-${style}`; 
+
+                shards.forEach(s => {
+                    s.src = rank.img;
+                    s.style.transition = 'none';
+                    s.style.color = rank.color; 
                     
-                    rankMain.classList.remove('anim-out');
-                    rankMain.style.opacity = 0;
-
-                    animNameEl.innerText = rank.name;
-                    animNameEl.style.textShadow = `0 0 30px ${rank.color}`;
-                    shockwave.style.borderColor = rank.color;
-                    bgGlow.style.backgroundColor = rank.color;
-
-                    triggerImpact(rank);
-
-                }, 300);
-            };
-        }
-
-        function triggerImpact(rank) {
-            // Image Principale
-            rankMain.classList.add('anim-slam');
-            
-            // Ghost
-            setTimeout(() => {
-                rankGhost.style.opacity = 0.6;
-                rankGhost.classList.remove('anim-ghost');
-                void rankGhost.offsetWidth; 
-                rankGhost.classList.add('anim-ghost');
-            }, 50);
-
-            // Shockwave
-            shockwave.classList.remove('anim-shockwave');
-            void shockwave.offsetWidth;
-            shockwave.classList.add('anim-shockwave');
-
-            // Shake & Flash
-            setTimeout(() => {
-                stage.classList.add('anim-shake');
-                setTimeout(() => stage.classList.remove('anim-shake'), 300);
+                    // Logic Display based on Style
+                    if(style === 'slash') {
+                        if(s.id === 'shard-3' || s.id === 'shard-4') s.style.display = 'none'; else s.style.display = 'block';
+                    } else if (style === 'gemstone' || style === 'pillar') {
+                        if(s.id === 'shard-4') s.style.display = 'none'; else s.style.display = 'block';
+                    } else { 
+                        s.style.display = 'block';
+                    }
+                });
                 
-                flash.style.transition = 'none';
-                flash.style.opacity = 0.2;
+                applyEntryAnimation(style);
+
                 setTimeout(() => {
-                    flash.style.transition = 'opacity 0.5s';
-                    flash.style.opacity = 0;
-                }, 50);
+                    applyTensionState(style);
+                    shards.forEach(s => s.classList.add('anim-tension'));
+                    bgGlow.style.backgroundColor = rank.color;
+                    bgGlow.style.opacity = 0.5;
+                    bgGlow.style.transition = 'opacity 0.5s';
+                }, 700);
 
-                spawnSparks(15);
-                bgGlow.style.opacity = 0.2;
+                setTimeout(() => {
+                    shards.forEach(s => s.classList.remove('anim-tension'));
+                    // SNAP
+                    shards.forEach(s => {
+                        s.style.transform = 'translate(0,0) scale(1) rotate(0)';
+                        s.style.filter = 'drop-shadow(0 0 0 rgba(0,0,0,0))';
+                    });
+                    // FLASH
+                    flash.style.transition = 'none'; flash.style.opacity = 0.6;
+                    setTimeout(() => { flash.style.transition = 'opacity 1s ease-out'; flash.style.opacity = 0; }, 50);
+                    // FX
+                    shockwave.style.borderColor = rank.color;
+                    shockwave.classList.remove('anim-shock'); void shockwave.offsetWidth; shockwave.classList.add('anim-shock');
+                    spawnSparks(40, rank.color);
+                    // TEXT
+                    animNameEl.innerText = rank.name;
+                    animNameEl.classList.remove('anim-text'); void animNameEl.offsetWidth; animNameEl.classList.add('anim-text');
+                    animNameEl.style.textShadow = `0 0 40px ${rank.color}`;
+                    animLineEl.style.width = '200px'; animLineEl.style.backgroundColor = rank.color;
+                    animLineEl.style.boxShadow = `0 0 20px ${rank.color}`;
+                }, 1200);
 
-            }, 250);
-
-            // Stabilisation
-            setTimeout(() => {
-                animNameEl.style.opacity = 1;
-                animNameEl.style.transform = 'translateY(0)';
-                animLineEl.style.width = '150px';
-                animLineEl.style.backgroundColor = rank.color;
-                
-                rankMain.style.opacity = 1;
-                rankMain.classList.remove('anim-slam');
-                rankMain.classList.add('anim-idle');
-            }, 800);
+                setTimeout(() => {
+                    shards.forEach(s => { s.style.transition = 'transform 0.5s'; s.classList.add('anim-idle'); });
+                    assembly.classList.add('anim-idle');
+                }, 1700);
+            }, 300);
         }
 
-        function spawnSparks(count) {
-            particlesContainer.innerHTML = ''; 
+        // Helpers
+        function applyEntryAnimation(style) {
+            shards.forEach(s => s.style.animation = '');
+            if (style === 'slash') {
+                shards[0].style.animation = 'slash-in-top 0.7s forwards';
+                shards[1].style.animation = 'slash-in-bot 0.7s forwards';
+            } else if (style === 'pillar') {
+                shards[0].style.animation = 'pillar-in-left 0.7s forwards';
+                shards[1].style.animation = 'pillar-in-center 0.7s forwards';
+                shards[2].style.animation = 'pillar-in-right 0.7s forwards';
+            } else if (style === 'gemstone') {
+                shards[0].style.animation = 'gem-in-1 0.7s forwards';
+                shards[1].style.animation = 'gem-in-2 0.7s forwards';
+                shards[2].style.animation = 'gem-in-3 0.7s forwards';
+            } else if (style === 'imperial') {
+                shards[0].style.animation = 'imp-in-tl 0.7s forwards';
+                shards[1].style.animation = 'imp-in-tr 0.7s forwards';
+                shards[2].style.animation = 'imp-in-br 0.7s forwards';
+                shards[3].style.animation = 'imp-in-bl 0.7s forwards';
+            }
+        }
+
+        function applyTensionState(style) {
+            shards.forEach(s => { s.style.animation = 'none'; s.style.opacity = 1; });
+            if (style === 'slash') {
+                shards[0].style.transform = 'translate(-10px, -5px) scale(1.05)';
+                shards[1].style.transform = 'translate(10px, 5px) scale(1.05)';
+            } else if (style === 'pillar') {
+                shards[0].style.transform = 'translateX(-15px) scale(1.05)';
+                shards[1].style.transform = 'translateY(-15px) scale(1.05)';
+                shards[2].style.transform = 'translateX(15px) scale(1.05)';
+            } else if (style === 'gemstone') {
+                shards[0].style.transform = 'translateY(-20px) scale(1.05)';
+                shards[1].style.transform = 'translate(-10px, 10px) scale(1.05)';
+                shards[2].style.transform = 'translate(10px, 10px) scale(1.05)';
+            } else if (style === 'imperial') {
+                shards[0].style.transform = 'translate(-10px, -10px) scale(1.05)';
+                shards[1].style.transform = 'translate(10px, -10px) scale(1.05)';
+                shards[2].style.transform = 'translate(10px, 10px) scale(1.05)';
+                shards[3].style.transform = 'translate(-10px, 10px) scale(1.05)';
+            }
+        }
+
+        function spawnSparks(count, color) {
+            particlesContainer.innerHTML = '';
             for(let i=0; i<count; i++) {
                 const spark = document.createElement('div');
                 spark.classList.add('spark', 'anim-spark');
+                spark.style.backgroundColor = color;
+                spark.style.boxShadow = `0 0 10px ${color}, 0 0 20px white`;
                 
                 const angle = Math.random() * Math.PI * 2;
-                const dist = 150 + Math.random() * 100;
+                const dist = 250 + Math.random() * 200;
                 const tx = Math.cos(angle) * dist + 'px';
                 const ty = Math.sin(angle) * dist + 'px';
                 
                 spark.style.setProperty('--tx', tx);
                 spark.style.setProperty('--ty', ty);
                 
-                spark.style.width = (Math.random() * 4 + 2) + 'px';
-                spark.style.height = spark.style.width;
+                const size = Math.random() * 3 + 2;
+                spark.style.width = size + 'px';
+                spark.style.height = size + 'px';
                 
                 particlesContainer.appendChild(spark);
             }
