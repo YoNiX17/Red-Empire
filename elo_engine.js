@@ -63,8 +63,6 @@ export class EloSystem {
      */
     getRankInfo(elo) {
         // On cherche le rang le plus élevé dont le minElo est <= elo actuel
-        // On inverse le tableau pour trouver le plus haut en premier, ou on utilise findLast si supporté
-        // Ici méthode compatible :
         let currentRank = RANKS[0];
         let nextRank = RANKS[1];
 
@@ -94,6 +92,7 @@ export class EloSystem {
         return {
             ...currentRank,
             lp: Math.floor(lp),
+            totalElo: elo,
             progressPercent: progress,
             nextRank: nextRank
         };
