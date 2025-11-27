@@ -1,1 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Système de Rangs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Teko:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        gold: { 400: '#facc15', 500: '#eab308', 600: '#ca8a04' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                        teko: ['Teko', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        .glass-panel { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        .rank-row {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .rank-row:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(10px);
+        }
 
+        /* Effet de brillance sur les images */
+        .rank-img { filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); transition: transform 0.3s; }
+        .rank-row:hover .rank-img { transform: scale(1.1) rotate(5deg); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-black flex flex-col min-h-screen">
+
+    <div class="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),#030303_60%)] pointer-events-none z-[-1]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-white/10 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-chart-simple text-white text-xl"></i>
+                <span class="font-display font-bold text-lg tracking-widest text-white">SYSTÈME <span class="text-gray-500">ELO</span></span>
+            </div>
+            <a href="blindtest_ranked.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> RETOUR
+            </a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-16 text-center px-4">
+        <h1 class="font-teko text-7xl md:text-9xl text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600 leading-none mb-4" data-aos="fade-down">
+            ÉCHELLE DES RANGS
+        </h1>
+        <p class="font-mono text-gray-400 max-w-2xl mx-auto text-lg" data-aos="fade-up" data-aos-delay="100">
+            Chaque victoire vous rapporte des points (LP). Chaque défaite vous en coûte.
+            <br>Progressez à travers les 6 divisions pour atteindre le sommet.
+        </p>
+    </section>
+
+    <!-- TABLEAU DES RANGS -->
+    <section class="max-w-5xl mx-auto px-4 pb-32">
+        <div class="glass-panel rounded-2xl overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+            
+            <!-- EN-TÊTE DU TABLEAU -->
+            <div class="grid grid-cols-12 gap-4 p-6 border-b border-white/10 text-xs font-mono text-gray-500 uppercase tracking-widest">
+                <div class="col-span-2 md:col-span-1 text-center">Insigne</div>
+                <div class="col-span-6 md:col-span-4">Dénomination</div>
+                <div class="col-span-4 md:col-span-3 text-right">Seuil Elo (LP)</div>
+                <div class="hidden md:block col-span-4 text-right">Status</div>
+            </div>
+
+            <!-- LISTE DYNAMIQUE DES RANGS (Générée par JS) -->
+            <div id="ranks-container">
+                <!-- Injection JS ici -->
+            </div>
+
+        </div>
+
+        <!-- INFO SYSTEME -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-green-500" data-aos="fade-up" data-aos-delay="300">
+                <h3 class="font-display text-white text-xl mb-2">VICTOIRE</h3>
+                <p class="text-gray-400 text-sm font-mono">Gagnez entre <span class="text-green-400 font-bold">+15</span> et <span class="text-green-400 font-bold">+30 LP</span> selon le niveau de votre adversaire.</p>
+            </div>
+            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-red-500" data-aos="fade-up" data-aos-delay="400">
+                <h3 class="font-display text-white text-xl mb-2">DÉFAITE</h3>
+                <p class="text-gray-400 text-sm font-mono">Perdez entre <span class="text-red-400 font-bold">-10</span> et <span class="text-red-400 font-bold">-25 LP</span>. Vous ne pouvez pas descendre sous 0 LP (Recrue).</p>
+            </div>
+            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-gold-500" data-aos="fade-up" data-aos-delay="500">
+                <h3 class="font-display text-white text-xl mb-2">SAISON</h3>
+                <p class="text-gray-400 text-sm font-mono">Les rangs sont réinitialisés (Soft Reset) à la fin de chaque saison compétitive.</p>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- SCRIPT -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script type="module">
+        import { RANKS } from "./elo_engine.js";
+        
+        AOS.init();
+
+        const container = document.getElementById('ranks-container');
+
+        // On inverse pour afficher le plus haut rang en premier (optionnel, ici on fait croissant pour la logique de progression)
+        // Disons qu'on affiche du plus petit au plus grand pour montrer l'ascension.
+        
+        RANKS.forEach((rank, index) => {
+            const nextRank = RANKS[index + 1];
+            const rangeText = nextRank 
+                ? `${rank.minElo} - ${nextRank.minElo - 1}` 
+                : `${rank.minElo}+`;
+            
+            const isTopRank = !nextRank;
+
+            const div = document.createElement('div');
+            div.className = "rank-row grid grid-cols-12 gap-4 p-6 border-b border-white/5 items-center group cursor-default";
+            div.style.borderLeftColor = rank.color;
+
+            div.innerHTML = `
+                <!-- Image -->
+                <div class="col-span-2 md:col-span-1 flex justify-center">
+                    <img src="${rank.img}" class="rank-img w-12 h-12 md:w-16 md:h-16 object-contain">
+                </div>
+
+                <!-- Nom -->
+                <div class="col-span-6 md:col-span-4 flex flex-col justify-center">
+                    <span class="font-teko text-2xl md:text-4xl uppercase tracking-wide group-hover:text-white transition-colors" style="color: ${rank.color}">${rank.name}</span>
+                    <span class="text-xs text-gray-600 font-mono uppercase tracking-widest hidden md:block">Division ${index + 1}</span>
+                </div>
+
+                <!-- Elo -->
+                <div class="col-span-4 md:col-span-3 text-right flex flex-col justify-center">
+                    <span class="font-mono text-xl md:text-2xl font-bold text-white">${rangeText}</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest">Points Elo</span>
+                </div>
+
+                <!-- Status (Desktop Only) -->
+                <div class="hidden md:block col-span-4 text-right">
+                    ${isTopRank 
+                        ? `<span class="px-3 py-1 border border-gold-500/30 bg-gold-500/10 text-gold-500 text-xs font-bold rounded uppercase tracking-widest">Légendaire</span>`
+                        : `<div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden mt-2"><div class="h-full bg-white/20 w-full"></div></div>`
+                    }
+                </div>
+            `;
+
+            container.appendChild(div);
+        });
+
+    </script>
+</body>
+</html>
