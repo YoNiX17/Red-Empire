@@ -6,7 +6,7 @@
     <title>Red Empire | Ranked Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Teko:wght@300;500;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <script>
@@ -21,6 +21,7 @@
                         sans: ['Inter', 'sans-serif'],
                         display: ['Orbitron', 'sans-serif'],
                         mono: ['Rajdhani', 'sans-serif'],
+                        teko: ['Teko', 'sans-serif'],
                     },
                     animation: { 
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -67,6 +68,49 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #030303; }
         ::-webkit-scrollbar-thumb { background: #ca8a04; border-radius: 3px; }
+
+        /* --- RANK REVEAL ANIMATIONS (INTEGRATED) --- */
+        #reveal-stage { position: relative; width: 500px; height: 500px; display: flex; justify-content: center; align-items: center; perspective: 1000px; z-index: 10; }
+        #rank-main { width: 320px; height: 320px; object-fit: contain; z-index: 20; opacity: 0; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); will-change: transform, opacity, filter; }
+        #rank-ghost { position: absolute; width: 320px; height: 320px; object-fit: contain; z-index: 15; opacity: 0; pointer-events: none; mix-blend-mode: screen; filter: blur(2px) brightness(2); }
+        .shockwave-ring { position: absolute; width: 300px; height: 300px; border-radius: 50%; border: 2px solid white; opacity: 0; z-index: 5; pointer-events: none; }
+        #screen-flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 50; mix-blend-mode: overlay; }
+        .spark { position: absolute; background: white; width: 4px; height: 4px; border-radius: 50%; opacity: 0; pointer-events: none; z-index: 18; }
+
+        @keyframes mythic-slam {
+            0% { opacity: 0; transform: scale(4) rotate(-10deg); filter: brightness(3) blur(10px); }
+            40% { opacity: 1; transform: scale(0.9); filter: brightness(1) blur(0px); }
+            60% { transform: scale(1.05); }
+            80% { transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        .anim-slam { animation: mythic-slam 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        @keyframes ghost-expand { 0% { opacity: 0.8; transform: scale(0.9); } 100% { opacity: 0; transform: scale(2); } }
+        .anim-ghost { animation: ghost-expand 0.5s ease-out forwards; }
+
+        @keyframes shockwave-burst { 0% { opacity: 1; transform: scale(0.5); border-width: 50px; } 100% { opacity: 0; transform: scale(2.5); border-width: 0px; } }
+        .anim-shockwave { animation: shockwave-burst 0.6s ease-out forwards; }
+
+        @keyframes heavy-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-5px, -5px); }
+            20%, 40%, 60%, 80% { transform: translate(5px, 5px); }
+        }
+        .anim-shake { animation: heavy-shake 0.3s ease-out; }
+
+        @keyframes idle-float {
+            0%, 100% { transform: translateY(0); filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
+            50% { transform: translateY(-15px); filter: drop-shadow(0 30px 50px rgba(0,0,0,0.6)); }
+        }
+        .anim-idle { animation: idle-float 4s ease-in-out infinite; }
+
+        @keyframes spark-fly {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+        }
+        .anim-spark { animation: spark-fly 0.6s ease-out forwards; }
+
     </style>
 </head>
 <body class="antialiased selection:bg-gold-500 selection:text-black flex flex-col min-h-screen">
@@ -194,6 +238,34 @@
         </div>
     </section>
 
+    <!-- RANK REVEAL OVERLAY (HIDDEN BY DEFAULT) -->
+    <div id="rank-reveal-overlay" class="hidden fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center backdrop-blur-xl">
+        <div id="screen-flash"></div>
+        <div id="main-container" class="relative flex flex-col items-center mb-16 w-full max-w-4xl">
+            <!-- Halo de fond -->
+            <div id="bg-glow" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-0 transition-all duration-1000 blur-[100px]"></div>
+
+            <div id="reveal-stage">
+                <div id="shockwave" class="shockwave-ring"></div>
+                <img id="rank-ghost" src="" alt="">
+                <img id="rank-main" src="" alt="">
+                <div id="particles-layer" class="absolute inset-0 pointer-events-none flex justify-center items-center"></div>
+            </div>
+
+            <!-- TEXTE DU RANG -->
+            <div class="text-center z-20 -mt-8">
+                <h3 class="text-gold-500 font-mono text-xl tracking-[0.5em] mb-2 uppercase animate-pulse">Promotion !</h3>
+                <h2 id="anim-rank-name" class="font-teko text-8xl uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 transition-all duration-300 opacity-0 scale-90">
+                    <!-- JS -->
+                </h2>
+                <div id="rank-line" class="h-1 w-0 bg-white mx-auto mt-2 shadow-[0_0_20px_white] transition-all duration-700"></div>
+                <button onclick="closeReveal()" class="mt-12 px-8 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded font-mono uppercase tracking-widest text-sm transition-colors text-gray-300 hover:text-white">
+                    CONTINUER
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="border-t border-yellow-900/20 bg-black py-8 mt-auto relative z-10">
         <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">© 2024 Red Empire Systems. Ranked Division.</div>
@@ -226,7 +298,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { eloEngine } from "./elo_engine.js";
+        import { eloEngine, RANKS } from "./elo_engine.js"; // Import avec RANKS pour l'animation
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -253,43 +325,69 @@
         const nextEl = document.getElementById('next-rank-name');
         const glowEl = document.getElementById('rank-glow');
 
+        // ANIMATION ELEMENTS
+        const revealOverlay = document.getElementById('rank-reveal-overlay');
+        const rankMain = document.getElementById('rank-main');
+        const rankGhost = document.getElementById('rank-ghost');
+        const shockwave = document.getElementById('shockwave');
+        const bgGlow = document.getElementById('bg-glow');
+        const flash = document.getElementById('screen-flash');
+        const stage = document.getElementById('reveal-stage');
+        const animNameEl = document.getElementById('anim-rank-name');
+        const animLineEl = document.getElementById('rank-line');
+        const particlesContainer = document.getElementById('particles-layer');
+
+        let currentRankId = null; // Pour suivre le rang précédent
+
+        window.closeReveal = () => {
+            revealOverlay.classList.add('hidden');
+        };
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Initialiser Elo si n'existe pas
                 const eloRef = ref(db, `users/${user.uid}/elo`);
-                
-                // Ecoute temps réel
                 onValue(eloRef, (snap) => {
                     let elo = snap.val();
                     if (elo === null) {
-                        // Si nouveau joueur ranked, on set à 500
                         elo = 500;
                         set(eloRef, 500);
                     }
-                    updateRankUI(elo);
+                    
+                    const newRankInfo = eloEngine.getRankInfo(elo);
+                    
+                    // DETECTION PASSAGE DE RANG (PROMOTION)
+                    if (currentRankId !== null && currentRankId !== newRankInfo.id) {
+                        // On vérifie si c'est une montée (nouveau minElo > ancien minElo)
+                        const oldRank = RANKS.find(r => r.id === currentRankId);
+                        if (oldRank && newRankInfo.minElo > oldRank.minElo) {
+                            // C'est une promotion !
+                            playRevealAnimation(newRankInfo);
+                        }
+                    }
+                    
+                    // Mise à jour state local
+                    currentRankId = newRankInfo.id;
+                    updateRankUI(newRankInfo);
                 });
                 
                 rankCard.classList.remove('hidden');
                 rankCard.classList.add('flex');
             } else {
                 rankCard.classList.add('hidden');
-                // Peut-être rediriger ou montrer un bouton login
             }
         });
 
-        function updateRankUI(elo) {
-            const info = eloEngine.getRankInfo(elo);
-
-            // Mise à jour Textes
+        function updateRankUI(info) {
+            // Text Elements
             nameEl.innerText = info.name;
             nameEl.style.color = info.color;
             lpEl.innerText = `${info.lp} LP`;
             totalEl.innerText = `ELO TOTAL: ${info.totalElo}`;
             
-            // Mise à jour Image
+            // Image
             imgEl.src = info.img;
 
-            // Mise à jour Barre
+            // Barre
             barEl.style.width = `${info.progressPercent}%`;
             barEl.style.backgroundColor = info.color;
             barEl.style.boxShadow = `0 0 15px ${info.color}`;
@@ -297,11 +395,115 @@
             // Glow
             glowEl.style.backgroundColor = info.color;
 
-            // Next Rank Text
+            // Next Rank
             if (info.nextRank) {
                 nextEl.innerText = `VERS ${info.nextRank.name}`;
             } else {
                 nextEl.innerText = "RANG MAXIMUM ATTEINT";
+            }
+        }
+
+        // --- ANIMATION LOGIC (From rank_reveal.html) ---
+        function playRevealAnimation(rank) {
+            revealOverlay.classList.remove('hidden');
+            
+            // 1. RESET
+            rankMain.classList.remove('anim-slam', 'anim-idle');
+            rankMain.classList.add('anim-out');
+            
+            animNameEl.style.opacity = 0;
+            animNameEl.style.transform = 'translateY(20px)';
+            animLineEl.style.width = '0px';
+            bgGlow.style.opacity = 0;
+
+            // 2. LOAD & TRIGGER
+            const imgLoader = new Image();
+            imgLoader.src = rank.img;
+            
+            imgLoader.onload = () => {
+                setTimeout(() => {
+                    rankMain.src = rank.img;
+                    rankGhost.src = rank.img;
+                    
+                    rankMain.classList.remove('anim-out');
+                    rankMain.style.opacity = 0;
+
+                    animNameEl.innerText = rank.name;
+                    animNameEl.style.textShadow = `0 0 30px ${rank.color}`;
+                    shockwave.style.borderColor = rank.color;
+                    bgGlow.style.backgroundColor = rank.color;
+
+                    triggerImpact(rank);
+
+                }, 300);
+            };
+        }
+
+        function triggerImpact(rank) {
+            // Image Principale
+            rankMain.classList.add('anim-slam');
+            
+            // Ghost
+            setTimeout(() => {
+                rankGhost.style.opacity = 0.6;
+                rankGhost.classList.remove('anim-ghost');
+                void rankGhost.offsetWidth; 
+                rankGhost.classList.add('anim-ghost');
+            }, 50);
+
+            // Shockwave
+            shockwave.classList.remove('anim-shockwave');
+            void shockwave.offsetWidth;
+            shockwave.classList.add('anim-shockwave');
+
+            // Shake & Flash
+            setTimeout(() => {
+                stage.classList.add('anim-shake');
+                setTimeout(() => stage.classList.remove('anim-shake'), 300);
+                
+                flash.style.transition = 'none';
+                flash.style.opacity = 0.2;
+                setTimeout(() => {
+                    flash.style.transition = 'opacity 0.5s';
+                    flash.style.opacity = 0;
+                }, 50);
+
+                spawnSparks(15);
+                bgGlow.style.opacity = 0.2;
+
+            }, 250);
+
+            // Stabilisation
+            setTimeout(() => {
+                animNameEl.style.opacity = 1;
+                animNameEl.style.transform = 'translateY(0)';
+                animLineEl.style.width = '150px';
+                animLineEl.style.backgroundColor = rank.color;
+                
+                rankMain.style.opacity = 1;
+                rankMain.classList.remove('anim-slam');
+                rankMain.classList.add('anim-idle');
+            }, 800);
+        }
+
+        function spawnSparks(count) {
+            particlesContainer.innerHTML = ''; 
+            for(let i=0; i<count; i++) {
+                const spark = document.createElement('div');
+                spark.classList.add('spark', 'anim-spark');
+                
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 150 + Math.random() * 100;
+                const tx = Math.cos(angle) * dist + 'px';
+                const ty = Math.sin(angle) * dist + 'px';
+                
+                spark.style.setProperty('--tx', tx);
+                spark.style.setProperty('--ty', ty);
+                
+                spark.style.width = (Math.random() * 4 + 2) + 'px';
+                spark.style.height = spark.style.width;
+                
+                particlesContainer.appendChild(spark);
             }
         }
 
