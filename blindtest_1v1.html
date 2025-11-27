@@ -81,6 +81,14 @@
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* Animation Sticker (Etiquette) */
+        @keyframes sticker-pop {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.1) rotate(2deg); opacity: 1; }
+            100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+        }
+        .animate-sticker { animation: sticker-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
         /* Input Styles */
         .input-cyber {
             background: rgba(0,0,0,0.8);
@@ -163,12 +171,45 @@
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
             <div class="w-full max-w-5xl aspect-video bg-black border-4 border-gold-500 shadow-[0_0_100px_rgba(234,179,8,0.3)] overflow-hidden relative rounded-lg">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
-                <!-- Overlay Résultat -->
-                <div id="result-overlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center hidden backdrop-blur-md">
-                    <h2 id="res-anime" class="font-display text-5xl md:text-7xl text-white font-black mb-4 text-shadow-glow tracking-tighter">ANIME NAME</h2>
-                    <p id="res-song" class="font-mono text-gold-400 text-2xl tracking-[0.5em] uppercase border-t border-gold-500/30 pt-4">SONG TITLE</p>
-                    <div id="res-type" class="mt-8 px-6 py-2 bg-white text-black font-black font-manga text-2xl skew-x-[-10deg] shadow-[5px_5px_0px_#ca8a04]">OPENING 1</div>
+                
+                <!-- NOUVEL OVERLAY : ETIQUETTE / STICKER -->
+                <div id="result-overlay" class="absolute inset-0 z-50 flex items-center justify-center hidden">
+                    <!-- Fond légèrement sombre pour contraste mais voir la vidéo -->
+                    <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div>
+
+                    <!-- L'étiquette (Sticker) -->
+                    <div class="animate-sticker relative bg-[#f5f5f5] border-[6px] border-black p-8 md:p-12 max-w-2xl w-[90%] shadow-[12px_12px_0px_#eab308] transform -rotate-2">
+                        
+                        <!-- Effet "Scotch" transparent en haut -->
+                        <div class="absolute -top-5 left-1/2 -translate-x-1/2 w-32 h-10 bg-white/40 border border-white/20 shadow-sm backdrop-blur-sm transform rotate-1"></div>
+
+                        <div class="flex flex-col items-center text-center text-black relative z-10">
+                            <!-- Badge Top -->
+                            <span class="inline-block bg-black text-gold-500 font-mono text-xs font-bold px-3 py-1 mb-3 tracking-[0.2em] uppercase transform -skew-x-12 border border-gold-500">
+                                IDENTIFIÉ
+                            </span>
+                            
+                            <!-- Anime Title (Big) -->
+                            <h2 id="res-anime" class="font-manga text-5xl md:text-7xl text-black leading-none mb-4 uppercase break-words w-full drop-shadow-sm">
+                                ANIME NAME
+                            </h2>
+                            
+                            <!-- Divider -->
+                            <div class="w-full h-1 bg-black/10 mb-4 rounded-full"></div>
+                            
+                            <!-- Info Row -->
+                            <div class="flex flex-wrap items-center justify-center gap-4">
+                                <p id="res-song" class="font-display font-bold text-gray-800 text-xl uppercase tracking-wider italic">
+                                    "Song Title"
+                                </p>
+                                <div id="res-type" class="bg-empire-red text-white font-black font-mono text-xl px-4 py-2 border-4 border-black shadow-[4px_4px_0px_#000] transform rotate-3">
+                                    OP 1
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
 
