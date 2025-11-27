@@ -28,7 +28,7 @@ export const RANKS = [
     },
     { 
         id: 'gold',
-        name: "SUPRÊME", 
+        name: "GÉNÉRALE SUPRÊME", // MODIFIÉ
         minElo: 1500, 
         color: "#38bdf8", // Bleu Cyan
         img: "https://i.postimg.cc/8k3T75BY/Gemini_Generated_Image_fwd624fwd624fwd6_removebg_preview.png" 
@@ -42,7 +42,7 @@ export const RANKS = [
     },
     { 
         id: 'master',
-        name: "DIEU", 
+        name: "DIEU SUPRÊME", // MODIFIÉ
         minElo: 2500, 
         color: "#facc15", // Or
         img: "https://i.postimg.cc/v8jG4BLv/Gemini_Generated_Image_66i96w66i96w66i9_removebg_preview.png" 
