@@ -163,12 +163,13 @@
     </nav>
 
     <!-- MAIN ARENA AREA -->
-    <div class="relative flex-grow flex flex-col items-center justify-center">
+    <!-- AJOUT DE 'pb-32 md:pb-48' POUR RELEVER LE CONTENU -->
+    <div class="relative flex-grow flex flex-col items-center justify-center pb-32 md:pb-48">
         
-        <!-- VIDEO PLAYER (MODIFIÉ: Plus Grand + Panneau Bottom) -->
+        <!-- VIDEO PLAYER (MODIFIÉ: max-h réduit pour éviter chevauchement) -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
-            <!-- Changement de taille ici: w-[95%] et max-h-[75vh] pour garder de la place pour l'input -->
-            <div class="w-[95%] max-w-[1800px] aspect-video max-h-[75vh] bg-black border-2 border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
+            <!-- Changement: w-[95%] et max-h-[60vh] md:max-h-[70vh] -->
+            <div class="w-[95%] max-w-[1800px] aspect-video max-h-[60vh] md:max-h-[70vh] bg-black border-2 border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 
                 <!-- NOUVEL OVERLAY : PANNEAU DA (Bottom Panel) -->
@@ -201,7 +202,7 @@
         <!-- VINYL MODE (GUESSING PHASE) -->
         <div id="vinyl-container" class="absolute inset-0 flex flex-col items-center justify-center z-0 transition-opacity duration-500">
             <!-- Disque -->
-            <div class="relative w-[400px] h-[400px]">
+            <div class="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px]">
                 <div class="absolute inset-0 bg-empire-red rounded-full blur-[100px] opacity-20 animate-pulse"></div>
                 <div id="disk" class="w-full h-full rounded-full bg-[#0a0a0a] border-[4px] border-[#333] shadow-2xl flex items-center justify-center disk-spin disk-paused relative z-10">
                     <div class="absolute inset-0 rounded-full border-[50px] border-[#111] opacity-50"></div>
@@ -317,7 +318,7 @@
         </div>
     </div>
 
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
