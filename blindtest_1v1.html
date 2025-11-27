@@ -27,6 +27,7 @@
                         'spin-slow': 'spin 4s linear infinite',
                         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                         'glitch': 'glitch 1s linear infinite',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
                         shake: {
@@ -39,6 +40,10 @@
                             '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
                             '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
                             '62%': { transform: 'translate(0,0) skew(5deg)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' }
                         }
                     }
                 }
@@ -74,20 +79,13 @@
         }
         
         .neon-text { text-shadow: 0 0 10px rgba(255, 46, 46, 0.7); }
+        .text-shadow-red { text-shadow: 2px 2px 0px #990000; }
         .neon-border { box-shadow: 0 0 15px rgba(255, 46, 46, 0.3), inset 0 0 15px rgba(255, 46, 46, 0.1); }
 
         /* --- GAME ELEMENTS --- */
         .disk-spin { animation: spin 3s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* Animation Sticker (Etiquette) */
-        @keyframes sticker-pop {
-            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
-            60% { transform: scale(1.1) rotate(2deg); opacity: 1; }
-            100% { transform: scale(1) rotate(-2deg); opacity: 1; }
-        }
-        .animate-sticker { animation: sticker-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         /* Input Styles */
         .input-cyber {
@@ -167,45 +165,32 @@
     <!-- MAIN ARENA AREA -->
     <div class="relative flex-grow flex flex-col items-center justify-center">
         
-        <!-- VIDEO PLAYER -->
+        <!-- VIDEO PLAYER (MODIFIÉ: Plus Grand + Panneau Bottom) -->
         <div id="video-container" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
-            <div class="w-full max-w-5xl aspect-video bg-black border-4 border-gold-500 shadow-[0_0_100px_rgba(234,179,8,0.3)] overflow-hidden relative rounded-lg">
+            <!-- Changement de taille ici: w-[95%] et max-h-[75vh] pour garder de la place pour l'input -->
+            <div class="w-[95%] max-w-[1800px] aspect-video max-h-[75vh] bg-black border-2 border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-lg">
                 <video id="game-video" class="w-full h-full object-contain" playsinline preload="auto"></video>
                 
-                <!-- NOUVEL OVERLAY : ETIQUETTE / STICKER -->
-                <div id="result-overlay" class="absolute inset-0 z-50 flex items-center justify-center hidden">
-                    <!-- Fond légèrement sombre pour contraste mais voir la vidéo -->
-                    <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div>
-
-                    <!-- L'étiquette (Sticker) -->
-                    <div class="animate-sticker relative bg-[#f5f5f5] border-[6px] border-black p-8 md:p-12 max-w-2xl w-[90%] shadow-[12px_12px_0px_#eab308] transform -rotate-2">
+                <!-- NOUVEL OVERLAY : PANNEAU DA (Bottom Panel) -->
+                <div id="result-overlay" class="absolute inset-x-0 bottom-0 z-50 hidden">
+                    <div class="bg-black/90 backdrop-blur-md border-t-4 border-empire-red p-6 animate-slide-up flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_-10px_50px_rgba(0,0,0,0.8)]">
                         
-                        <!-- Effet "Scotch" transparent en haut -->
-                        <div class="absolute -top-5 left-1/2 -translate-x-1/2 w-32 h-10 bg-white/40 border border-white/20 shadow-sm backdrop-blur-sm transform rotate-1"></div>
+                        <!-- Left: Anime Name -->
+                        <div class="flex-1 text-center md:text-left min-w-0">
+                            <span class="text-xs font-mono text-gray-500 uppercase tracking-widest block mb-1">CIBLE IDENTIFIÉE</span>
+                            <h2 id="res-anime" class="font-display font-black text-3xl md:text-5xl text-white text-shadow-red leading-none truncate uppercase tracking-tighter">ANIME NAME</h2>
+                        </div>
 
-                        <div class="flex flex-col items-center text-center text-black relative z-10">
-                            <!-- Badge Top -->
-                            <span class="inline-block bg-black text-gold-500 font-mono text-xs font-bold px-3 py-1 mb-3 tracking-[0.2em] uppercase transform -skew-x-12 border border-gold-500">
-                                IDENTIFIÉ
-                            </span>
-                            
-                            <!-- Anime Title (Big) -->
-                            <h2 id="res-anime" class="font-manga text-5xl md:text-7xl text-black leading-none mb-4 uppercase break-words w-full drop-shadow-sm">
-                                ANIME NAME
-                            </h2>
-                            
-                            <!-- Divider -->
-                            <div class="w-full h-1 bg-black/10 mb-4 rounded-full"></div>
-                            
-                            <!-- Info Row -->
-                            <div class="flex flex-wrap items-center justify-center gap-4">
-                                <p id="res-song" class="font-display font-bold text-gray-800 text-xl uppercase tracking-wider italic">
-                                    "Song Title"
-                                </p>
-                                <div id="res-type" class="bg-empire-red text-white font-black font-mono text-xl px-4 py-2 border-4 border-black shadow-[4px_4px_0px_#000] transform rotate-3">
-                                    OP 1
-                                </div>
-                            </div>
+                        <!-- Center: Song Info -->
+                        <div class="flex flex-col items-center flex-shrink-0">
+                            <div id="res-type" class="bg-gold-500 text-black font-bold font-mono px-4 py-1 skew-x-[-10deg] text-sm mb-2 shadow-[2px_2px_0px_#fff]">OPENING 1</div>
+                            <p id="res-song" class="font-mono text-gold-400 text-lg md:text-xl uppercase tracking-widest border-b border-gold-500/30 pb-1">"Song Title"</p>
+                        </div>
+
+                        <!-- Right: Decorative / Score Indicator -->
+                        <div class="hidden md:flex items-center gap-4 flex-shrink-0">
+                            <div class="h-10 w-px bg-gray-700"></div>
+                            <i class="fa-solid fa-compact-disc text-4xl text-gray-800 animate-spin-slow"></i>
                         </div>
                     </div>
                 </div>
@@ -332,7 +317,7 @@
         </div>
     </div>
 
-    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
+    <audio id="silence" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto"></audio>
 
     <!-- LOGIQUE JAVASCRIPT -->
     <script type="module">
