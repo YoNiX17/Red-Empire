@@ -83,7 +83,7 @@
     <!-- PODIUM (TOP 3) -->
     <section class="max-w-5xl mx-auto px-4 mb-20">
         <div id="podium-container" class="flex flex-col md:flex-row justify-center items-end gap-6 md:gap-8 min-h-[400px]">
-            <div class="text-gray-500 font-mono animate-pulse w-full text-center">Connexion au satellite Ranked...</div>
+            <div id="loading-msg" class="text-gray-500 font-mono animate-pulse w-full text-center">Connexion au satellite Ranked...</div>
         </div>
     </section>
 
@@ -127,35 +127,45 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- CHARGEMENT TEMPS RÉEL ---
+        // --- CHARGEMENT TEMPS RÉEL (ROBUST) ---
         function initLeaderboard() {
+            // On écoute TOUS les utilisateurs pour être sûr de n'oublier personne
+            // (Pour une grosse app, on ferait un query limitToLast, mais ici on veut être sûr de tout voir)
             const usersRef = ref(db, 'users');
-            // On récupère les 50 meilleurs selon le champ 'elo'
-            const q = query(usersRef, orderByChild('elo'), limitToLast(50));
             
-            // onValue = Écouteur Temps Réel (met à jour si l'elo change)
-            onValue(q, (snapshot) => {
+            onValue(usersRef, (snapshot) => {
                 const users = [];
                 
                 snapshot.forEach((childSnapshot) => {
                     const data = childSnapshot.val();
-                    // Filtre les utilisateurs valides
+                    // On vérifie que c'est un vrai user
                     if(data.username || data.name) {
+                        // FIX: Si pas d'Elo, on met 500 par défaut pour l'affichage
+                        const safeElo = (data.elo === undefined || data.elo === null) ? 500 : data.elo;
+                        
                         users.push({
                             name: data.username || data.name || "Inconnu",
                             avatar: data.avatar || `https://ui-avatars.com/api/?name=${data.username || "U"}`,
-                            elo: data.elo || 500, // Elo par défaut si absent
+                            elo: safeElo,
                             uid: childSnapshot.key
                         });
                     }
                 });
 
-                // Firebase renvoie en ordre croissant (du plus petit au plus grand)
-                // On inverse pour avoir le TOP 1 en premier
+                // Tri décroissant
                 users.sort((a, b) => b.elo - a.elo);
+
+                // Si vide
+                if (users.length === 0) {
+                    document.getElementById('loading-msg').innerText = "Aucun joueur trouvé. Soyez le premier !";
+                    return;
+                }
 
                 renderPodium(users.slice(0, 3));
                 renderList(users.slice(3));
+            }, (error) => {
+                console.error("Erreur lecture:", error);
+                document.getElementById('loading-msg').innerText = "Erreur de connexion (Permissions insuffisantes ?)";
             });
         }
 
@@ -171,7 +181,6 @@
                 if (!player) return;
 
                 const rank = idx + 1; // 1, 2 ou 3
-                // Utilisation du Moteur Elo pour récupérer le rang officiel (ex: Diamant)
                 const rankInfo = eloEngine.getRankInfo(player.elo);
                 
                 let cardClass = "";
@@ -227,7 +236,6 @@
 
             others.forEach((player, index) => {
                 const realRank = index + 4;
-                // Calcul du rang dynamique pour chaque joueur
                 const rankInfo = eloEngine.getRankInfo(player.elo);
 
                 const html = `
