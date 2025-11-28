@@ -137,9 +137,9 @@
 
     <script>
         // CONFIGURATION API (Change l'URL si tu héberges le bot ailleurs)
-        const API_URL = "general-bot-production.up.railway.app";
+        const API_URL = "https://general-bot-production.up.railway.app/api";
 
-        async def_loadStats() {
+        async function loadStats() {
             try {
                 // 1. Charger les Stats Globales
                 const statsRes = await fetch(`${API_URL}/stats`);
@@ -193,8 +193,8 @@
         }
 
         // Auto-refresh toutes les 30s
-        def_loadStats();
-        setInterval(def_loadStats, 30000);
+        loadStats();
+        setInterval(loadStats, 30000);
     </script>
 </body>
 </html>
