@@ -84,7 +84,6 @@
         .rank-3 .avatar-ring { border-color: #c2410c; box-shadow: 0 0 15px #c2410c; }
 
         /* --- LISTE STYLES --- */
-        /* Animation Keyframes ajoutées ici pour corriger l'invisibilité */
         @keyframes slideIn {
             0% { opacity: 0; transform: translateX(-20px); }
             100% { opacity: 1; transform: translateX(0); }
@@ -158,9 +157,9 @@
             
             <div class="grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] bg-black/60 backdrop-blur-xl sticky top-0 z-20">
                 <div class="col-span-2 md:col-span-1 text-center">#</div>
-                <div class="col-span-6 md:col-span-5">Joueur</div>
-                <div class="col-span-4 md:col-span-3 text-right">Rang</div>
-                <div class="hidden md:block col-span-3 text-right">Points Elo</div>
+                <div class="col-span-5 md:col-span-5">Joueur</div>
+                <div class="col-span-3 md:col-span-3 text-right">Rang</div>
+                <div class="col-span-2 md:col-span-3 text-right">Points Elo</div>
             </div>
 
             <div id="leaderboard-list" class="divide-y divide-white/5">
@@ -327,11 +326,12 @@
                         </div>
                         
                         <div class="text-center mt-12 w-full flex-grow flex flex-col justify-end pb-4">
-                            <div class="font-display font-black text-white text-2xl truncate mb-2 drop-shadow-md tracking-wide">${player.name}</div>
+                            <div class="font-display font-black text-white text-2xl truncate mb-4 drop-shadow-md tracking-wide">${player.name}</div>
                             
-                            <div class="flex items-center justify-center gap-2 mb-4">
-                                <img src="${rankInfo.img}" class="w-6 h-6 object-contain">
-                                <span class="text-xs font-mono font-bold tracking-widest uppercase" style="color:${rankInfo.color}">${rankInfo.name}</span>
+                            <!-- PODIUM RANK BADGE (LARGE) -->
+                            <div class="flex flex-col items-center justify-center gap-2 mb-4">
+                                <img src="${rankInfo.img}" class="w-16 h-16 object-contain drop-shadow-[0_0_15px_${rankInfo.color}] animate-float">
+                                <span class="text-lg font-teko font-bold tracking-widest uppercase" style="color:${rankInfo.color}; text-shadow: 0 0 10px ${rankInfo.color}">${rankInfo.name}</span>
                             </div>
 
                             <div class="py-3 bg-black/40 rounded-xl border border-white/5 backdrop-blur-sm">
@@ -352,7 +352,7 @@
             others.forEach((player, index) => {
                 const realRank = index + 4;
                 const rankInfo = eloEngine.getRankInfo(player.elo);
-                const delay = index * 50; // Stagger effect
+                const delay = index * 50; 
 
                 const html = `
                     <div class="rank-row grid grid-cols-12 gap-4 p-4 items-center group cursor-default" style="animation-delay: ${delay}ms">
@@ -364,17 +364,19 @@
                             <img src="${player.avatar}" class="w-10 h-10 rounded border border-gray-800 object-cover bg-black group-hover:border-white transition-colors">
                             <div class="flex flex-col min-w-0">
                                 <span class="font-bold text-gray-300 text-sm truncate group-hover:text-white font-display tracking-wide">${player.name}</span>
-                                <span class="text-[10px] text-gray-600 font-mono uppercase tracking-widest md:hidden" style="color:${rankInfo.color}">${rankInfo.name}</span>
                             </div>
                         </div>
 
-                        <div class="col-span-4 md:col-span-3 text-right md:text-right flex items-center justify-end gap-2">
-                            <span class="text-[10px] font-bold uppercase tracking-wider hidden md:block" style="color:${rankInfo.color}">${rankInfo.name}</span>
-                            <img src="${rankInfo.img}" class="w-6 h-6 object-contain hidden md:block" title="${rankInfo.name}">
+                        <!-- LIST RANK BADGE (ENHANCED) -->
+                        <div class="col-span-4 md:col-span-3 text-right md:text-right flex items-center justify-end gap-3">
+                            <div class="flex flex-col items-end">
+                                <span class="font-teko font-bold text-xl leading-none tracking-wide" style="color:${rankInfo.color}">${rankInfo.name}</span>
+                            </div>
+                            <img src="${rankInfo.img}" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_${rankInfo.color}]" title="${rankInfo.name}">
                         </div>
                         
-                        <div class="hidden md:block col-span-3 text-right">
-                            <span class="font-mono font-bold text-lg text-white group-hover:text-empire-500 transition-colors">${player.elo}</span>
+                        <div class="hidden md:block col-span-2 md:col-span-3 text-right">
+                            <span class="font-mono font-bold text-xl text-white group-hover:text-empire-500 transition-colors">${player.elo}</span>
                             <span class="text-[10px] text-gray-600 ml-1">LP</span>
                         </div>
                     </div>
