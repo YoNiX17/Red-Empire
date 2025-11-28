@@ -41,11 +41,13 @@ window.login = async () => {
         const snapshot = await get(child(dbRef, `users/${user.uid}`));
         
         if (!snapshot.exists()) {
+            // CRÉATION NOUVEL UTILISATEUR AVEC ELO 500
             await set(ref(db, 'users/' + user.uid), {
                 username: user.displayName,
                 avatar: user.photoURL,
                 email: user.email,
                 joinedAt: new Date().toISOString(),
+                elo: 500, // <--- Initialisation Elo
                 stats: { wakfudle: { wins: 0 }, haikyuudle: { wins: 0 } }
             });
         }
