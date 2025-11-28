@@ -268,7 +268,7 @@
 
     </div>
 
-    <!-- FINAL SCOREBOARD OVERLAY (NEW) -->
+    <!-- FINAL SCOREBOARD OVERLAY -->
     <div id="final-scoreboard" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
         <div class="relative w-full max-w-4xl bg-[#0a0a0a] border-4 border-gold-500 rounded-xl overflow-hidden shadow-[0_0_100px_rgba(234,179,8,0.2)] animate-fade-in flex flex-col">
             
@@ -440,6 +440,9 @@
         let opFound = false;
         let opAttempts = 0;
 
+        // --- GLOBAL: Seek Time pour sync ---
+        let currentSeekTime = 0; // NOUVEAU
+
         // --- DOM ---
         const videoEl = document.getElementById('game-video');
         const diskEl = document.getElementById('disk');
@@ -489,7 +492,7 @@
             return false;
         }
 
-        // --- GAMEPLAY LOGIC (MODIFIÉE POUR TRACKING STATS) ---
+        // --- GAMEPLAY LOGIC ---
         window.submitGuess = () => {
             if (!currentSong || !matchId) return;
             
@@ -500,7 +503,7 @@
             if (!animeFound && !animeExhausted) {
                 if (isCloseMatch(val, currentSong.anime) || checkAlts(val, currentSong.alt)) {
                     animeFound = true;
-                    addScore(1, 'anime'); // +1 pt (Anime)
+                    addScore(1, 'anime'); 
                     
                     document.getElementById('fb-anime').classList.remove('hidden');
                     inputGuess.value = "";
@@ -541,7 +544,7 @@
                 
                 if (guessedNum === currentSong.num) {
                     opFound = true;
-                    addScore(0.5, 'op'); // +0.5 pt (Opening)
+                    addScore(0.5, 'op'); 
                     
                     document.getElementById('fb-op').classList.remove('hidden');
                     inputGuess.value = "";
@@ -567,7 +570,6 @@
             }
         };
 
-        // --- MODIFIED: ADD SCORE WITH STATS BREAKDOWN ---
         function addScore(points, type) {
             const playerRef = ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`);
             runTransaction(playerRef, (player) => {
@@ -683,7 +685,15 @@
                                 [p1]: { name: p1Data.name, avatar: p1Data.avatar, score: 0, status: 'connecting', stats: {anime:0, op:0}, elo: p1Data.elo || 500 },
                                 [p2]: { name: p2Data.name, avatar: p2Data.avatar, score: 0, status: 'connecting', stats: {anime:0, op:0}, elo: p2Data.elo || 500 }
                             },
-                            gameState: { phase: 'setup', round: 1, songIndex: 0, startTime: 0, deck: generateDeck() },
+                            // MODIF: Ajout seekTime initial
+                            gameState: { 
+                                phase: 'setup', 
+                                round: 1, 
+                                songIndex: 0, 
+                                startTime: 0, 
+                                deck: generateDeck(),
+                                seekTime: Math.floor(Math.random() * 11) + 40 // 40 à 50s
+                            },
                             created: serverTimestamp(),
                             lastActivity: Date.now()
                         };
@@ -841,170 +851,41 @@
                 if (gameState.phase === 'setup' || gameState.phase === 'loading') {
                     if (gameState.deck && gameState.deck.length > 0) {
                         const songIdx = gameState.deck[gameState.round - 1];
-                        setupRound(songIdx);
+                        // MODIF: On passe le seekTime stocké dans le gameState
+                        setupRound(songIdx, gameState.seekTime);
                     }
                 } else if (gameState.phase === 'playing') {
                     startPlayback(gameState.startTime);
                 } else if (gameState.phase === 'reveal') {
                     showResult();
                 } 
-                // --- NEW: PHASE DE FIN ---
                 else if (gameState.phase === 'finished') {
                     endGameSequence(players, fullMatchData.results);
                 }
             }
         }
 
-        // --- NEW: LOGIQUE FIN DE MATCH ---
-        function endGameSequence(players, results) {
-            // Hide Game UI
-            document.getElementById('video-container').classList.add('hidden');
-            document.getElementById('vinyl-container').classList.add('hidden');
-            document.querySelector('.absolute.bottom-0').classList.add('hidden'); // Input bar
-            
-            // Show Scoreboard
-            document.getElementById('final-scoreboard').classList.remove('hidden');
-            
-            // Populate Stats
-            const p1 = players[currentUser.uid];
-            const p2 = players[opponentId];
-            
-            // P1 (Me)
-            document.getElementById('final-p1-img').src = p1.avatar;
-            document.getElementById('final-p1-name').innerText = "MOI";
-            document.getElementById('final-p1-anime').innerText = p1.stats?.anime || 0;
-            document.getElementById('final-p1-op').innerText = p1.stats?.op || 0;
-            document.getElementById('final-p1-score').innerText = p1.score;
-            
-            // P2 (Opponent)
-            document.getElementById('final-p2-img').src = p2.avatar;
-            document.getElementById('final-p2-name').innerText = p2.name;
-            document.getElementById('final-p2-anime').innerText = p2.stats?.anime || 0;
-            document.getElementById('final-p2-op').innerText = p2.stats?.op || 0;
-            document.getElementById('final-p2-score').innerText = p2.score;
-
-            // Determine Winner & LP
-            let resultText = "ÉGALITÉ";
-            let resultColor = "text-gray-400";
-            
-            if (p1.score > p2.score) {
-                resultText = "VICTOIRE";
-                resultColor = "text-gold-500";
-            } else if (p1.score < p2.score) {
-                resultText = "DÉFAITE";
-                resultColor = "text-red-500";
-            }
-            
-            const titleEl = document.getElementById('final-title');
-            titleEl.innerText = resultText;
-            titleEl.className = `font-display font-black text-6xl tracking-tighter mb-2 ${resultColor}`;
-
-            // Display LP Change (if calculated by host)
-            if (results && results[currentUser.uid]) {
-                const diff = results[currentUser.uid].diff;
-                const lpEl = document.getElementById('final-p1-lp');
-                lpEl.innerText = (diff >= 0 ? "+" : "") + diff + " LP";
-                lpEl.className = `mt-4 text-xl font-black font-mono animate-pulse ${diff >= 0 ? 'text-green-400' : 'text-red-500'}`;
-            }
-
-            // Start Timer
-            let timeLeft = 30;
-            const timerEl = document.getElementById('final-timer');
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
-                    window.location.href = 'blindtest_ranked.html';
-                }
-            }, 1000);
-        }
-
-        // --- UPDATED SHOW RESULT WITH END GAME TRIGGER ---
-        function showResult() {
-            document.getElementById('video-container').classList.remove('opacity-0');
-            document.getElementById('vinyl-container').classList.add('opacity-0');
-            diskEl.classList.add('disk-paused');
-            inputGuess.disabled = true;
-
-            document.getElementById('result-overlay').classList.remove('hidden');
-            document.getElementById('res-anime').innerText = currentSong.anime;
-            document.getElementById('res-song').innerText = currentSong.song;
-            document.getElementById('res-type').innerText = `OP ${currentSong.num || 1}`;
-
-            if (isHost) {
-                setTimeout(async () => {
-                    const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
-                    if (!currentState.exists()) return; 
-
-                    const state = currentState.val();
-                    
-                    if (state.round >= 10) {
-                        // --- FIN DE PARTIE : CALCUL ELO ---
-                        const playersSnap = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
-                        const players = playersSnap.val();
-                        
-                        const p1 = players[currentUser.uid];
-                        const p2 = players[opponentId];
-                        
-                        // Calcul (Si p1 gagne)
-                        let isWin = p1.score > p2.score;
-                        // Si égalité, on considère pas de changement ou on traite comme une petite victoire/défaite selon l'elo
-                        // Pour faire simple ici : Egalité = Pas de changement ou petite logique. 
-                        // EloEngine gère win/loss booléen. Si égalité, on peut dire false pour les deux ou random.
-                        // Pour simplifier : Si égalité, le host "perd" l'avantage (false).
-                        if (p1.score === p2.score) isWin = false; 
-
-                        // Appel moteur Elo
-                        const eloResult = eloEngine.calculateNewElo(p1.elo, p2.elo, isWin);
-                        const eloResultP2 = eloEngine.calculateNewElo(p2.elo, p1.elo, !isWin);
-
-                        // Update Users Elo
-                        const updates = {};
-                        updates[`users/${currentUser.uid}/elo`] = eloResult.newElo;
-                        updates[`users/${opponentId}/elo`] = eloResultP2.newElo;
-                        
-                        // Update Match State to FINISHED + Store Results for display
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'finished';
-                        updates[`blindtest/ranked/matches/${matchId}/results`] = {
-                            [currentUser.uid]: { diff: eloResult.diff },
-                            [opponentId]: { diff: eloResultP2.diff }
-                        };
-                        
-                        await update(ref(db), updates);
-
-                    } else {
-                        // Next Round
-                        const updates = {};
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading';
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/round`] = state.round + 1;
-                        updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1;
-                        updates[`blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/status`] = 'loading';
-                        updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
-                        updates[`blindtest/ranked/matches/${matchId}/lastActivity`] = Date.now();
-                        
-                        await update(ref(db), updates);
-                    }
-                }, 8000);
-            }
-        }
-
-        // --- STANDARD GAME FUNCS ---
-        function setupRound(songIdx) {
+        // MODIF: seekTime en argument (défaut 0 pour compatibilité)
+        function setupRound(songIdx, seekTime = 0) {
             resetUI();
             currentSong = OP_DATABASE[songIdx];
             if (!currentSong) return;
 
+            // Stockage global pour utilisation dans startPlayback
+            currentSeekTime = seekTime;
+
             statusText.innerText = "CHARGEMENT DU FLUX...";
             videoEl.src = currentSong.url;
-            videoEl.currentTime = 0;
+            // Appliquer le seekTime immédiatement
+            videoEl.currentTime = seekTime;
             videoEl.volume = 0.5;
             
             let isLoaded = false;
             const markAsLoaded = () => {
                 if(isLoaded) return;
                 isLoaded = true;
+                // Ré-appliquer le seekTime au cas où
+                videoEl.currentTime = currentSeekTime;
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
                 videoEl.oncanplaythrough = null;
             };
@@ -1045,9 +926,16 @@
             const delay = targetStartTime - now;
 
             if (delay > 0) {
-                setTimeout(() => { videoEl.play().catch(console.error); startTimerBar(targetStartTime, 20000); }, delay);
+                setTimeout(() => { 
+                    // Play et assure seekTime correct
+                    videoEl.currentTime = currentSeekTime;
+                    videoEl.play().catch(console.error); 
+                    startTimerBar(targetStartTime, 20000); 
+                }, delay);
             } else {
-                videoEl.currentTime = Math.abs(delay) / 1000;
+                // Late join : On ajoute le retard au seekTime initial
+                const elapsedTime = Math.abs(delay) / 1000;
+                videoEl.currentTime = currentSeekTime + elapsedTime;
                 videoEl.play().catch(console.error);
                 startTimerBar(targetStartTime, 20000);
             }
@@ -1079,7 +967,126 @@
             requestAnimationFrame(updateBar);
         }
 
-        // --- GESTION DU RANG ---
+        function showResult() {
+            document.getElementById('video-container').classList.remove('opacity-0');
+            document.getElementById('vinyl-container').classList.add('opacity-0');
+            diskEl.classList.add('disk-paused');
+            inputGuess.disabled = true;
+
+            document.getElementById('result-overlay').classList.remove('hidden');
+            document.getElementById('res-anime').innerText = currentSong.anime;
+            document.getElementById('res-song').innerText = currentSong.song;
+            document.getElementById('res-type').innerText = `OP ${currentSong.num || 1}`;
+
+            if (isHost) {
+                setTimeout(async () => {
+                    const currentState = await get(ref(db, `blindtest/ranked/matches/${matchId}/gameState`));
+                    if (!currentState.exists()) return; 
+
+                    const state = currentState.val();
+                    
+                    if (state.round >= 10) {
+                        const playersSnap = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
+                        const players = playersSnap.val();
+                        
+                        const p1 = players[currentUser.uid];
+                        const p2 = players[opponentId];
+                        
+                        let isWin = p1.score > p2.score;
+                        if (p1.score === p2.score) isWin = false; 
+
+                        const eloResult = eloEngine.calculateNewElo(p1.elo, p2.elo, isWin);
+                        const eloResultP2 = eloEngine.calculateNewElo(p2.elo, p1.elo, !isWin);
+
+                        const updates = {};
+                        updates[`users/${currentUser.uid}/elo`] = eloResult.newElo;
+                        updates[`users/${opponentId}/elo`] = eloResultP2.newElo;
+                        
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'finished';
+                        updates[`blindtest/ranked/matches/${matchId}/results`] = {
+                            [currentUser.uid]: { diff: eloResult.diff },
+                            [opponentId]: { diff: eloResultP2.diff }
+                        };
+                        
+                        await update(ref(db), updates);
+
+                    } else {
+                        // MODIF: Générer nouveau seekTime pour le prochain round
+                        const nextSeek = Math.floor(Math.random() * 11) + 40; // 40 à 50s
+                        
+                        const updates = {};
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/phase`] = 'loading';
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/round`] = state.round + 1;
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/songIndex`] = state.songIndex + 1;
+                        updates[`blindtest/ranked/matches/${matchId}/gameState/seekTime`] = nextSeek; // IMPORTANT
+                        updates[`blindtest/ranked/matches/${matchId}/players/${currentUser.uid}/status`] = 'loading';
+                        updates[`blindtest/ranked/matches/${matchId}/players/${opponentId}/status`] = 'loading';
+                        updates[`blindtest/ranked/matches/${matchId}/lastActivity`] = Date.now();
+                        
+                        await update(ref(db), updates);
+                    }
+                }, 8000);
+            }
+        }
+
+        // --- NEW: LOGIQUE FIN DE MATCH ---
+        function endGameSequence(players, results) {
+            document.getElementById('video-container').classList.add('hidden');
+            document.getElementById('vinyl-container').classList.add('hidden');
+            document.querySelector('.absolute.bottom-0').classList.add('hidden'); 
+            
+            document.getElementById('final-scoreboard').classList.remove('hidden');
+            
+            const p1 = players[currentUser.uid];
+            const p2 = players[opponentId];
+            
+            document.getElementById('final-p1-img').src = p1.avatar;
+            document.getElementById('final-p1-name').innerText = "MOI";
+            document.getElementById('final-p1-anime').innerText = p1.stats?.anime || 0;
+            document.getElementById('final-p1-op').innerText = p1.stats?.op || 0;
+            document.getElementById('final-p1-score').innerText = p1.score;
+            
+            document.getElementById('final-p2-img').src = p2.avatar;
+            document.getElementById('final-p2-name').innerText = p2.name;
+            document.getElementById('final-p2-anime').innerText = p2.stats?.anime || 0;
+            document.getElementById('final-p2-op').innerText = p2.stats?.op || 0;
+            document.getElementById('final-p2-score').innerText = p2.score;
+
+            let resultText = "ÉGALITÉ";
+            let resultColor = "text-gray-400";
+            
+            if (p1.score > p2.score) {
+                resultText = "VICTOIRE";
+                resultColor = "text-gold-500";
+            } else if (p1.score < p2.score) {
+                resultText = "DÉFAITE";
+                resultColor = "text-red-500";
+            }
+            
+            const titleEl = document.getElementById('final-title');
+            titleEl.innerText = resultText;
+            titleEl.className = `font-display font-black text-6xl tracking-tighter mb-2 ${resultColor}`;
+
+            if (results && results[currentUser.uid]) {
+                const diff = results[currentUser.uid].diff;
+                const lpEl = document.getElementById('final-p1-lp');
+                lpEl.innerText = (diff >= 0 ? "+" : "") + diff + " LP";
+                lpEl.className = `mt-4 text-xl font-black font-mono animate-pulse ${diff >= 0 ? 'text-green-400' : 'text-red-500'}`;
+            }
+
+            let timeLeft = 30;
+            const timerEl = document.getElementById('final-timer');
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    set(ref(db, `users/${currentUser.uid}/currentMatch`), null);
+                    window.location.href = 'blindtest_ranked.html';
+                }
+            }, 1000);
+        }
+
         function updateUserRankDisplay(elo) {
             const rank = eloEngine.getRankInfo(elo);
             document.getElementById('p1-rank-name').innerText = rank.name;
