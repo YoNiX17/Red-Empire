@@ -84,6 +84,12 @@
         .rank-3 .avatar-ring { border-color: #c2410c; box-shadow: 0 0 15px #c2410c; }
 
         /* --- LISTE STYLES --- */
+        /* Animation Keyframes ajoutées ici pour corriger l'invisibilité */
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
         .rank-row { 
             transition: all 0.2s ease-out; 
             border-left: 2px solid transparent;
