@@ -55,7 +55,7 @@
         .podium-card {
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            overflow: visible;
+            overflow: visible; /* Important pour que l'avatar dépasse */
         }
         .podium-card:hover { transform: translateY(-15px) scale(1.02); z-index: 20; }
         
@@ -159,7 +159,7 @@
                 <div class="col-span-2 md:col-span-1 text-center">#</div>
                 <div class="col-span-5 md:col-span-5">Joueur</div>
                 <div class="col-span-3 md:col-span-3 text-right">Rang</div>
-                <div class="col-span-2 md:col-span-3 text-right">Points Elo</div>
+                <div class="hidden md:block col-span-3 text-right">Points Elo</div>
             </div>
 
             <div id="leaderboard-list" class="divide-y divide-white/5">
@@ -325,12 +325,14 @@
                             </div>
                         </div>
                         
-                        <div class="text-center mt-12 w-full flex-grow flex flex-col justify-end pb-4">
+                        <!-- AJUSTEMENT ICI: mt-24 pour éviter le chevauchement -->
+                        <div class="text-center mt-24 w-full flex-grow flex flex-col justify-end pb-4">
                             <div class="font-display font-black text-white text-2xl truncate mb-4 drop-shadow-md tracking-wide">${player.name}</div>
                             
-                            <!-- PODIUM RANK BADGE (LARGE) -->
+                            <!-- PODIUM RANK BADGE (LARGE & PROPORTIONNÉ) -->
                             <div class="flex flex-col items-center justify-center gap-2 mb-4">
-                                <img src="${rankInfo.img}" class="w-16 h-16 object-contain drop-shadow-[0_0_15px_${rankInfo.color}] animate-float">
+                                <!-- Taille augmentée pour une meilleure bannière -->
+                                <img src="${rankInfo.img}" class="w-20 h-20 object-contain drop-shadow-[0_0_15px_${rankInfo.color}] animate-float">
                                 <span class="text-lg font-teko font-bold tracking-widest uppercase" style="color:${rankInfo.color}; text-shadow: 0 0 10px ${rankInfo.color}">${rankInfo.name}</span>
                             </div>
 
