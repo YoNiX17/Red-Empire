@@ -875,27 +875,42 @@
             currentSeekTime = seekTime;
 
             statusText.innerText = "CHARGEMENT DU FLUX...";
+            
+            // Reset pour être propre
+            videoEl.removeAttribute('src'); 
+            videoEl.load();
+            
             videoEl.src = currentSong.url;
-            // Appliquer le seekTime immédiatement
-            videoEl.currentTime = seekTime;
             videoEl.volume = 0.5;
+            
+            // IMPORTANT: On attend que les métadonnées soient chargées pour set le temps
+            videoEl.onloadedmetadata = () => {
+                videoEl.currentTime = currentSeekTime;
+            };
             
             let isLoaded = false;
             const markAsLoaded = () => {
                 if(isLoaded) return;
                 isLoaded = true;
-                // Ré-appliquer le seekTime au cas où
-                videoEl.currentTime = currentSeekTime;
                 update(ref(db, `blindtest/ranked/matches/${matchId}/players/${currentUser.uid}`), { status: 'loaded' });
+                
+                // Cleanup listeners
                 videoEl.oncanplaythrough = null;
+                videoEl.onloadedmetadata = null;
             };
 
+            // On utilise 'canplay' au lieu de 'canplaythrough' pour être moins strict sur le buffer du seek ?
+            // Non, pour un blindtest sans coupure, canplaythrough est mieux.
+            // Mais si le seek est loin, ça peut être long.
             videoEl.oncanplaythrough = markAsLoaded;
-            if (videoEl.readyState >= 3) markAsLoaded();
-            else videoEl.load();
-
-            setTimeout(() => { if(!isLoaded) markAsLoaded(); }, 5000);
-
+            
+            // Fallback si déjà prêt (rare avec changement de src)
+            // if (videoEl.readyState >= 3) markAsLoaded(); 
+            // videoEl.load(); // Déjà appelé implicitement par src=
+            
+            // Timeout de sécurité pour ne pas bloquer le jeu si une vidéo charge mal
+            setTimeout(() => { if(!isLoaded) markAsLoaded(); }, 8000); // Augmenté à 8s
+            
             if (isHost) {
                 const checkLoadInterval = setInterval(async () => {
                     const s = await get(ref(db, `blindtest/ranked/matches/${matchId}/players`));
@@ -927,8 +942,8 @@
 
             if (delay > 0) {
                 setTimeout(() => { 
-                    // Play et assure seekTime correct
-                    videoEl.currentTime = currentSeekTime;
+                    // Just play, don't reset currentTime if already set in setup
+                    // videoEl.currentTime = currentSeekTime; // REMOVED to avoid seek stutter
                     videoEl.play().catch(console.error); 
                     startTimerBar(targetStartTime, 20000); 
                 }, delay);
