@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Dashboard Serveur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; }
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: #e60000; transition: all 0.3s; }
+        
+        /* Table Styles */
+        tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+        td { padding: 1rem; }
+    </style>
+</head>
+<body class="min-h-screen bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+
+    <div class="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.1),#030303_80%)] pointer-events-none z-[-1]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-white/10 bg-black/95 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fa-brands fa-discord text-empire-500 text-xl"></i>
+                <span class="font-display font-bold text-lg tracking-widest text-white">SERVEUR <span class="text-empire-500">DASHBOARD</span></span>
+            </div>
+            <a href="index.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> RETOUR SITE
+            </a>
+        </div>
+    </nav>
+
+    <main class="pt-32 pb-16 px-4 max-w-7xl mx-auto">
+        
+        <!-- HEADER -->
+        <div class="mb-12 flex flex-col md:flex-row justify-between items-end gap-4">
+            <div>
+                <h1 class="font-display text-4xl md:text-6xl text-white font-bold mb-2">STATISTIQUES <span class="text-empire-500">LIVE</span></h1>
+                <p class="text-gray-400 font-mono text-sm">Données en temps réel depuis le Bot Général</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-mono">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-green-400">API CONNECTÉE</span>
+            </div>
+        </div>
+
+        <!-- STATS CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <!-- Members -->
+            <div class="glass-card stat-card p-6 flex items-center gap-6">
+                <div class="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 text-3xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <div id="stat-members" class="font-mono text-4xl font-bold text-white">...</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-widest font-bold">Membres Totaux</div>
+                </div>
+            </div>
+
+            <!-- Online -->
+            <div class="glass-card stat-card p-6 flex items-center gap-6">
+                <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center text-green-400 text-3xl">
+                    <i class="fa-solid fa-signal"></i>
+                </div>
+                <div>
+                    <div id="stat-online" class="font-mono text-4xl font-bold text-white">...</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-widest font-bold">En Ligne</div>
+                </div>
+            </div>
+
+            <!-- Voice -->
+            <div class="glass-card stat-card p-6 flex items-center gap-6">
+                <div class="w-16 h-16 rounded-full bg-empire-500/10 flex items-center justify-center text-empire-500 text-3xl">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                </div>
+                <div>
+                    <div id="stat-voice" class="font-mono text-4xl font-bold text-white">...</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-widest font-bold">Actifs en Vocal</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEADERBOARD TABLE -->
+        <div class="glass-card overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-display text-xl text-white">CLASSEMENT ACTIVITÉ</h3>
+                <div class="text-xs text-gray-500 font-mono bg-black/30 px-3 py-1 rounded">TOP 50</div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-xs font-mono text-gray-400 uppercase tracking-wider">
+                            <th class="p-4 text-center w-16">#</th>
+                            <th class="p-4">Utilisateur</th>
+                            <th class="p-4 text-center">Niveau</th>
+                            <th class="p-4 text-right">XP</th>
+                            <th class="p-4 text-right">Messages</th>
+                            <th class="p-4 text-right">Temps Vocal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="text-sm font-mono text-gray-300">
+                        <tr><td colspan="6" class="text-center py-8">Chargement des données...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // CONFIGURATION API (Change l'URL si tu héberges le bot ailleurs)
+        const API_URL = "http://localhost:8080/api";
+
+        async def_loadStats() {
+            try {
+                // 1. Charger les Stats Globales
+                const statsRes = await fetch(`${API_URL}/stats`);
+                const stats = await statsRes.json();
+                
+                document.getElementById('stat-members').innerText = stats.members;
+                document.getElementById('stat-online').innerText = stats.online;
+                document.getElementById('stat-voice').innerText = stats.voice_count;
+
+                // 2. Charger le Leaderboard
+                const lbRes = await fetch(`${API_URL}/leaderboard`);
+                const leaderboard = await lbRes.json();
+                
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+
+                leaderboard.forEach((user, index) => {
+                    const rank = index + 1;
+                    let rankClass = "text-gray-500";
+                    let rowClass = "";
+                    
+                    if (rank === 1) { rankClass = "text-yellow-400 font-bold text-xl"; rowClass = "bg-yellow-500/5"; }
+                    if (rank === 2) { rankClass = "text-gray-300 font-bold text-lg"; }
+                    if (rank === 3) { rankClass = "text-orange-400 font-bold text-lg"; }
+
+                    // Formatage temps vocal
+                    const hours = Math.floor(user.voice_time / 3600);
+                    const minutes = Math.floor((user.voice_time % 3600) / 60);
+                    const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+                    const html = `
+                        <tr class="${rowClass}">
+                            <td class="text-center ${rankClass}">${rank}</td>
+                            <td class="flex items-center gap-3">
+                                <img src="${user.avatar}" class="w-8 h-8 rounded-full bg-black">
+                                <span class="font-bold text-white">${user.name}</span>
+                            </td>
+                            <td class="text-center"><span class="bg-white/10 px-2 py-1 rounded text-xs text-white font-bold">${user.level}</span></td>
+                            <td class="text-right text-empire-500 font-bold">${user.xp.toLocaleString()}</td>
+                            <td class="text-right text-gray-400">${user.messages.toLocaleString()}</td>
+                            <td class="text-right text-blue-400 font-bold">${timeStr}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += html;
+                });
+
+            } catch (error) {
+                console.error("Erreur API:", error);
+                document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">Impossible de contacter le bot (Vérifie qu'il est lancé sur le port 8080)</td></tr>`;
+            }
+        }
+
+        // Auto-refresh toutes les 30s
+        def_loadStats();
+        setInterval(def_loadStats, 30000);
+    </script>
+</body>
+</html>
