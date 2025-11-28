@@ -83,7 +83,9 @@
     <!-- PODIUM (TOP 3) -->
     <section class="max-w-5xl mx-auto px-4 mb-20">
         <div id="podium-container" class="flex flex-col md:flex-row justify-center items-end gap-6 md:gap-8 min-h-[400px]">
-            <div id="loading-msg" class="text-gray-500 font-mono animate-pulse w-full text-center">Connexion au satellite Ranked...</div>
+            <div id="loading-msg" class="text-gray-500 font-mono animate-pulse w-full text-center">
+                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Connexion au satellite Ranked...
+            </div>
         </div>
     </section>
 
@@ -110,6 +112,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        // AJOUT: Import de l'Auth pour vérifier la connexion
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { eloEngine } from "./elo_engine.js";
 
@@ -125,22 +129,35 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- CHARGEMENT TEMPS RÉEL (ROBUST) ---
+        // --- ATTENTE DE LA CONNEXION AVANT DE CHARGER ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // L'utilisateur est connecté, on peut charger les données en toute sécurité
+                console.log("Connecté, chargement du leaderboard...");
+                initLeaderboard();
+            } else {
+                // Pas connecté -> Redirection ou message
+                document.getElementById('loading-msg').innerHTML = `
+                    <span class="text-red-500">ACCÈS REFUSÉ</span><br>
+                    <a href="index.html" class="underline text-sm">Veuillez vous connecter</a>
+                `;
+            }
+        });
+
         function initLeaderboard() {
-            // On écoute TOUS les utilisateurs pour être sûr de n'oublier personne
-            // (Pour une grosse app, on ferait un query limitToLast, mais ici on veut être sûr de tout voir)
             const usersRef = ref(db, 'users');
+            // On prend les 50 meilleurs
+            const q = query(usersRef, orderByChild('elo'), limitToLast(50));
             
-            onValue(usersRef, (snapshot) => {
+            onValue(q, (snapshot) => {
                 const users = [];
                 
                 snapshot.forEach((childSnapshot) => {
                     const data = childSnapshot.val();
-                    // On vérifie que c'est un vrai user
                     if(data.username || data.name) {
-                        // FIX: Si pas d'Elo, on met 500 par défaut pour l'affichage
                         const safeElo = (data.elo === undefined || data.elo === null) ? 500 : data.elo;
                         
                         users.push({
@@ -152,20 +169,19 @@
                     }
                 });
 
-                // Tri décroissant
+                // Tri décroissant (Du plus grand au plus petit)
                 users.sort((a, b) => b.elo - a.elo);
 
-                // Si vide
                 if (users.length === 0) {
-                    document.getElementById('loading-msg').innerText = "Aucun joueur trouvé. Soyez le premier !";
+                    document.getElementById('loading-msg').innerText = "Aucun joueur trouvé.";
                     return;
                 }
 
                 renderPodium(users.slice(0, 3));
                 renderList(users.slice(3));
             }, (error) => {
-                console.error("Erreur lecture:", error);
-                document.getElementById('loading-msg').innerText = "Erreur de connexion (Permissions insuffisantes ?)";
+                console.error("Erreur Firebase:", error);
+                document.getElementById('loading-msg').innerText = "Erreur de chargement.";
             });
         }
 
@@ -173,14 +189,14 @@
             const container = document.getElementById('podium-container');
             container.innerHTML = '';
 
-            // Ordre visuel du podium : 2ème (Gauche), 1er (Centre), 3ème (Droite)
+            // Ordre visuel : 2ème - 1er - 3ème
             const visualOrder = [1, 0, 2]; 
             
             visualOrder.forEach(idx => {
                 const player = top3[idx];
                 if (!player) return;
 
-                const rank = idx + 1; // 1, 2 ou 3
+                const rank = idx + 1;
                 const rankInfo = eloEngine.getRankInfo(player.elo);
                 
                 let cardClass = "";
@@ -215,11 +231,10 @@
                             <div class="font-display font-bold text-white text-2xl truncate mb-1 text-shadow-lg">${player.name}</div>
                             <div class="font-mono text-4xl font-black text-white mb-4 tracking-tighter">${player.elo} <span class="text-sm text-gray-500 font-normal">LP</span></div>
                             
-                            <!-- BADGE DE RANG DYNAMIQUE -->
                             <div class="flex items-center justify-center gap-3 bg-white/5 py-3 rounded-lg border border-white/5 group-hover:bg-white/10 transition-colors">
                                 <img src="${rankInfo.img}" class="w-8 h-8 object-contain filter drop-shadow-md">
                                 <div class="flex flex-col items-start leading-none">
-                                    <span class="text-[10px] text-gray-500 font-mono uppercase">RANG ACTUEL</span>
+                                    <span class="text-[10px] text-gray-500 font-mono uppercase">RANG</span>
                                     <span class="text-xs font-mono font-bold tracking-widest uppercase" style="color:${rankInfo.color}">${rankInfo.name}</span>
                                 </div>
                             </div>
@@ -262,10 +277,6 @@
                 list.innerHTML += html;
             });
         }
-
-        // Démarrage
-        initLeaderboard();
-
     </script>
 </body>
 </html>
