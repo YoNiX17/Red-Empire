@@ -3,779 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red Empire | Streak PLK</title>
+    <title>PLK | Platinum Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Polices modernes et impactantes -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        blue: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a' },
-                        cyber: { dark: '#020617', panel: '#0f172a' },
+                        plk: { 
+                            blue: '#3b82f6', // Bleu vibrant
+                            deep: '#0f172a', // Fond très sombre
+                            silver: '#e2e8f0' // Effet platine
+                        }
                     },
                     fontFamily: {
-                        manga: ['Bangers', 'cursive'],
-                        display: ['Orbitron', 'sans-serif'],
-                        mono: ['Rajdhani', 'sans-serif'],
+                        heading: ['Anton', 'sans-serif'], // Pour les gros titres (PLK style)
+                        ui: ['Inter', 'sans-serif'],      // Pour le texte clean
+                        mono: ['Rajdhani', 'sans-serif']  // Pour les chiffres/stats
                     },
                     animation: {
-                        'spin-slow': 'spin 4s linear infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } }
+                        'spin-vinyl': 'spin 1.8s linear infinite', // Rotation plus fluide
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #020617; color: #eee; overflow: hidden; }
-        .bg-animated { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #020617 70%); }
-        .glass-hud { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; }
-        
-        .disk-spin { animation: spin 4s linear infinite; }
-        .disk-paused { animation-play-state: paused !important; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .input-cyber { 
-            background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); 
-            color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; 
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); 
+        body { 
+            background-color: #020617; 
+            color: #e2e8f0; 
+            overflow: hidden; 
         }
-        .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
-        
-        .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
-        
-        .hidden-force { display: none !important; }
-        
-        /* Transitions */
-        .scene-container {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease, transform 0.5s ease;
+
+        /* FOND : Dégradé radial subtil (Spotlight) */
+        .bg-spotlight {
+            background: radial-gradient(circle at 50% 30%, #1e3a8a 0%, #020617 60%);
+            opacity: 0.6;
         }
-        .scene-hidden { opacity: 0; pointer-events: none; transform: scale(0.9); }
-        .scene-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        /* EFFET VERRE (Glassmorphism propre) */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* VINYLE RÉALISTE */
+        .vinyl-container {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: #111;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Les rainures du disque (Reflets) */
+        .vinyl-grooves {
+            position: absolute;
+            inset: 5px;
+            border-radius: 50%;
+            background: 
+                repeating-radial-gradient(
+                #111 0, 
+                #111 2px, 
+                #222 3px, 
+                #222 4px
+                );
+            /* Reflet brillant qui tourne pour montrer le mouvement */
+            background-image: 
+                linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%),
+                repeating-radial-gradient(#111 0, #111 2px, #1a1a1a 3px, #1a1a1a 4px);
+        }
+
+        .vinyl-label {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8); /* Effet Platinum */
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            border: 4px solid #0f172a;
+        }
+
+        /* Logo PLK sur le disque */
+        .plk-logo-text {
+            font-family: 'Anton', sans-serif;
+            font-size: 3rem;
+            color: #0f172a;
+            line-height: 1;
+            letter-spacing: -2px;
+            transform: scaleY(1.2); /* Style étiré */
+        }
+
+        /* Animation Rotation */
+        .spinning { animation: spin-vinyl 4s linear infinite; }
+        .paused { animation-play-state: paused; }
+
+        @keyframes spin-vinyl { 100% { transform: rotate(360deg); } }
+
+        /* Input Clean */
+        .input-clean {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #334155;
+            color: white;
+            font-family: 'Anton', sans-serif;
+            letter-spacing: 1px;
+            font-size: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        .input-clean:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.3);
+        }
+        .input-clean::placeholder {
+            color: #475569;
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-size: 1.5rem;
+            letter-spacing: 0;
+        }
+
     </style>
 </head>
-<body class="h-screen flex flex-col font-mono relative">
+<body class="h-screen flex flex-col relative">
 
-    <div class="bg-animated"></div>
-    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
+    <!-- FOND LUMINEUX -->
+    <div class="fixed inset-0 bg-spotlight z-[-1]"></div>
+    <div class="fixed inset-0 z-[-1]" style="background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2;"></div>
 
-    <!-- LECTEUR AUDIO -->
-    <audio id="game-audio" preload="auto"></audio>
-
-    <!-- HUD -->
-    <nav class="absolute top-0 w-full p-6 z-50 flex items-start justify-between pointer-events-none">
-        <div class="pointer-events-auto flex items-center gap-4">
-            <a href="streak_selection.html" class="glass-hud w-12 h-12 flex items-center justify-center text-blue-300 hover:text-white transition-all cursor-pointer">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <div class="glass-hud px-4 py-2 flex items-center gap-3">
-                <i class="fa-solid fa-volume-high text-blue-400 text-xs"></i>
-                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20 accent-blue-500" oninput="window.updateVolume(this.value)">
+    <!-- NAVBAR -->
+    <nav class="h-24 w-full flex items-center justify-between px-8 md:px-16 z-50">
+        <a href="index.html" class="group flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+            <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </div>
+        </a>
+
+        <!-- SCORE CENTRAL -->
+        <div class="flex flex-col items-center">
+            <div class="text-[10px] font-mono text-plk-blue uppercase tracking-[0.3em] mb-1">Score Actuel</div>
+            <div class="font-heading text-5xl text-white tracking-wide" id="score-display">0</div>
         </div>
 
-        <div class="flex flex-col items-center mt-2">
-            <div class="relative">
-                <div class="text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]" id="streak-counter">0</div>
-                <div class="absolute -top-4 -right-8 text-xs font-mono text-blue-400 border border-blue-500/50 px-2 py-0.5 rounded bg-black/50 backdrop-blur-sm">STREAK</div>
+        <!-- STREAK -->
+        <div class="flex flex-col items-end opacity-80">
+            <div class="flex items-center gap-2 text-plk-blue">
+                <i class="fa-solid fa-bolt"></i>
+                <span class="font-heading text-2xl" id="streak-display">0</span>
             </div>
-        </div>
-
-        <div class="flex flex-col items-end gap-2 pointer-events-auto">
-            <div class="glass-hud px-5 py-3 text-right">
-                <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase mb-1">Record</div>
-                <div class="font-display font-bold text-2xl text-white flex items-center justify-end gap-2">
-                    <i class="fa-solid fa-trophy text-yellow-500 text-sm"></i>
-                    <span id="best-streak">0</span>
-                </div>
-            </div>
-            <div class="glass-hud px-4 py-2 flex items-center gap-3 text-red-400 font-display font-bold text-xl" id="timer-display">20s</div>
+            <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400">Série</div>
         </div>
     </nav>
 
-    <!-- ZONE PRINCIPALE -->
-    <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
+    <!-- MAIN GAME AREA -->
+    <div class="flex-grow flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto">
         
-        <!-- 1. SCÈNE RÉVÉLATION -->
-        <div id="reveal-container" class="scene-container scene-hidden z-20">
-            <div class="relative mb-8">
-                <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
-                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
-            </div>
-            <div class="text-center z-10 bg-black/80 backdrop-blur-md p-6 rounded-xl border border-blue-500/30 min-w-[320px]">
-                <div class="text-blue-400 text-xs font-mono tracking-[0.4em] mb-2 uppercase">Identifié</div>
-                <h2 id="res-title" class="text-3xl md:text-5xl font-display font-black text-white uppercase tracking-tight text-glow-blue mb-3 truncate max-w-lg">TITRE</h2>
-                <div class="inline-flex flex-col items-center gap-2">
-                    <span class="px-4 py-1 bg-blue-600 text-white rounded text-sm font-bold uppercase shadow-[0_0_15px_#2563eb]" id="res-album">ALBUM</span>
-                    <span id="res-feat" class="text-xs text-blue-300 font-mono italic hidden">Feat. Artistes</span>
+        <!-- ZONE VINYLE / POCHETTE -->
+        <div class="relative group">
+            
+            <!-- VINYLE (MODE ÉCOUTE) -->
+            <div id="disk-container" class="vinyl-container paused transition-all duration-700">
+                <div class="vinyl-grooves"></div>
+                <div class="vinyl-label">
+                    <span class="plk-logo-text">PLK</span>
+                    <div class="h-0.5 w-10 bg-black mt-1 mb-1"></div>
+                    <span class="text-[8px] font-mono font-bold text-black tracking-widest">PLATINUM</span>
                 </div>
+                <!-- Reflet de lumière sur le disque qui tourne -->
+                <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-transparent opacity-30 pointer-events-none"></div>
+            </div>
+
+            <!-- POCHETTE (MODE REVEAL) -->
+            <div id="cover-reveal" class="absolute inset-0 flex items-center justify-center opacity-0 scale-90 transition-all duration-500 pointer-events-none z-20">
+                <img id="reveal-img" src="" class="w-[320px] h-[320px] object-cover rounded shadow-2xl border border-white/10">
+            </div>
+
+        </div>
+
+        <!-- PROGRESS BAR (Minimaliste) -->
+        <div class="w-full max-w-md mt-16 mb-8 relative">
+            <div class="flex justify-between text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">
+                <span id="status-text">En attente...</span>
+                <span id="timer-text" class="text-white">20.0</span>
+            </div>
+            <div class="h-[2px] bg-white/10 w-full overflow-hidden relative">
+                <div id="timer-bar" class="absolute top-0 left-0 h-full bg-plk-blue w-full shadow-[0_0_15px_#3b82f6] transition-all duration-100 ease-linear"></div>
             </div>
         </div>
 
-        <!-- 2. SCÈNE JEU -->
-        <div id="vinyl-container" class="scene-container scene-visible">
-            <div class="visualizer-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_10s_linear_infinite_reverse]"></div>
-            <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-[float_6s_ease-in-out_infinite]">
-                <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
-                <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
-                    <div class="absolute inset-0 rounded-full border-[60px] border-[#0a0a0a] opacity-80" style="background: repeating-radial-gradient(#111 0, #111 2px, #000 3px, #000 4px);"></div>
-                    <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent opacity-30 pointer-events-none"></div>
-                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-900 border-4 border-black flex items-center justify-center relative z-20 shadow-[0_0_20px_black] overflow-hidden">
-                        <img id="disk-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
-                    </div>
+        <!-- INPUT ZONE -->
+        <div class="w-full max-w-2xl px-4 relative z-30">
+            
+            <!-- Badges Feedback -->
+            <div class="absolute -top-12 left-0 w-full flex justify-center gap-4 pointer-events-none">
+                <div id="badge-title" class="hidden px-4 py-1 bg-green-500 text-black font-heading uppercase text-sm tracking-wide transform -skew-x-12 animate-fade-in">
+                    TITRE OK
+                </div>
+                <div id="badge-album" class="hidden px-4 py-1 bg-plk-blue text-white font-heading uppercase text-sm tracking-wide transform -skew-x-12 animate-fade-in">
+                    ALBUM OK
                 </div>
             </div>
-            <div class="mt-16 text-center">
-                <div class="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-blue-900/20 border border-blue-500/30">
-                    <span id="status-text" class="text-blue-300 font-mono text-sm font-bold tracking-widest uppercase">Écoute en cours...</span>
-                </div>
+
+            <input type="text" id="input-guess" 
+                   placeholder="ENTREZ LE TITRE..." 
+                   class="input-clean w-full pb-4" 
+                   autocomplete="off" disabled>
+            
+            <div class="text-center mt-6 opacity-40 hover:opacity-100 transition-opacity">
+                <p class="text-[10px] font-mono uppercase tracking-[0.2em]">Appuyez sur Entrée pour valider</p>
+                <p class="text-[10px] font-mono mt-1 text-plk-blue">Essais restants : <span id="attempts-count">2</span></p>
             </div>
         </div>
 
     </div>
 
-    <!-- ZONE DE SAISIE -->
-    <div class="fixed bottom-0 w-full p-6 pb-10 z-40 flex justify-center bg-gradient-to-t from-black via-black/80 to-transparent">
-        <div class="w-full max-w-2xl relative group">
-            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-xl opacity-30 blur-lg group-hover:opacity-60 transition duration-500"></div>
-            <div class="relative flex shadow-2xl">
-                <input type="text" id="input-guess" placeholder="TITRE DU SON..." class="input-cyber flex-1 px-8 py-5 text-xl md:text-2xl rounded-l-xl uppercase transition-all" autocomplete="off" onkeydown="if(event.key === 'Enter') window.submitGuess()">
-                <button onclick="window.submitGuess()" class="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold px-8 py-5 text-lg md:text-xl rounded-r-xl transition-all border-l border-white/10 hover:shadow-[0_0_30px_#3b82f6]">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
+    <!-- GAMEOVER ECRAN -->
+    <div id="gameover-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center">
+        <h1 class="font-heading text-[120px] leading-none text-white opacity-10 select-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">GAME OVER</h1>
+        
+        <div class="relative z-10 text-center">
+            <div class="mb-2 text-plk-blue font-mono text-sm tracking-[0.5em] uppercase">Session Terminée</div>
+            <h2 class="font-heading text-6xl text-white mb-12">SCORE FINAL</h2>
+            
+            <div class="flex gap-16 justify-center mb-16">
+                <div class="text-center">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Points</div>
+                    <div id="final-score" class="font-heading text-4xl text-white">0</div>
+                </div>
+                <div class="w-px bg-white/10 h-12"></div>
+                <div class="text-center">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Meilleure Série</div>
+                    <div id="final-streak" class="font-heading text-4xl text-plk-blue">0</div>
+                </div>
             </div>
-            <div class="text-center mt-3 flex justify-between px-2">
-                <span class="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]" id="attempts-info">ESSAIS RESTANTS : <span class="text-white font-bold" id="attempts-count">2</span></span>
-                <span class="text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold" id="step-info">ÉTAPE 1/2 : TITRE</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- START OVERLAY -->
-    <div id="start-overlay" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
-        <div class="text-center max-w-2xl">
-            <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
-            <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
-            <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105 cursor-pointer pointer-events-auto">
-                <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3"><i class="fa-solid fa-play text-sm"></i> JOUER</span>
+            <div class="text-sm font-mono text-gray-400 mb-8 border-b border-white/10 pb-4 inline-block px-8">
+                C'était : <span id="final-answer" class="text-white font-bold ml-2">???</span>
+            </div>
+            <br>
+
+            <button onclick="startGame()" class="px-10 py-4 bg-white text-black font-heading text-xl uppercase tracking-wider hover:bg-plk-blue hover:text-white transition-colors duration-300 transform skew-x-[-10deg]">
+                <span class="skew-x-[10deg] inline-block">Rejouer</span>
             </button>
         </div>
     </div>
 
-    <!-- GAME OVER -->
-    <div id="game-over-overlay" class="hidden-force fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4">
-        <div class="w-full max-w-lg relative bg-[#0f172a] border border-red-900/50 p-8 md:p-12 rounded-2xl text-center">
-            <h2 class="font-display font-black text-6xl md:text-7xl text-red-600 mb-1 tracking-tighter animate-pulse">ÉCHEC</h2>
-            <p class="font-mono text-gray-500 text-sm tracking-[0.5em] mb-8 uppercase">Série Interrompue</p>
-            <div class="text-8xl font-black font-display text-white mb-8" id="final-score">0</div>
-            <div class="bg-red-900/10 border border-red-500/20 p-4 rounded-lg mb-8 text-left">
-                <div class="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">C'était :</div>
-                <div id="fail-correct-answer" class="text-white font-display font-bold text-xl truncate">...</div>
-                <div id="fail-correct-album" class="text-gray-400 font-mono text-sm">Album: ...</div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="location.reload()" class="w-full py-4 bg-white text-black font-black font-display text-lg uppercase tracking-wider hover:bg-gray-200 transition-colors rounded-lg">RÉESSAYER</button>
-                <a href="streak_selection.html" class="w-full flex items-center justify-center py-4 border border-white/10 text-gray-400 font-bold font-mono uppercase tracking-wider hover:text-white hover:border-white transition-colors rounded-lg">QUITTER</a>
-            </div>
-        </div>
-    </div>
+    <audio id="audio-player" style="display:none;"></audio>
 
-    <script>
-        // === DONNEES ===
-        const ALBUM_COVERS = {
-            "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
-            "2069": "https://i.postimg.cc/G2wTdwgJ/0x1900_000000_80_0_0.jpg",
-            "Enna": "https://i.postimg.cc/bJcSpcV0/0x1900_000000_80_0_0_(1).jpg",
-            "Mental": "https://i.postimg.cc/NMq2BqCH/0x1900_000000_80_0_0_(2).jpg",
-            "Polak": "https://i.postimg.cc/W3LqTLYh/0x1900_000000_80_0_0_(3).jpg",
-            "Platinum": "https://i.postimg.cc/bJcSpcVd/0x1900_000000_80_0_0_(4).jpg",
-            "Ténébreux": "https://i.postimg.cc/TwM5fMNw/0x1900_000000_80_0_0_(5).jpg",
-            "Feat.": "https://i.postimg.cc/bv2S7Ng2/549462567_1359332145554525_4081579609646448260_n.jpg",
-            "Single": "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"
-        };
+    <script type="module">
+        // Import de la BDD
+        import { PLK_RAW_DISCOGRAPHY, ALBUM_COVERS } from './plk_database.js';
 
-        const PLK_RAW_DISCOGRAPHY = {
-            "Chambre 140": [
-                { title: "Chambre 140", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Chambre%20140.mp3" },
-                { title: "EA7", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20EA7.mp3" },
-                { title: "Flash", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Flash.mp3" },
-                { title: "Gare du Nord", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Gare%20du%20Nord.mp3" },
-                { title: "Il pleut à Paris", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Il%20pleut%20%C3%A0%20Paris.mp3" },
-                { title: "Mignon tout plein", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mignon%20tout%20plein.mp3" },
-                { title: "Périph", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20P%C3%A9riph.mp3" },
-                { title: "Sun", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Sun.mp3" },
-                { title: "Ça fait longtemps", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20%C3%87a%20fait%20longtemps.mp3" },
-                { title: "Ça mène à rien", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Gazo%20-%20%C3%87a%20m%C3%A8ne%20%C3%A0%20rien.mp3" },
-                { title: "En mieux", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Hamza%20-%20En%20mieux.mp3" },
-                { title: "Faut pas", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Jul%20-%20Faut%20pas.mp3" },
-                { title: "La nuit", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20TIF%20-%20La%20nuit.mp3" },
-                { title: "Chouchou", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Vacra%20-%20Chouchou.mp3" }
-            ],
-            "2069 (EP)": [
-                { title: "Demain", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Demain.mp3" },
-                { title: "Décembre", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20D%C3%A9cembre.mp3" },
-                { title: "Nouvelles", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Nouvelles.mp3" },
-                { title: "Panama Bende", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Panama%20Bende.mp3" }, 
-                { title: "10 minutes", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Dinos%20-%2010%20minutes.mp3" },
-                { title: "77", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Kerchak%20-%2077.mp3" }
-            ],
-            "Enna": [
-                { title: "Problèmes", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Probl%C3%A8mes.mp3" },
-                { title: "Pilote", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Hamza%20-%20Pilote%20%28feat.%20Hamza%29.mp3" },
-                { title: "On sait jamais", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Niska%20-%20On%20sait%20jamais%20%28feat.%20Niska%29.mp3" },
-                { title: "Chandon et Moët", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Heuss%20L%27enfoir%C3%A9%20-%20Chandon%20et%20Mo%C3%ABt%20%28feat.%20Heuss%20l%27Enfoir%C3%A9%29.mp3" },
-                { title: "Toutes générations", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Rim%27K%20-%20Toutes%20g%C3%A9n%C3%A9rations%20%28feat.%20Rim%27K%29.mp3" },
-                { title: "Au fond d'ma tête", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Au%20fond%20d%27ma%20t%C3%AAte.mp3" },
-                { title: "Billet d'20", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Billet%20d%2720.mp3" },
-                { title: "Dans les clips", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dans%20les%20clips.mp3" },
-                { title: "Pourtant", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pourtant.mp3" },
-                { title: "Mamie", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mamie.mp3" },
-                { title: "Alleluia", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Alleluia.mp3" },
-                { title: "C'est mort", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20C%27est%20mort.mp3" },
-                { title: "Ptain", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Ptain.mp3" },
-                { title: "Les comptes", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Les%20comptes.mp3" },
-                { title: "Bénef", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20B%C3%A9nef.mp3" },
-                { title: "Terrible", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Terrible.mp3" },
-                { title: "3 en 1", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%203%20en%201.mp3" },
-                { title: "La vie c'est marrant", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20vie%20c%27est%20marrant.mp3" },
-                { title: "Calme", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Calme.mp3" },
-                { title: "La vraie vie", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20vraie%20vie.mp3" },
-                { title: "Attentat", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20OBOY%20-%20Attentat.mp3" },
-                { title: "A la base", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20la%20base.mp3" },
-                { title: "Boost", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Boost.mp3" },
-                { title: "Dangereux", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dangereux.mp3" },
-                { title: "En ville", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SDM%20-%20En%20ville.mp3" },
-                { title: "Hubert et Saïd", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hubert%20et%20Sa%C3%AFd.mp3" },
-                { title: "J'attends", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20J%27attends.mp3" },
-                { title: "La rue", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20rue.mp3" },
-                { title: "Le P", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20P.mp3" },
-                { title: "Onana", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Onana.mp3" },
-                { title: "Pelo", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pelo.mp3" },
-                { title: "Perdu", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Perdu.mp3" },
-                { title: "Faut croire", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Faut%20croire.mp3" }
-            ],
-            "Mental": [
-                { title: "Un peu de haine", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Un%20peu%20de%20haine.mp3" },
-                { title: "Problèmes", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Probl%C3%A8mes.mp3" }, 
-                { title: "Hola", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hola.mp3" },
-                { title: "Travailler", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Travailler.mp3" },
-                { title: "Nana", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Nana.mp3" },
-                { title: "Meilleur cauchemar", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Meilleur%20cauchemar.mp3" },
-                { title: "Tout recommencer", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Tessa%20B.%C2%A0%20-%20Tout%20recommencer%20%28feat.%20Tessa%20B%29.mp3" },
-                { title: "V2V", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20V2V.mp3" },
-                { title: "Corazon", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Aladin%20135%20-%20Corazon%20%28feat.%20Aladin%20135%29.mp3" },
-                { title: "Cartelo", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Maes%20-%20Cartelo%20%28feat.%20Maes%29.mp3" },
-                { title: "Toute l'année", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Timal%20-%20Toute%20l%27ann%C3%A9e%20%28feat.%20Timal%29.mp3" },
-                { title: "Mental", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mental.mp3" },
-                { title: "Ma génération", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Ma%20g%C3%A9n%C3%A9ration.mp3" },
-                { title: "Temps perdu", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Temps%20perdu.mp3" },
-                { title: "TT", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20TT.mp3" },
-                { title: "RS3", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20RS3.mp3" },
-                { title: "Incontrolables", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SCH%20-%20Incontrolables.mp3" }
-            ],
-            "Polak": [
-                { title: "Monégasque", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mon%C3%A9gasque.mp3" },
-                { title: "Polak", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Polak.mp3" },
-                { title: "Hier", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SCH%20-%20Hier%20%28feat.%20SCH%29.mp3" },
-                { title: "Waow", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Nekfeu%20-%20Waow%20%28feat.%20Nekfeu%29.mp3" },
-                { title: "Dingue", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dingue.mp3" },
-                { title: "250", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20250.mp3" },
-                { title: "Sans suite", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Sans%20suite.mp3" },
-                { title: "Bunkoeur", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Bunkoeur.mp3" },
-                { title: "Idiote", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Idiote.mp3" },
-                { title: "Le sel", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20sel.mp3" },
-                { title: "Gozier", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Paluch%20-%20Gozier%20%28feat.%20Paluch%29.mp3" },
-                { title: "Ils nous comprennent pas", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Ils%20nous%20comprennent%20pas.mp3" },
-                { title: "Olcho Gvng", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Olcho%20Gvng.mp3" },
-                { title: "Weed", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Weed.mp3" },
-                { title: "Séparer", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20S%C3%A9parer.mp3" },
-                { title: "260", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20260.mp3" },
-                { title: "POL AK", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20POL-AK.mp3" },
-                { title: "Intro", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Intro.mp3" },
-                { title: "Intr100000", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Intr100000.mp3" }
-            ],
-            "Platinum": [
-                { title: "Pas les mêmes", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20les%20m%C3%AAmes.mp3" },
-                { title: "A A A", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20A%20A.mp3" },
-                { title: "Dis moi oui", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dis-moi%20oui.mp3" },
-                { title: "Copine", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Copine.mp3" },
-                { title: "Platinum", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Platinum.mp3" },
-                { title: "Izé", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Iz%C3%A9.mp3" },
-                { title: "Go", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Krisy%20-%20Go%20%28feat.%20Krisy%29.mp3" },
-                { title: "Pas ce soir", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Krisy%20-%20Pas%20ce%20soir%20%28feat.%20Krisy%29.mp3" },
-                { title: "Pas besoin", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20besoin.mp3" },
-                { title: "C'est grave", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20C%27est%20grave.mp3" },
-                { title: "High", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20High.mp3" },
-                { title: "Mentalité", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mentalit%C3%A9.mp3" },
-                { title: "Niveau", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Niveau.mp3" },
-                { title: "Colis piégés", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Lefa%20-%20Colis%20pi%C3%A9g%C3%A9s%20%28feat.%20Lefa%29.mp3" },
-                { title: "Arai", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Arai.mp3" },
-                { title: "Homies", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Homies.mp3" },
-                { title: "Avec les miens", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20les%20miens.mp3" },
-                { title: "Amigo", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Amigo.mp3" },
-                { title: "Bikini Bottom", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Bikini%20Bottom.mp3" },
-                { title: "Skuu", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Krisy%20-%20Skuu%20%28feat.%20Krisy%29.mp3" },
-                { title: "Si ça marche plus", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Si%20%C3%A7a%20marche%20plus.mp3" },
-                { title: "Le son de la street", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20son%20de%20la%20street.mp3" },
-                { title: "Flamenco", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Flamenco%20-%20Bonus%20Track.mp3" },
-                { title: "Émotif", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20%C3%89motif%20%28Booska%201H%29.mp3" },
-                { title: "Dégaine de bandit", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20D%C3%A9gaine%20de%20bandit.mp3" },
-                { title: "Amérique", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Am%C3%A9rique.mp3" }
-            ],
-            "Ténébreux": [
-                { title: "Ténébreux", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20T%C3%A9n%C3%A9breux.mp3" },
-                { title: "A l'envers", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20l%27envers.mp3" },
-                { title: "All Night", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20All%20Night.mp3" },
-                { title: "Pas de sentiments", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20de%20sentiments.mp3" },
-                { title: "Du mal", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Du%20mal.mp3" },
-                { title: "Casino", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Casino.mp3" },
-                { title: "Yeux", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Yeux.mp3" },
-                { title: "Mon poto", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mon%20poto.mp3" },
-                { title: "Plata O Plomo", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Plata%20O%20Plomo.mp3" },
-                { title: "Shérif", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Sh%C3%A9rif.mp3" },
-                { title: "Enfant du hall", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Enfant%20du%20hall.mp3" },
-                { title: "Une pêche une patate", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Une%20p%C3%A9che%20une%20patate.mp3" },
-                { title: "Hall", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hall.mp3" },
-                { title: "R.A.F", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R.A.F.mp3" },
-                { title: "Juste Un Petit Peu", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Juste%20Un%20Petit%20Peu.mp3" },
-                { title: "Fin de mois", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Fin%20de%20mois.mp3" },
-                { title: "Cash", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Cash.mp3" }
-            ],
-            "Apparitions / Featurings": [
-                { title: "Aminata", album: "Feat. 13 Block", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/13%20Block%2C%20PLK%20-%20Aminata%20%28feat.%20PLK%29.mp3" },
-                { title: "10", album: "Feat. 404Billy", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/404Billy%2C%20PLK%20-%2010.mp3" },
-                { title: "All Day", album: "Feat. Aladin 135", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Aladin%20135%2C%20PLK%20-%20All%20Day.mp3" },
-                { title: "Hiver", album: "Feat. Aladin 135", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Aladin%20135%2C%20PLK%2C%20Lesram%20-%20Hiver.mp3" },
-                { title: "Tableau de bord", album: "Feat. Alonzo", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Alonzo%2C%20PLK%20-%20Tableau%20de%20bord.mp3" },
-                { title: "Fisheye", album: "Feat. Bekar", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Bekar%2C%20PLK%20-%20Fisheye%20%28feat.%20PLK%29.mp3" },
-                { title: "Arriba", album: "Feat. Caballero", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Caballero%2C%20PLK%20-%20Arriba.mp3" },
-                { title: "Des fois", album: "Feat. Dadju", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Dadju%2C%20PLK%20-%20Des%20fois.mp3" },
-                { title: "Parle moi", album: "Feat. Dadju", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Dadju%2C%20PLK%20-%20Parle-moi.mp3" },
-                { title: "Saigne", album: "Feat. Dadju", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Dadju%2C%20PLK%20-%20Saigne.mp3" },
-                { title: "XbarV", album: "Feat. Dinor", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Dinor%20rdt%2C%20PLK%20-%20XbarV%20%28feat.%20PLK%29.mp3" },
-                { title: "Mondeo", album: "Feat. Doums", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Doums%2C%20PLK%20-%20Mondeo%20%28feat.%20PLK%29.mp3" },
-                { title: "BNB", album: "Feat. Enima", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Enima%2C%20PLK%20-%20BNB.mp3" },
-                { title: "Quand tout s'enflamme", album: "Feat. Georgio", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Georgio%2C%20PLK%20-%20Quand%20tout%20s%27enflamme.mp3" },
-                { title: "Astrid", album: "Feat. JRK 19", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/JRK%2019%2C%20PLK%20-%20Astrid.mp3" },
-                { title: "Postiché", album: "Feat. Jul", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Jul%2C%20PLK%20-%20Postich%C3%A9.mp3" },
-                { title: "ALICANTE", album: "Feat. Karmen", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Karmen%2C%20PLK%20-%20ALICANTE.mp3" },
-                { title: "Pas bien", album: "BO En Passant Pécho", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Kore%2C%20PLK%20-%20Pas%20bien%20-%20Extrait%20de%20la%20BO%20de%20%C2%AB%20En%20Passant%20P%C3%A9cho%20%C2%BB.mp3" },
-                { title: "Ledger", album: "Feat. Lacrim", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Lacrim%2C%20PLK%20-%20Ledger%20%28feat.%20PLK%29.mp3" },
-                { title: "230", album: "Feat. Lefa", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Lefa%2C%20PLK%20-%20230%20%28feat.%20PLK%29.mp3" },
-                { title: "100X", album: "Feat. Lesram", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Lesram%2C%20PLK%20-%20100X%20%28feat.%20PLK%29.mp3" },
-                { title: "Avec le temps", album: "Feat. Lesram", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Lesram%2C%20PLK%20-%20Avec%20le%20temps%20%28feat.%20PLK%29.mp3" },
-                { title: "Train de vie", album: "Feat. Leto", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Leto%2C%20PLK%20-%20Train%20de%20vie%20%28feat.%20PLK%29.mp3" },
-                { title: "4MOTION", album: "Feat. Maes", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Maes%2C%20PLK%20-%204MOTION.mp3" },
-                { title: "Grosses Sommes", album: "Feat. Matou", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Matou%2C%20PLK%20-%20Grosses%20Sommes.mp3" },
-                { title: "Jamais", album: "Feat. Mister V", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Mister%20V%2C%20PLK%20-%20Jamais.mp3" },
-                { title: "Lambo", album: "Feat. Mister V", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Mister%20V%2C%20PLK%20-%20Lambo.mp3" },
-                { title: "Zion", album: "Feat. Nemir", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Nemir%2C%20PLK%20-%20Zion.mp3" },
-                { title: "Nuage qui passe", album: "Feat. Nessbeal", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Nessbeal%2C%20PLK%20-%20Nuage%20qui%20passe.mp3" },
-                { title: "ON FAIT LES CHOSES", album: "Feat. Niaks", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Niaks%2C%20PLK%20-%20ON%20FAIT%20LES%20CHOSES.mp3" },
-                { title: "Fils 2", album: "Feat. Niro", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Niro%2C%20PLK%20-%20Fils%202.mp3" },
-                { title: "Vieilles Gueules", album: "Feat. Ormaz", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Ormaz%2C%20PLK%20-%20Vieilles%20Gueules.mp3" },
-                { title: "Comme à l'ancienne", album: "Feat. RK", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/RK%2C%20PLK%20-%20Comme%20%C3%A0%20l%27ancienne.mp3" },
-                { title: "Cosmos", album: "Feat. Rim'K", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Rim%27K%2C%20PLK%20-%20Cosmos.mp3" },
-                { title: "Jack Fuego", album: "Feat. SDM", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/SDM%2C%20PLK%20-%20Jack%20Fuego.mp3" },
-                { title: "Le bruit des applaudissements", album: "Feat. SDM", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/SDM%2C%20PLK%20-%20Le%20bruit%20des%20applaudissements.mp3" },
-                { title: "Des années", album: "Feat. Shtar Ac", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Shtar%20Academy%2C%20PLK%2C%20Ryan%2C%20Perkiz%20-%20Des%20ann%C3%A9es.mp3" },
-                { title: "Faux Paradis", album: "Feat. Soprano", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Soprano%2C%20PLK%20-%20Faux%20Paradis.mp3" },
-                { title: "Petrouchka", album: "Feat. Soso Maness", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Soso%20Maness%2C%20PLK%20-%20Petrouchka%20%28feat.%20PLK%29.mp3" },
-                { title: "Allez", album: "Feat. Soso Maness", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Soso%20Maness%2C%20PLK%2C%20Naps%20-%20Allez%20%28feat.%20PLK%20%26%20Naps%29.mp3" },
-                { title: "Promis", album: "Feat. Timal", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Timal%2C%20PLK%20-%20Promis%20%28feat.%20PLK%29.mp3" },
-                { title: "Sorry", album: "Feat. Tsew The Kid", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Tsew%20The%20Kid%2C%20PLK%20-%20%E2%81%B9%20Sorry.mp3" },
-                { title: "Confidences", album: "Feat. Vacra", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Vacra%2C%20PLK%20-%20Confidences.mp3" },
-                { title: "En pétard", album: "Feat. Werenoi", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Werenoi%2C%20PLK%20-%20En%20p%C3%A9tard.mp3" },
-                { title: "Escorte", album: "Feat. Werenoi", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Werenoi%2C%20PLK%20-%20Escorte.mp3" },
-                { title: "Mec de cité", album: "Feat. Yaro", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Yaro%2C%20Ninho%2C%20PLK%20-%20Mec%20de%20cit%C3%A9.mp3" },
-                { title: "Salut", album: "Feat. Yaro", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Yaro%2C%20PLK%20-%20Salut.mp3" },
-                { title: "Les jolies filles", album: "Feat. Zamdane", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Zamdane%2C%20PLK%20-%20Les%20jolies%20filles.mp3" },
-                { title: "Piou Piou", album: "Feat. Zeu", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Zeu%2C%20PLK%2C%20Ormaz%20-%20Piou%20Piou.mp3" },
-                { title: "Tu vois comment", album: "Feat. Zkr", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Zkr%2C%20PLK%20-%20Tu%20vois%20comment%20.mp3" }
-            ],
-            "Singles / Hors Album": [
-                { title: "10 Millions", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%2010%20Millions.mp3" },
-                { title: "1Eu", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%201%E2%82%AC%C2%A0%201Eu.mp3" },
-                { title: "Règlement Freestyle #17", album: "Freestyle", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R%C3%A8glement%20Freestyle%20%2317.mp3" },
-                { title: "Avec moi", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20moi.mp3" }
-            ]
-        };
-
-        // 1. Création de la base de données plate
-        const PLK_DATABASE = [];
-        Object.values(PLK_RAW_DISCOGRAPHY).flat().forEach(item => {
-            let processedItem = { ...item };
-            if (processedItem.album.startsWith("Feat.")) {
-                processedItem.feat = processedItem.album.replace("Feat. ", "");
-                processedItem.album = "Feat.";
-            }
-            if (processedItem.album.includes("Enna (Boost)")) processedItem.album = "Enna";
-            if (processedItem.album.includes("BO") || processedItem.album.includes("Freestyle")) processedItem.album = "Single";
-            PLK_DATABASE.push(processedItem);
-        });
-
-        // 2. Variables d'état
-        let currentStreak = 0;
-        let bestStreak = localStorage.getItem('plk_best_streak') || 0;
+        // --- VARIABLES JEU ---
+        let songs = [];
         let currentSong = null;
-        let usedIndices = [];
+        let score = 0;
+        let streak = 0;
         let timerInterval = null;
-        let gameStep = 1; // 1: Titre, 2: Album
-        let attemptsTitle = 2;
-        let attemptsAlbum = 1;
+        let titleAttempts = 2;
+        let albumAttempts = 1;
+        let phase = 'waiting';
 
-        // 3. DOM Elements (Sécurisés)
-        const getEl = (id) => document.getElementById(id);
+        // --- DOM ---
+        const audio = document.getElementById('audio-player');
+        const input = document.getElementById('input-guess');
+        const timerBar = document.getElementById('timer-bar');
+        const timerText = document.getElementById('timer-text');
+        const statusText = document.getElementById('status-text');
+        const diskContainer = document.getElementById('disk-container');
 
-        // --- FONCTIONS DU JEU ---
+        // Préparation des musiques
+        Object.values(PLK_RAW_DISCOGRAPHY).forEach(album => songs.push(...album));
 
-        function updateVolume(val) {
-            const audio = getEl('game-audio');
-            if(audio) audio.volume = val;
-        }
-
-        function startGame() {
-            const audio = getEl('game-audio');
-            if(audio) {
-                // Débloquer l'audio contexte
-                audio.play().then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }).catch(e => console.log("Audio unlock:", e));
-            }
-
-            const startOverlay = getEl('start-overlay');
-            if(startOverlay) {
-                startOverlay.style.opacity = '0';
-                startOverlay.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    startOverlay.classList.add('hidden-force');
-                    nextRound();
-                }, 500);
-            }
-        }
+        window.startGame = () => {
+            score = 0;
+            streak = 0;
+            updateUI();
+            document.getElementById('gameover-screen').classList.add('hidden');
+            input.disabled = false;
+            nextRound();
+        };
 
         function nextRound() {
-            gameStep = 1;
-            attemptsTitle = 2;
-            attemptsAlbum = 1;
+            // Reset
+            const randomIndex = Math.floor(Math.random() * songs.length);
+            currentSong = songs[randomIndex];
+            phase = 'title';
+            titleAttempts = 2;
+            albumAttempts = 1;
+
+            // UI Clean
+            diskContainer.classList.remove('opacity-0', 'scale-50');
+            diskContainer.classList.add('spinning'); // Ça tourne !
+            diskContainer.classList.remove('paused');
             
-            // Reset UI
-            const revealContainer = getEl('reveal-container');
-            const vinylContainer = getEl('vinyl-container');
-            const diskEl = getEl('disk');
-            const inputEl = getEl('input-guess');
-            const statusText = getEl('status-text');
-            const stepInfoEl = getEl('step-info');
-            const attemptsInfoEl = getEl('attempts-count');
+            document.getElementById('cover-reveal').classList.add('opacity-0', 'scale-90');
+            document.getElementById('badge-title').classList.add('hidden');
+            document.getElementById('badge-album').classList.add('hidden');
 
-            if(revealContainer) {
-                revealContainer.classList.remove('scene-visible');
-                revealContainer.classList.add('scene-hidden');
-            }
-            if(vinylContainer) {
-                vinylContainer.classList.remove('scene-hidden');
-                vinylContainer.classList.add('scene-visible');
-            }
-            if(diskEl) diskEl.classList.remove('disk-paused');
-            
-            if(inputEl) {
-                inputEl.value = "";
-                inputEl.placeholder = "TITRE DU SON...";
-                inputEl.disabled = false;
-                inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
-                inputEl.focus();
-            }
-            if(statusText) {
-                statusText.innerText = "Écoute en cours...";
-                statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
-            }
-            if(stepInfoEl) {
-                stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
-                stepInfoEl.className = "text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold";
-            }
-            if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
+            input.value = "";
+            input.placeholder = "TITRE DU SON ?";
+            input.disabled = false;
+            input.focus();
+            updateAttemptsUI();
 
-            // Sélection Son
-            if (usedIndices.length === PLK_DATABASE.length) usedIndices = [];
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
-            } while (usedIndices.includes(randomIndex));
-            usedIndices.push(randomIndex);
-            currentSong = PLK_DATABASE[randomIndex];
+            // Audio Start (Random 20s-60s)
+            const offset = 20 + Math.random() * 40;
+            audio.src = currentSong.url;
+            audio.currentTime = offset;
+            audio.volume = 0.5;
 
-            // Mise à jour Pochette Disque
-            const coverEl = getEl('disk-cover');
-            if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
-
-            // Lancement Audio
-            const audio = getEl('game-audio');
-            if (currentSong.url && audio) {
-                audio.src = currentSong.url;
-                audio.volume = 0.5; 
-                audio.currentTime = 0;
-                
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Erreur lecture (attente interaction):", error);
-                    });
-                }
-            }
-
-            startTimer();
+            audio.play().then(() => {
+                startTimer(20);
+                statusText.innerText = "ÉCOUTE EN COURS...";
+                statusText.className = "text-plk-blue animate-pulse";
+            }).catch(() => {
+                statusText.innerText = "CLIQUEZ POUR DÉMARRER";
+                document.addEventListener('click', () => { audio.play(); startTimer(20); }, { once: true });
+            });
         }
 
-        function startTimer() {
+        function startTimer(seconds) {
             clearInterval(timerInterval);
-            let timeLeft = 20;
-            const timerDisplay = getEl('timer-display');
+            let timeLeft = seconds;
             
-            if (timerDisplay) {
-                timerDisplay.innerText = timeLeft + "s";
-                timerDisplay.classList.remove('text-red-500');
-                timerDisplay.classList.add('text-blue-400');
-            }
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+            void timerBar.offsetWidth;
+            timerBar.style.transition = `width ${seconds}s linear`;
+            timerBar.style.width = '0%';
 
             timerInterval = setInterval(() => {
-                timeLeft--;
-                if (timerDisplay) {
-                    timerDisplay.innerText = timeLeft + "s";
-                    if (timeLeft <= 5) {
-                        timerDisplay.classList.remove('text-blue-400');
-                        timerDisplay.classList.add('text-red-500');
-                    }
-                }
+                timeLeft -= 0.1;
+                timerText.innerText = Math.max(0, timeLeft).toFixed(1);
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    handleLoss("Temps écoulé !");
+                    handleTimeOut();
+                }
+            }, 100);
+        }
+
+        function handleTimeOut() {
+            if (phase === 'title') gameOver();
+            else if (phase === 'album') {
+                statusText.innerText = "TEMPS ÉCOULÉ POUR L'ALBUM";
+                setTimeout(reveal, 1000);
+            }
+        }
+
+        function submitGuess() {
+            const guess = input.value.trim();
+            if (!guess || phase === 'reveal') return;
+
+            if (phase === 'title') {
+                if (isCloseMatch(guess, currentSong.title)) {
+                    // TITRE BON
+                    score += 1;
+                    phase = 'album';
+                    
+                    document.getElementById('badge-title').classList.remove('hidden');
+                    input.value = "";
+                    input.placeholder = "QUEL PROJET / ALBUM ?";
+                    
+                    // Stop timer titre
+                    clearInterval(timerInterval);
+                    timerBar.style.transition = 'none';
+                    timerBar.style.width = '100%'; 
+                    
+                    statusText.innerText = "TITRE VALIDÉ ! BONUS ALBUM ?";
+                    statusText.className = "text-green-400";
+                    updateUI();
+                } else {
+                    titleAttempts--;
+                    input.classList.add('border-red-500');
+                    setTimeout(() => input.classList.remove('border-red-500'), 500);
+                    
+                    if (titleAttempts <= 0) gameOver();
+                    else input.value = "";
+                    updateAttemptsUI();
+                }
+            } else if (phase === 'album') {
+                let target = currentSong.album;
+                // Gestion simple Feat
+                if (target.includes("Feat") && !isCloseMatch(guess, target)) {
+                     const guest = target.replace(/feat\.?/i, '').trim();
+                     if (isCloseMatch(guess, guest)) target = guess; // Accepte juste l'artiste
+                }
+
+                if (isCloseMatch(guess, target)) {
+                    score += 0.5;
+                    document.getElementById('badge-album').classList.remove('hidden');
+                    statusText.innerText = "EXCELLENT !";
+                } else {
+                    statusText.innerText = "ALBUM RATÉ...";
+                }
+                updateUI();
+                reveal();
+            }
+        }
+
+        function reveal() {
+            phase = 'reveal';
+            clearInterval(timerInterval);
+            streak++;
+            updateUI();
+
+            // Stop Disque & Hide
+            diskContainer.classList.add('paused');
+            diskContainer.classList.add('opacity-0', 'scale-50');
+
+            // Show Cover
+            const revealEl = document.getElementById('cover-reveal');
+            revealEl.classList.remove('opacity-0', 'scale-90');
+            
+            // Image Logic
+            let url = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+            if (!url && currentSong.album.includes("Feat")) url = ALBUM_COVERS["Feat."];
+            if (!url) url = ALBUM_COVERS["Single"]; // Fallback
+
+            document.getElementById('reveal-img').src = url;
+            input.value = `${currentSong.title}`;
+            input.disabled = true;
+
+            // Countdown Next
+            let cd = 8;
+            timerText.innerText = "SUIVANT: " + cd;
+            const int = setInterval(() => {
+                cd--;
+                timerText.innerText = "SUIVANT: " + cd;
+                if (cd <= 0) {
+                    clearInterval(int);
+                    nextRound();
                 }
             }, 1000);
         }
 
-        // VRAIE LOGIQUE DE COMPARAISON (LEVENSHTEIN MATRIX)
+        function gameOver() {
+            phase = 'gameover';
+            clearInterval(timerInterval);
+            audio.pause();
+            document.getElementById('gameover-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-streak').innerText = streak;
+            document.getElementById('final-answer').innerText = `${currentSong.title} (${currentSong.album})`;
+        }
+
+        function updateUI() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('streak-display').innerText = streak;
+        }
+
+        function updateAttemptsUI() {
+            const el = document.getElementById('attempts-count');
+            el.innerText = phase === 'title' ? titleAttempts : albumAttempts;
+        }
+
+        // --- UTILS ---
+        function isCloseMatch(input, target) {
+            if(!target) return false;
+            const a = clean(input);
+            const b = clean(target);
+            if (a === b) return true;
+            if (b.includes(a) && a.length > 3) return true;
+            return levenshtein(a, b) <= 2; // Tolérance simple
+        }
+
+        function clean(s) {
+            return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
         function levenshtein(a, b) {
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
-            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
-                        matrix[i][j] = matrix[i - 1][j - 1];
+            if(a.length == 0) return b.length; 
+            if(b.length == 0) return a.length; 
+            var matrix = [];
+            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
+            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
+            for(var i = 1; i <= b.length; i++){
+                for(var j = 1; j <= a.length; j++){
+                    if(b.charAt(i-1) == a.charAt(j-1)){
+                        matrix[i][j] = matrix[i-1][j-1];
                     } else {
-                        matrix[i][j] = Math.min(
-                            matrix[i - 1][j - 1] + 1, // substitution
-                            Math.min(
-                                matrix[i][j - 1] + 1, // insertion
-                                matrix[i - 1][j] + 1  // deletion
-                            )
-                        );
+                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
                     }
                 }
             }
             return matrix[b.length][a.length];
         }
 
-        function isCloseMatch(input, target) {
-            if (!target) return false;
-            const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
-            const a = clean(input);
-            const b = clean(target);
-            
-            if (a === b) return true;
-            if (b.length > 3 && b.includes(a)) return true;
-            
-            const dist = levenshtein(a, b);
-            const maxLength = Math.max(a.length, b.length);
-            const similarity = 1 - (dist / maxLength);
-            
-            // 65% de similarité acceptée
-            return similarity > 0.65;
-        }
-
-        window.submitGuess = () => {
-            const inputEl = getEl('input-guess');
-            if (!inputEl) return;
-            const guess = inputEl.value.trim();
-            if (!guess) return;
-
-            const stepInfoEl = getEl('step-info');
-            const attemptsInfoEl = getEl('attempts-count');
-            const statusText = getEl('status-text');
-
-            if (gameStep === 1) {
-                // GUESS TITRE
-                if (isCloseMatch(guess, currentSong.title)) {
-                    gameStep = 2;
-                    inputEl.value = "";
-                    inputEl.placeholder = "QUEL ALBUM ?";
-                    inputEl.classList.add('border-green-500');
-                    setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
-                    
-                    if(stepInfoEl) {
-                        stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
-                        stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
-                    }
-                    if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
-                    if(statusText) {
-                        statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
-                        statusText.className = "text-green-400 font-bold tracking-widest uppercase";
-                    }
-                } else {
-                    attemptsTitle--;
-                    if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
-                    inputEl.classList.add('border-red-500');
-                    setTimeout(() => inputEl.classList.remove('border-red-500'), 500);
-                    
-                    if (attemptsTitle <= 0) handleLoss("Mauvais titre");
-                }
-            } else {
-                // GUESS ALBUM
-                if (isCloseMatch(guess, currentSong.album)) {
-                    handleWin();
-                } else {
-                    attemptsAlbum--;
-                    if (attemptsAlbum <= 0) handleLoss("Mauvais album");
-                }
-            }
-        };
-
-        function handleWin() {
-            clearInterval(timerInterval);
-            const inputEl = getEl('input-guess');
-            if(inputEl) inputEl.classList.add('border-green-500');
-            
-            const statusText = getEl('status-text');
-            if(statusText) {
-                statusText.innerText = "CORRECT !";
-                statusText.className = "text-green-400 font-display font-black text-xl tracking-widest uppercase animate-bounce";
-            }
-
-            currentStreak++;
-            const streakCounter = getEl('streak-counter');
-            if (streakCounter) streakCounter.innerText = currentStreak;
-            
-            if(currentStreak > bestStreak) {
-                bestStreak = currentStreak;
-                localStorage.setItem('plk_best_streak', bestStreak);
-                const bestEl = getEl('best-streak');
-                if(bestEl) bestEl.innerText = bestStreak;
-            }
-            
-            // VICTOIRE : On NE COUPE PAS le son
-            showReveal(true);
-        }
-
-        function handleLoss(reason) {
-            clearInterval(timerInterval);
-            const audio = getEl('game-audio');
-            if(audio) audio.pause(); // DEFAITE : On coupe le son
-            
-            const inputEl = getEl('input-guess');
-            if(inputEl) inputEl.classList.add('border-red-500');
-            
-            const statusText = getEl('status-text');
-            if(statusText) {
-                statusText.innerText = reason || "ERREUR...";
-                statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
-            }
-            showReveal(false);
-        }
-
-        function showReveal(isWin) {
-            const vinylContainer = getEl('vinyl-container');
-            const revealContainer = getEl('reveal-container');
-
-            // Transition : Cache le vinyle
-            if(vinylContainer) {
-                vinylContainer.classList.remove('scene-visible');
-                vinylContainer.classList.add('scene-hidden');
-            }
-
-            setTimeout(() => {
-                // Affiche la pochette
-                if(revealContainer) {
-                    revealContainer.classList.remove('scene-hidden');
-                    revealContainer.classList.add('scene-visible');
-                }
-
-                const resTitle = getEl('res-title');
-                if(resTitle) resTitle.innerText = currentSong.title;
-                
-                const revealCoverEl = getEl('reveal-cover');
-                if(revealCoverEl) {
-                    // Fallback si pas de cover spécifique
-                    const coverUrl = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
-                    revealCoverEl.src = coverUrl;
-                }
-                
-                const albumEl = getEl('res-album');
-                if(albumEl) albumEl.innerText = currentSong.album;
-                
-                const featEl = getEl('res-feat');
-                if(featEl) {
-                    if (currentSong.feat) {
-                        featEl.innerText = "Feat. " + currentSong.feat;
-                        featEl.classList.remove('hidden');
-                    } else {
-                        featEl.classList.add('hidden');
-                    }
-                }
-                
-                if (isWin) {
-                    // Si gagné : la musique continue, on attend 8s
-                    setTimeout(() => {
-                        nextRound();
-                    }, 8000); 
-                } else {
-                    // Si perdu : on attend 2s pour lire la réponse, puis Game Over
-                    setTimeout(() => {
-                        showGameOver();
-                    }, 2000);
-                }
-            }, 500);
-        }
-
-        function showGameOver() {
-            const finalScore = getEl('final-score');
-            if(finalScore) finalScore.innerText = currentStreak;
-            
-            const failAnswer = getEl('fail-correct-answer');
-            if(failAnswer) failAnswer.innerText = currentSong.title;
-            
-            const failAlbum = getEl('fail-correct-album');
-            if(failAlbum) {
-                let detailText = `Album: ${currentSong.album}`;
-                if(currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
-                failAlbum.innerText = detailText;
-            }
-            
-            const gameOverOverlay = getEl('game-over-overlay');
-            if(gameOverOverlay) gameOverOverlay.classList.remove('hidden-force');
-        }
-
-        // Init au chargement
-        document.addEventListener('DOMContentLoaded', () => {
-            const bestEl = document.getElementById('best-streak');
-            if(bestEl) bestEl.innerText = localStorage.getItem('plk_best_streak') || 0;
-            
-            // Initialisation du bouton
-            const btnStart = document.getElementById('btn-start');
-            if(btnStart) btnStart.addEventListener('click', startGame);
-        });
-
-        // Triche pour le dev (Tapez "cheat" dans la console)
-        window.submitGuess = submitGuess;
-        window.updateVolume = updateVolume;
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitGuess(); });
+        window.onload = startGame;
 
     </script>
 </body>
