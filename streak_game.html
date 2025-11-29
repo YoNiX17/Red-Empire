@@ -295,6 +295,20 @@
         // Préparation des musiques
         Object.values(PLK_RAW_DISCOGRAPHY).forEach(album => songs.push(...album));
 
+        // --- CHEAT SCRIPT (Exposé Globalement) ---
+        // Tape 'giveAnswer()' dans la console F12 pour remplir la réponse
+        window.giveAnswer = () => {
+            if(currentSong && phase === 'title') {
+                input.value = currentSong.title;
+                input.focus();
+            } else if (currentSong && phase === 'album') {
+                input.value = currentSong.album;
+                input.focus();
+            } else {
+                console.log("Pas de question active.");
+            }
+        };
+
         window.startGame = () => {
             score = 0;
             streak = 0;
