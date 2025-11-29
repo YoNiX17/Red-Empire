@@ -23,15 +23,10 @@
                     },
                     animation: {
                         'spin-slow': 'spin 4s linear infinite',
-                        'spin-reveal': 'spin 10s linear infinite',
                         'float': 'float 6s ease-in-out infinite',
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } }
                     }
                 }
             }
@@ -39,16 +34,13 @@
     </script>
     <style>
         body { background-color: #020617; color: #eee; overflow: hidden; }
-        
         .bg-animated { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #020617 70%); }
         .glass-hud { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; }
         
-        /* Disque Jeu */
         .disk-spin { animation: spin 4s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* Input */
         .input-cyber { 
             background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); 
             color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; 
@@ -56,18 +48,14 @@
         }
         .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
         
-        .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
-        
-        /* Gestion Visibilité */
+        /* UTILITAIRES D'AFFICHAGE (CRITIQUES) */
         .hidden-force { display: none !important; }
-        .opacity-0 { opacity: 0 !important; pointer-events: none !important; }
-        .opacity-100 { opacity: 1 !important; pointer-events: auto !important; }
-        .scale-0 { transform: scale(0.95); }
-        .scale-100 { transform: scale(1); }
-        .transition-all-game { transition: all 0.5s ease-in-out; }
-
-        /* Animation Pochette Reveal */
-        .animate-spin-slow-reveal { animation: spin 10s linear infinite; }
+        
+        /* États de transition */
+        .state-hidden { opacity: 0; pointer-events: none; transform: scale(0.9); }
+        .state-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+        
+        .transition-fast { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono relative">
@@ -75,12 +63,11 @@
     <div class="bg-animated"></div>
     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
-    <!-- AUDIO PLAYER GLOBAL -->
+    <!-- LECTEUR AUDIO UNIQUE (CACHE) -->
     <audio id="game-audio" preload="auto"></audio>
 
     <!-- HUD -->
     <nav class="absolute top-0 w-full p-6 z-50 flex items-start justify-between pointer-events-none">
-        <!-- Gauche -->
         <div class="pointer-events-auto flex items-center gap-4">
             <a href="streak_selection.html" class="glass-hud w-12 h-12 flex items-center justify-center text-blue-300 hover:text-white transition-all cursor-pointer">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -91,7 +78,6 @@
             </div>
         </div>
 
-        <!-- Centre -->
         <div class="flex flex-col items-center mt-2">
             <div class="relative">
                 <div class="text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]" id="streak-counter">0</div>
@@ -99,7 +85,6 @@
             </div>
         </div>
 
-        <!-- Droite -->
         <div class="flex flex-col items-end gap-2 pointer-events-auto">
             <div class="glass-hud px-5 py-3 text-right">
                 <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase mb-1">Record</div>
@@ -112,17 +97,15 @@
         </div>
     </nav>
 
-    <!-- ZONE PRINCIPALE DE JEU -->
+    <!-- ZONE PRINCIPALE -->
     <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
         
-        <!-- 1. PHASE RÉVÉLATION (Pochette Tournante) -->
-        <!-- IMPORTANT : ID = reveal-container -->
-        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-all-game opacity-0 pointer-events-none scale-0">
-            
+        <!-- 1. CONTAINER REVELATION (Pochette) -->
+        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-fast state-hidden">
             <!-- Pochette Carrée -->
             <div class="relative mb-8">
                 <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
-                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-spin-slow-reveal relative z-10">
+                <img id="reveal-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
             </div>
 
             <!-- Infos -->
@@ -136,23 +119,14 @@
             </div>
         </div>
 
-        <!-- 2. PHASE JEU (Disque Vinyle) -->
-        <!-- IMPORTANT : ID = vinyl-container -->
-        <div id="vinyl-container" class="relative transition-all-game opacity-100 scale-100">
-            
-            <!-- Visualizer Circle -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_10s_linear_infinite_reverse]"></div>
-
+        <!-- 2. CONTAINER JEU (Vinyle) -->
+        <div id="vinyl-container" class="relative transition-fast state-visible">
+            <div class="visualizer-circle"></div>
             <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-[float_6s_ease-in-out_infinite]">
                 <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
-                
                 <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
-                    <!-- Sillons -->
                     <div class="absolute inset-0 rounded-full border-[60px] border-[#0a0a0a] opacity-80" style="background: repeating-radial-gradient(#111 0, #111 2px, #000 3px, #000 4px);"></div>
-                    <!-- Reflets -->
                     <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent opacity-30 pointer-events-none"></div>
-                    
-                    <!-- Pochette Centrale (Neutre) -->
                     <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-900 border-4 border-black flex items-center justify-center relative z-20 shadow-[0_0_20px_black] overflow-hidden">
                         <img id="disk-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
                     </div>
@@ -187,20 +161,16 @@
     <!-- START OVERLAY -->
     <div id="start-overlay" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
         <div class="text-center max-w-2xl">
-            <div class="inline-block mb-4 px-4 py-1 border border-blue-500/30 rounded-full bg-blue-900/20">
-                <span class="text-xs font-mono font-bold tracking-[0.2em] text-blue-400 uppercase">MODE SURVIE</span>
-            </div>
             <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
             <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
-            
-            <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105">
+            <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105 cursor-pointer pointer-events-auto">
                 <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3"><i class="fa-solid fa-play text-sm"></i> LANCER LA SESSION</span>
             </button>
         </div>
     </div>
 
-    <!-- GAME OVER SCREEN -->
-    <div id="game-over-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4">
+    <!-- GAME OVER OVERLAY -->
+    <div id="game-over-overlay" class="hidden-force fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4">
         <div class="w-full max-w-lg relative bg-[#0f172a] border border-red-900/50 p-8 md:p-12 rounded-2xl text-center">
             <h2 class="font-display font-black text-6xl md:text-7xl text-red-600 mb-1 tracking-tighter animate-pulse">ÉCHEC</h2>
             <p class="font-mono text-gray-500 text-sm tracking-[0.5em] mb-8 uppercase">Série Interrompue</p>
@@ -218,7 +188,7 @@
     </div>
 
     <script>
-        // --- 1. DONNEES (Base de données complète) ---
+        // --- DONNEES ---
         const ALBUM_COVERS = {
             "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
             "2069": "https://i.postimg.cc/G2wTdwgJ/0x1900_000000_80_0_0.jpg",
@@ -498,7 +468,7 @@
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // UI Reset
+            // Reset UI
             const revealContainer = getEl('reveal-container');
             const vinylContainer = getEl('vinyl-container');
             const diskEl = getEl('disk');
@@ -508,12 +478,12 @@
             const attemptsInfoEl = getEl('attempts-count');
 
             if(revealContainer) {
-                revealContainer.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-                revealContainer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                revealContainer.classList.remove('state-visible');
+                revealContainer.classList.add('state-hidden');
             }
             if(vinylContainer) {
-                vinylContainer.classList.remove('opacity-0', 'scale-50');
-                vinylContainer.classList.add('opacity-100', 'scale-100');
+                vinylContainer.classList.remove('state-hidden');
+                vinylContainer.classList.add('state-visible');
             }
             if(diskEl) diskEl.classList.remove('disk-paused');
             
@@ -543,13 +513,23 @@
             usedIndices.push(randomIndex);
             currentSong = PLK_DATABASE[randomIndex];
 
+            // Mise à jour Pochette Disque
+            const coverEl = getEl('disk-cover');
+            if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
+
             // Lancement Audio
             const audio = getEl('game-audio');
             if (currentSong.url && audio) {
                 audio.src = currentSong.url;
                 audio.volume = 0.5; 
                 audio.currentTime = 0;
-                audio.play().catch(e => console.log("Autoplay blocked:", e));
+                
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Erreur lecture (attente interaction):", error);
+                    });
+                }
             }
 
             startTimer();
@@ -588,27 +568,22 @@
             const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
             const a = clean(input);
             const b = clean(target);
+            
             if (a === b) return true;
             if (b.length > 3 && b.includes(a)) return true;
             
-            // Levenshtein Distance
-            if(a.length == 0) return b.length; 
-            if(b.length == 0) return a.length; 
-            var matrix = [];
-            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
-            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
-            for(var i = 1; i <= b.length; i++){
-                for(var j = 1; j <= a.length; j++){
-                    if(b.charAt(i-1) == a.charAt(j-1)){
-                        matrix[i][j] = matrix[i-1][j-1];
-                    } else {
-                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
-                    }
-                }
+            // Levenshtein simplifiée
+            if(a.length === 0) return false;
+            if(a.length < 3 && a !== b) return false;
+            
+            // Pour éviter les faux positifs sur les mots très courts, on exige 65%
+            let matchCount = 0;
+            const aArr = a.split('');
+            const bArr = b.split('');
+            for(let i=0; i<Math.min(aArr.length, bArr.length); i++) {
+                if(aArr[i] === bArr[i]) matchCount++;
             }
-            const dist = matrix[b.length][a.length];
-            const similarity = 1 - (dist / Math.max(a.length, b.length));
-            return similarity > 0.65;
+            return (matchCount / b.length) > 0.6;
         }
 
         window.submitGuess = () => {
@@ -617,7 +592,12 @@
             const guess = inputEl.value.trim();
             if (!guess) return;
 
-            if (gameStep === 1) { // TITRE
+            const stepInfoEl = getEl('step-info');
+            const statusText = getEl('status-text');
+            const attemptsInfoEl = getEl('attempts-count');
+
+            if (gameStep === 1) {
+                // GUESS TITRE
                 if (isCloseMatch(guess, currentSong.title)) {
                     gameStep = 2;
                     inputEl.value = "";
@@ -625,31 +605,25 @@
                     inputEl.classList.add('border-green-500');
                     setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
                     
-                    const stepInfoEl = getEl('step-info');
                     if(stepInfoEl) {
                         stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
                         stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
                     }
-                    
-                    const attemptsInfoEl = getEl('attempts-count');
                     if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
-                    
-                    const statusText = getEl('status-text');
                     if(statusText) {
                         statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
                         statusText.className = "text-green-400 font-bold tracking-widest uppercase";
                     }
                 } else {
                     attemptsTitle--;
-                    const attemptsInfoEl = getEl('attempts-count');
                     if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
-                    
-                    inputEl.classList.add('border-red-500');
-                    setTimeout(() => inputEl.classList.remove('border-red-500'), 500);
+                    inputEl.classList.add('border-red-500', 'animate-shake');
+                    setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
                     
                     if (attemptsTitle <= 0) handleLoss("Mauvais titre");
                 }
-            } else { // ALBUM
+            } else {
+                // GUESS ALBUM
                 if (isCloseMatch(guess, currentSong.album)) {
                     handleWin();
                 } else {
@@ -681,7 +655,6 @@
                 if(bestEl) bestEl.innerText = bestStreak;
             }
             
-            // On NE COUPE PAS la musique ici
             showReveal(true);
         }
 
@@ -691,7 +664,7 @@
             if(audio) audio.pause(); // On coupe SEULEMENT si perdu
             
             const inputEl = getEl('input-guess');
-            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400');
+            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
             
             const statusText = getEl('status-text');
             if(statusText) {
@@ -702,46 +675,44 @@
         }
 
         function showReveal(isWin) {
-            // Animation transition
             const vinylContainer = getEl('vinyl-container');
             const revealContainer = getEl('reveal-container');
 
             if(vinylContainer) {
-                vinylContainer.classList.remove('scale-100', 'opacity-100');
-                vinylContainer.classList.add('scale-50', 'opacity-0'); 
+                vinylContainer.classList.remove('state-visible');
+                vinylContainer.classList.add('state-hidden');
             }
 
             setTimeout(() => {
                 if(revealContainer) {
-                    revealContainer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-                    revealContainer.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+                    revealContainer.classList.remove('state-hidden');
+                    revealContainer.classList.add('state-visible');
                 }
 
-                // Remplissage infos
                 const resTitle = getEl('res-title');
                 if(resTitle) resTitle.innerText = currentSong.title;
                 
-                const revealCover = getEl('reveal-cover');
-                if(revealCover) {
-                    const coverUrl = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
-                    revealCover.src = coverUrl;
+                const revealCoverEl = getEl('reveal-cover');
+                if(revealCoverEl) {
+                    const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+                    revealCoverEl.src = realCover;
                 }
                 
-                const resAlbum = getEl('res-album');
-                if(resAlbum) resAlbum.innerText = currentSong.album;
+                const albumEl = getEl('res-album');
+                if(albumEl) albumEl.innerText = currentSong.album;
                 
-                const resFeat = getEl('res-feat');
-                if(resFeat) {
+                const featEl = getEl('res-feat');
+                if(featEl) {
                     if (currentSong.feat) {
-                        resFeat.innerText = "Feat. " + currentSong.feat;
-                        resFeat.classList.remove('hidden');
+                        featEl.innerText = "Feat. " + currentSong.feat;
+                        featEl.classList.remove('hidden');
                     } else {
-                        resFeat.classList.add('hidden');
+                        featEl.classList.add('hidden');
                     }
                 }
                 
                 if (isWin) {
-                    setTimeout(nextRound, 8000); // 8s de musique en plus
+                    setTimeout(nextRound, 8000); 
                 } else {
                     setTimeout(showGameOver, 2000);
                 }
@@ -750,20 +721,20 @@
 
         function showGameOver() {
             const finalScore = getEl('final-score');
-            if (finalScore) finalScore.innerText = currentStreak;
+            if(finalScore) finalScore.innerText = currentStreak;
             
             const failAnswer = getEl('fail-correct-answer');
-            if (failAnswer) failAnswer.innerText = currentSong.title;
+            if(failAnswer) failAnswer.innerText = currentSong.title;
             
             const failAlbum = getEl('fail-correct-album');
-            if (failAlbum) {
+            if(failAlbum) {
                 let detailText = `Album: ${currentSong.album}`;
                 if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
                 failAlbum.innerText = detailText;
             }
             
             const gameOverOverlay = getEl('game-over-overlay');
-            if (gameOverOverlay) gameOverOverlay.classList.remove('hidden');
+            if(gameOverOverlay) gameOverOverlay.classList.remove('hidden-force');
         }
 
         // Expose functions
