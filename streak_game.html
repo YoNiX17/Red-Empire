@@ -638,6 +638,12 @@
             document.getElementById('game-over-overlay').classList.remove('hidden');
         }
 
+        // --- CORRECTION DU BUG DE LANCEMENT ---
+        // On rend les fonctions accessibles globalement (hors du module)
+        window.startGame = startGame;
+        window.submitGuess = submitGuess;
+        window.updateVolume = updateVolume;
+
     </script>
 </body>
 </html>
