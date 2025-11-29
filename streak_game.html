@@ -22,26 +22,15 @@
                         mono: ['Rajdhani', 'sans-serif'],
                     },
                     animation: {
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
-                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+                        'spin-reveal': 'spin 10s linear infinite',
                         'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
-                        shake: {
-                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        },
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-20px)' },
-                        },
-                        glow: {
-                            'from': { boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6' },
-                            'to': { boxShadow: '0 0 20px #2563eb, 0 0 30px #2563eb' }
                         }
                     }
                 }
@@ -50,24 +39,35 @@
     </script>
     <style>
         body { background-color: #020617; color: #eee; overflow: hidden; }
+        
         .bg-animated { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #020617 70%); }
         .glass-hud { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; }
+        
+        /* Disque Jeu */
         .disk-spin { animation: spin 4s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .visualizer-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; border-radius: 50%; border: 2px dashed rgba(59, 130, 246, 0.3); animation: spin 10s linear infinite reverse; }
-        .input-cyber { background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
-        .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2); }
-        .input-cyber::placeholder { color: rgba(255,255,255,0.2); }
+        
+        /* Input */
+        .input-cyber { 
+            background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); 
+            color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); 
+        }
+        .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+        
         .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
         
-        /* Classes utilitaires pour gérer l'affichage */
+        /* Gestion Visibilité */
         .hidden-force { display: none !important; }
-        .opacity-0-pointer-none { opacity: 0; pointer-events: none; }
-        .opacity-100-pointer-auto { opacity: 1; pointer-events: auto; }
-        
-        /* Pour éviter le flash au chargement */
-        #reveal-container, #game-over-overlay { pointer-events: none; }
+        .opacity-0 { opacity: 0 !important; pointer-events: none !important; }
+        .opacity-100 { opacity: 1 !important; pointer-events: auto !important; }
+        .scale-0 { transform: scale(0.95); }
+        .scale-100 { transform: scale(1); }
+        .transition-all-game { transition: all 0.5s ease-in-out; }
+
+        /* Animation Pochette Reveal */
+        .animate-spin-slow-reveal { animation: spin 10s linear infinite; }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono relative">
@@ -75,11 +75,12 @@
     <div class="bg-animated"></div>
     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
-    <!-- AUDIO PLAYER (INVISIBLE) -->
+    <!-- AUDIO PLAYER GLOBAL -->
     <audio id="game-audio" preload="auto"></audio>
 
-    <!-- HUD (TOP) -->
+    <!-- HUD -->
     <nav class="absolute top-0 w-full p-6 z-50 flex items-start justify-between pointer-events-none">
+        <!-- Gauche -->
         <div class="pointer-events-auto flex items-center gap-4">
             <a href="streak_selection.html" class="glass-hud w-12 h-12 flex items-center justify-center text-blue-300 hover:text-white transition-all cursor-pointer">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -90,6 +91,7 @@
             </div>
         </div>
 
+        <!-- Centre -->
         <div class="flex flex-col items-center mt-2">
             <div class="relative">
                 <div class="text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]" id="streak-counter">0</div>
@@ -97,6 +99,7 @@
             </div>
         </div>
 
+        <!-- Droite -->
         <div class="flex flex-col items-end gap-2 pointer-events-auto">
             <div class="glass-hud px-5 py-3 text-right">
                 <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase mb-1">Record</div>
@@ -109,16 +112,17 @@
         </div>
     </nav>
 
-    <!-- ZONE PRINCIPALE -->
+    <!-- ZONE PRINCIPALE DE JEU -->
     <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
         
-        <!-- CONTAINER 1 : REVELATION (POCHETTE TOURNANTE) -->
-        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-all duration-700 ease-out opacity-0 pointer-events-none scale-95">
+        <!-- 1. PHASE RÉVÉLATION (Pochette Tournante) -->
+        <!-- IMPORTANT : ID = reveal-container -->
+        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-all-game opacity-0 pointer-events-none scale-0">
             
-            <!-- Pochette -->
+            <!-- Pochette Carrée -->
             <div class="relative mb-8">
                 <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
-                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
+                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-spin-slow-reveal relative z-10">
             </div>
 
             <!-- Infos -->
@@ -132,14 +136,23 @@
             </div>
         </div>
 
-        <!-- CONTAINER 2 : JEU (DISQUE) -->
-        <div id="vinyl-container" class="relative transition-all duration-500 ease-in-out opacity-100 scale-100">
-            <div class="visualizer-circle"></div>
-            <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-float">
+        <!-- 2. PHASE JEU (Disque Vinyle) -->
+        <!-- IMPORTANT : ID = vinyl-container -->
+        <div id="vinyl-container" class="relative transition-all-game opacity-100 scale-100">
+            
+            <!-- Visualizer Circle -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_10s_linear_infinite_reverse]"></div>
+
+            <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-[float_6s_ease-in-out_infinite]">
                 <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
+                
                 <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
+                    <!-- Sillons -->
                     <div class="absolute inset-0 rounded-full border-[60px] border-[#0a0a0a] opacity-80" style="background: repeating-radial-gradient(#111 0, #111 2px, #000 3px, #000 4px);"></div>
+                    <!-- Reflets -->
                     <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent opacity-30 pointer-events-none"></div>
+                    
+                    <!-- Pochette Centrale (Neutre) -->
                     <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-900 border-4 border-black flex items-center justify-center relative z-20 shadow-[0_0_20px_black] overflow-hidden">
                         <img id="disk-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
                     </div>
@@ -147,11 +160,6 @@
             </div>
             <div class="mt-16 text-center">
                 <div class="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-blue-900/20 border border-blue-500/30">
-                    <div class="flex gap-1 h-4 items-end">
-                        <div class="w-1 bg-blue-400 animate-[bounce_1s_infinite] h-2"></div>
-                        <div class="w-1 bg-blue-400 animate-[bounce_1.2s_infinite] h-4"></div>
-                        <div class="w-1 bg-blue-400 animate-[bounce_0.8s_infinite] h-3"></div>
-                    </div>
                     <span id="status-text" class="text-blue-300 font-mono text-sm font-bold tracking-widest uppercase">Écoute en cours...</span>
                 </div>
             </div>
@@ -184,6 +192,7 @@
             </div>
             <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
             <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
+            
             <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105">
                 <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3"><i class="fa-solid fa-play text-sm"></i> LANCER LA SESSION</span>
             </button>
@@ -209,18 +218,7 @@
     </div>
 
     <script>
-        // --- INITIALISATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialisation du bouton Start
-            const btnStart = document.getElementById('btn-start');
-            if (btnStart) btnStart.addEventListener('click', startGame);
-            
-            // Init best score display
-            const best = localStorage.getItem('plk_best_streak') || 0;
-            document.getElementById('best-streak').innerText = best;
-        });
-
-        // --- DONNEES ---
+        // --- 1. DONNEES (Base de données complète) ---
         const ALBUM_COVERS = {
             "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
             "2069": "https://i.postimg.cc/G2wTdwgJ/0x1900_000000_80_0_0.jpg",
@@ -440,26 +438,21 @@
             ]
         };
 
+        // --- INITIALISATION ---
+        // 1. Création de la base de données plate
         const PLK_DATABASE = [];
-
         Object.values(PLK_RAW_DISCOGRAPHY).flat().forEach(item => {
             let processedItem = { ...item };
-            
             if (processedItem.album.startsWith("Feat.")) {
                 processedItem.feat = processedItem.album.replace("Feat. ", "");
                 processedItem.album = "Feat.";
             }
-            if (processedItem.album.includes("Enna (Boost)")) {
-                processedItem.album = "Enna";
-            }
-            if (processedItem.album.includes("BO") || processedItem.album.includes("Freestyle")) {
-                processedItem.album = "Single";
-            }
-
+            if (processedItem.album.includes("Enna (Boost)")) processedItem.album = "Enna";
+            if (processedItem.album.includes("BO") || processedItem.album.includes("Freestyle")) processedItem.album = "Single";
             PLK_DATABASE.push(processedItem);
         });
 
-        // --- ETAT DU JEU ---
+        // 2. Variables d'état
         let currentStreak = 0;
         let bestStreak = localStorage.getItem('plk_best_streak') || 0;
         let currentSong = null;
@@ -469,76 +462,27 @@
         let attemptsTitle = 2;
         let attemptsAlbum = 1;
 
-        // Utilisation de getElementById avec vérification à l'intérieur des fonctions
-        // pour éviter les erreurs si les éléments ne sont pas encore là.
+        // 3. DOM Elements (Sécurisés)
+        const getEl = (id) => document.getElementById(id);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const bestEl = document.getElementById('best-streak');
-            if (bestEl) bestEl.innerText = bestStreak;
-            
-            // Fix pour le bouton Start qui n'était pas lié
-            const btnStart = document.getElementById('btn-start');
-            if(btnStart) {
-                btnStart.addEventListener('click', startGame);
-            }
-        });
-
-        function levenshtein(a, b) {
-            if(a.length == 0) return b.length; 
-            if(b.length == 0) return a.length; 
-            var matrix = [];
-            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
-            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
-            for(var i = 1; i <= b.length; i++){
-                for(var j = 1; j <= a.length; j++){
-                    if(b.charAt(i-1) == a.charAt(j-1)){
-                        matrix[i][j] = matrix[i-1][j-1];
-                    } else {
-                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
-                    }
-                }
-            }
-            return matrix[b.length][a.length];
-        }
-
-        function isCloseMatch(input, target) {
-            if (!target) return false;
-            // Nettoyage agressif : minuscules, suppression ponctuation, accents et espaces
-            const clean = (str) => str.toLowerCase()
-                                      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève accents
-                                      .replace(/[^a-z0-9]/g, '');
-            const normInput = clean(input);
-            const normTarget = clean(target);
-            
-            // Match exact ou inclusion
-            if (normInput === normTarget) return true;
-            if (normInput.length > 3 && normTarget.includes(normInput)) return true;
-            
-            // Levenshtein pour les fautes de frappe
-            const distance = levenshtein(normInput, normTarget);
-            const maxLength = Math.max(normInput.length, normTarget.length);
-            const similarity = 1 - (distance / maxLength);
-            
-            // Tolérance 0.65 pour accepter "un peux de aine"
-            return similarity > 0.65;
-        }
+        // --- FONCTIONS DU JEU ---
 
         function updateVolume(val) {
-            const audio = document.getElementById('game-audio');
+            const audio = getEl('game-audio');
             if(audio) audio.volume = val;
         }
 
         function startGame() {
-            // On débloque l'audio sur le clic utilisateur
-            const audio = document.getElementById('game-audio');
+            const audio = getEl('game-audio');
             if(audio) {
+                // Débloquer l'audio contexte
                 audio.play().then(() => {
                     audio.pause();
                     audio.currentTime = 0;
                 }).catch(e => console.log("Audio unlock:", e));
             }
 
-            const startOverlay = document.getElementById('start-overlay');
+            const startOverlay = getEl('start-overlay');
             if(startOverlay) {
                 startOverlay.style.opacity = '0';
                 startOverlay.style.pointerEvents = 'none';
@@ -550,78 +494,62 @@
         }
 
         function nextRound() {
-            // Reset Game State
             gameStep = 1;
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // --- GESTION SÉCURISÉE DU DOM ---
-            const revealContainer = document.getElementById('reveal-container');
-            if (revealContainer) {
-                revealContainer.classList.remove('opacity-100-pointer-auto');
-                revealContainer.classList.add('opacity-0-pointer-none', 'scale-95');
+            // UI Reset
+            const revealContainer = getEl('reveal-container');
+            const vinylContainer = getEl('vinyl-container');
+            const diskEl = getEl('disk');
+            const inputEl = getEl('input-guess');
+            const statusText = getEl('status-text');
+            const stepInfoEl = getEl('step-info');
+            const attemptsInfoEl = getEl('attempts-count');
+
+            if(revealContainer) {
+                revealContainer.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                revealContainer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             }
-            
-            const vinylContainer = document.getElementById('vinyl-container');
-            if (vinylContainer) {
+            if(vinylContainer) {
                 vinylContainer.classList.remove('opacity-0', 'scale-50');
                 vinylContainer.classList.add('opacity-100', 'scale-100');
             }
+            if(diskEl) diskEl.classList.remove('disk-paused');
             
-            const diskEl = document.getElementById('disk');
-            if (diskEl) diskEl.classList.remove('disk-paused');
-            
-            const inputEl = document.getElementById('input-guess');
-            if (inputEl) {
+            if(inputEl) {
                 inputEl.value = "";
                 inputEl.placeholder = "TITRE DU SON...";
                 inputEl.disabled = false;
                 inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
                 inputEl.focus();
             }
-            
-            const statusText = document.getElementById('status-text');
-            if (statusText) {
+            if(statusText) {
                 statusText.innerText = "Écoute en cours...";
                 statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
             }
-
-            const stepInfoEl = document.getElementById('step-info');
-            if (stepInfoEl) {
+            if(stepInfoEl) {
                 stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
                 stepInfoEl.className = "text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold";
             }
-            
-            const attemptsInfoEl = document.getElementById('attempts-count');
-            if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
+            if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
 
-            // --- LOGIQUE SON ---
+            // Sélection Son
             if (usedIndices.length === PLK_DATABASE.length) usedIndices = [];
-            
             let randomIndex;
             do {
                 randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
             } while (usedIndices.includes(randomIndex));
-
             usedIndices.push(randomIndex);
             currentSong = PLK_DATABASE[randomIndex];
 
-            const coverEl = document.getElementById('disk-cover');
-            if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
-
-            const audioEl = document.getElementById('game-audio');
-            if (currentSong.url && audioEl) {
-                audioEl.src = currentSong.url;
-                // Force le volume à 0.5 par défaut
-                audioEl.volume = 0.5; 
-                audioEl.currentTime = 0;
-                
-                const playPromise = audioEl.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Erreur lecture (probablement pas de clic):", error);
-                    });
-                }
+            // Lancement Audio
+            const audio = getEl('game-audio');
+            if (currentSong.url && audio) {
+                audio.src = currentSong.url;
+                audio.volume = 0.5; 
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Autoplay blocked:", e));
             }
 
             startTimer();
@@ -630,7 +558,7 @@
         function startTimer() {
             clearInterval(timerInterval);
             let timeLeft = 20;
-            const timerDisplay = document.getElementById('timer-display');
+            const timerDisplay = getEl('timer-display');
             
             if (timerDisplay) {
                 timerDisplay.innerText = timeLeft + "s";
@@ -654,18 +582,42 @@
             }, 1000);
         }
 
-        window.submitGuess = () => {
-            const inputEl = document.getElementById('input-guess');
-            const stepInfoEl = document.getElementById('step-info');
-            const attemptsInfoEl = document.getElementById('attempts-count');
-            const statusText = document.getElementById('status-text');
+        // Logique de comparaison (Tolérance aux fautes)
+        function isCloseMatch(input, target) {
+            if (!target) return false;
+            const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+            const a = clean(input);
+            const b = clean(target);
+            if (a === b) return true;
+            if (b.length > 3 && b.includes(a)) return true;
             
+            // Levenshtein Distance
+            if(a.length == 0) return b.length; 
+            if(b.length == 0) return a.length; 
+            var matrix = [];
+            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
+            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
+            for(var i = 1; i <= b.length; i++){
+                for(var j = 1; j <= a.length; j++){
+                    if(b.charAt(i-1) == a.charAt(j-1)){
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
+                    }
+                }
+            }
+            const dist = matrix[b.length][a.length];
+            const similarity = 1 - (dist / Math.max(a.length, b.length));
+            return similarity > 0.65;
+        }
+
+        window.submitGuess = () => {
+            const inputEl = getEl('input-guess');
             if (!inputEl) return;
             const guess = inputEl.value.trim();
             if (!guess) return;
 
-            if (gameStep === 1) {
-                // GUESS TITRE
+            if (gameStep === 1) { // TITRE
                 if (isCloseMatch(guess, currentSong.title)) {
                     gameStep = 2;
                     inputEl.value = "";
@@ -673,25 +625,31 @@
                     inputEl.classList.add('border-green-500');
                     setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
                     
+                    const stepInfoEl = getEl('step-info');
                     if(stepInfoEl) {
                         stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
                         stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
                     }
+                    
+                    const attemptsInfoEl = getEl('attempts-count');
                     if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
+                    
+                    const statusText = getEl('status-text');
                     if(statusText) {
                         statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
                         statusText.className = "text-green-400 font-bold tracking-widest uppercase";
                     }
                 } else {
                     attemptsTitle--;
+                    const attemptsInfoEl = getEl('attempts-count');
                     if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
-                    inputEl.classList.add('border-red-500', 'animate-shake');
-                    setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
+                    
+                    inputEl.classList.add('border-red-500');
+                    setTimeout(() => inputEl.classList.remove('border-red-500'), 500);
                     
                     if (attemptsTitle <= 0) handleLoss("Mauvais titre");
                 }
-            } else {
-                // GUESS ALBUM
+            } else { // ALBUM
                 if (isCloseMatch(guess, currentSong.album)) {
                     handleWin();
                 } else {
@@ -703,38 +661,39 @@
 
         function handleWin() {
             clearInterval(timerInterval);
-            const inputEl = document.getElementById('input-guess');
+            const inputEl = getEl('input-guess');
             if(inputEl) inputEl.classList.add('border-green-500', 'text-green-400');
             
-            const statusText = document.getElementById('status-text');
+            const statusText = getEl('status-text');
             if(statusText) {
                 statusText.innerText = "CORRECT !";
                 statusText.className = "text-green-400 font-display font-black text-xl tracking-widest uppercase animate-bounce";
             }
 
             currentStreak++;
-            const streakCounter = document.getElementById('streak-counter');
+            const streakCounter = getEl('streak-counter');
             if (streakCounter) streakCounter.innerText = currentStreak;
             
             if(currentStreak > bestStreak) {
                 bestStreak = currentStreak;
                 localStorage.setItem('plk_best_streak', bestStreak);
-                const bestEl = document.getElementById('best-streak');
+                const bestEl = getEl('best-streak');
                 if(bestEl) bestEl.innerText = bestStreak;
             }
-
+            
+            // On NE COUPE PAS la musique ici
             showReveal(true);
         }
 
         function handleLoss(reason) {
             clearInterval(timerInterval);
-            const audio = document.getElementById('game-audio');
-            if(audio) audio.pause(); // On coupe le son SEULEMENT si perdu
+            const audio = getEl('game-audio');
+            if(audio) audio.pause(); // On coupe SEULEMENT si perdu
             
-            const inputEl = document.getElementById('input-guess');
-            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
+            const inputEl = getEl('input-guess');
+            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400');
             
-            const statusText = document.getElementById('status-text');
+            const statusText = getEl('status-text');
             if(statusText) {
                 statusText.innerText = reason || "ERREUR...";
                 statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
@@ -743,71 +702,79 @@
         }
 
         function showReveal(isWin) {
-            const vinylContainer = document.getElementById('vinyl-container');
+            // Animation transition
+            const vinylContainer = getEl('vinyl-container');
+            const revealContainer = getEl('reveal-container');
+
             if(vinylContainer) {
                 vinylContainer.classList.remove('scale-100', 'opacity-100');
                 vinylContainer.classList.add('scale-50', 'opacity-0'); 
             }
 
             setTimeout(() => {
-                const revealContainer = document.getElementById('reveal-container');
                 if(revealContainer) {
-                    revealContainer.classList.remove('opacity-0-pointer-none', 'scale-95');
-                    revealContainer.classList.add('opacity-100-pointer-auto', 'scale-100');
+                    revealContainer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                    revealContainer.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
                 }
 
-                const resTitle = document.getElementById('res-title');
+                // Remplissage infos
+                const resTitle = getEl('res-title');
                 if(resTitle) resTitle.innerText = currentSong.title;
                 
-                const revealCoverEl = document.getElementById('reveal-cover');
-                if(revealCoverEl) {
-                    const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
-                    revealCoverEl.src = realCover;
+                const revealCover = getEl('reveal-cover');
+                if(revealCover) {
+                    const coverUrl = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+                    revealCover.src = coverUrl;
                 }
                 
-                const albumEl = document.getElementById('res-album');
-                if(albumEl) albumEl.innerText = currentSong.album;
+                const resAlbum = getEl('res-album');
+                if(resAlbum) resAlbum.innerText = currentSong.album;
                 
-                const featEl = document.getElementById('res-feat');
-                if(featEl) {
+                const resFeat = getEl('res-feat');
+                if(resFeat) {
                     if (currentSong.feat) {
-                        featEl.innerText = "Feat. " + currentSong.feat;
-                        featEl.classList.remove('hidden');
+                        resFeat.innerText = "Feat. " + currentSong.feat;
+                        resFeat.classList.remove('hidden');
                     } else {
-                        featEl.classList.add('hidden');
+                        resFeat.classList.add('hidden');
                     }
                 }
                 
                 if (isWin) {
-                    // Si gagné, on laisse tourner 8 secondes (la musique continue)
-                    setTimeout(() => {
-                        nextRound();
-                    }, 8000); 
+                    setTimeout(nextRound, 8000); // 8s de musique en plus
                 } else {
-                    setTimeout(() => {
-                        showGameOver();
-                    }, 2000);
+                    setTimeout(showGameOver, 2000);
                 }
             }, 500);
         }
 
         function showGameOver() {
-            const finalScore = document.getElementById('final-score');
-            if(finalScore) finalScore.innerText = currentStreak;
+            const finalScore = getEl('final-score');
+            if (finalScore) finalScore.innerText = currentStreak;
             
-            const failAnswer = document.getElementById('fail-correct-answer');
-            if(failAnswer) failAnswer.innerText = currentSong.title;
+            const failAnswer = getEl('fail-correct-answer');
+            if (failAnswer) failAnswer.innerText = currentSong.title;
             
-            const failAlbum = document.getElementById('fail-correct-album');
-            if(failAlbum) {
+            const failAlbum = getEl('fail-correct-album');
+            if (failAlbum) {
                 let detailText = `Album: ${currentSong.album}`;
                 if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
                 failAlbum.innerText = detailText;
             }
             
-            const gameOverOverlay = document.getElementById('game-over-overlay');
-            if(gameOverOverlay) gameOverOverlay.classList.remove('hidden');
+            const gameOverOverlay = getEl('game-over-overlay');
+            if (gameOverOverlay) gameOverOverlay.classList.remove('hidden');
         }
+
+        // Expose functions
+        window.startGame = startGame;
+        window.submitGuess = submitGuess;
+        window.updateVolume = updateVolume;
+
+        // Init au chargement
+        const bestEl = document.getElementById('best-streak');
+        if(bestEl) bestEl.innerText = localStorage.getItem('plk_best_streak') || 0;
+
     </script>
 </body>
 </html>
