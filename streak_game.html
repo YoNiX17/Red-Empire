@@ -22,27 +22,11 @@
                         mono: ['Rajdhani', 'sans-serif'],
                     },
                     animation: {
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
-                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                         'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
                     },
                     keyframes: {
-                        shake: {
-                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        },
-                        glow: {
-                            'from': { boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6' },
-                            'to': { boxShadow: '0 0 20px #2563eb, 0 0 30px #2563eb' }
-                        }
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } }
                     }
                 }
             }
@@ -66,10 +50,16 @@
         
         .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
         
-        /* États de visibilité */
         .hidden-force { display: none !important; }
-        .state-hidden { opacity: 0; pointer-events: none; transform: scale(0.9); transition: all 0.5s ease; }
-        .state-visible { opacity: 1; pointer-events: auto; transform: scale(1); transition: all 0.5s ease; }
+        
+        /* Transitions fluides */
+        .scene-container {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .scene-hidden { opacity: 0; pointer-events: none; transform: scale(0.9); }
+        .scene-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono relative">
@@ -77,7 +67,7 @@
     <div class="bg-animated"></div>
     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
-    <!-- LECTEUR AUDIO UNIQUE -->
+    <!-- LECTEUR AUDIO -->
     <audio id="game-audio" preload="auto"></audio>
 
     <!-- HUD -->
@@ -88,7 +78,7 @@
             </a>
             <div class="glass-hud px-4 py-2 flex items-center gap-3">
                 <i class="fa-solid fa-volume-high text-blue-400 text-xs"></i>
-                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20 accent-blue-500" oninput="updateVolume(this.value)">
+                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20 accent-blue-500" oninput="window.updateVolume(this.value)">
             </div>
         </div>
 
@@ -114,15 +104,12 @@
     <!-- ZONE PRINCIPALE -->
     <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
         
-        <!-- 1. CONTAINER REVELATION (Pochette) -->
-        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 state-hidden">
-            <!-- Pochette Carrée -->
+        <!-- 1. SCÈNE RÉVÉLATION (Pochette) -->
+        <div id="reveal-container" class="scene-container scene-hidden z-20">
             <div class="relative mb-8">
                 <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
-                <img id="reveal-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
+                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
             </div>
-
-            <!-- Infos -->
             <div class="text-center z-10 bg-black/80 backdrop-blur-md p-6 rounded-xl border border-blue-500/30 min-w-[320px]">
                 <div class="text-blue-400 text-xs font-mono tracking-[0.4em] mb-2 uppercase">Identifié</div>
                 <h2 id="res-title" class="text-3xl md:text-5xl font-display font-black text-white uppercase tracking-tight text-glow-blue mb-3 truncate max-w-lg">TITRE</h2>
@@ -133,9 +120,9 @@
             </div>
         </div>
 
-        <!-- 2. CONTAINER JEU (Vinyle) -->
-        <div id="vinyl-container" class="relative state-visible">
-            <div class="visualizer-circle"></div>
+        <!-- 2. SCÈNE JEU (Vinyle) -->
+        <div id="vinyl-container" class="scene-container scene-visible">
+            <div class="visualizer-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_10s_linear_infinite_reverse]"></div>
             <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-[float_6s_ease-in-out_infinite]">
                 <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
                 <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
@@ -160,8 +147,8 @@
         <div class="w-full max-w-2xl relative group">
             <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-xl opacity-30 blur-lg group-hover:opacity-60 transition duration-500"></div>
             <div class="relative flex shadow-2xl">
-                <input type="text" id="input-guess" placeholder="TITRE DU SON..." class="input-cyber flex-1 px-8 py-5 text-xl md:text-2xl rounded-l-xl uppercase transition-all" autocomplete="off" onkeydown="if(event.key === 'Enter') submitGuess()">
-                <button onclick="submitGuess()" class="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold px-8 py-5 text-lg md:text-xl rounded-r-xl transition-all border-l border-white/10 hover:shadow-[0_0_30px_#3b82f6]">
+                <input type="text" id="input-guess" placeholder="TITRE DU SON..." class="input-cyber flex-1 px-8 py-5 text-xl md:text-2xl rounded-l-xl uppercase transition-all" autocomplete="off" onkeydown="if(event.key === 'Enter') window.submitGuess()">
+                <button onclick="window.submitGuess()" class="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold px-8 py-5 text-lg md:text-xl rounded-r-xl transition-all border-l border-white/10 hover:shadow-[0_0_30px_#3b82f6]">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>
@@ -172,7 +159,18 @@
         </div>
     </div>
 
-    <!-- GAME OVER OVERLAY -->
+    <!-- START OVERLAY (OBLIGATOIRE POUR LE SON) -->
+    <div id="start-overlay" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+        <div class="text-center max-w-2xl">
+            <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
+            <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
+            <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105 cursor-pointer pointer-events-auto">
+                <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3"><i class="fa-solid fa-play text-sm"></i> JOUER</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER -->
     <div id="game-over-overlay" class="hidden-force fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4">
         <div class="w-full max-w-lg relative bg-[#0f172a] border border-red-900/50 p-8 md:p-12 rounded-2xl text-center">
             <h2 class="font-display font-black text-6xl md:text-7xl text-red-600 mb-1 tracking-tighter animate-pulse">ÉCHEC</h2>
@@ -191,7 +189,7 @@
     </div>
 
     <script>
-        // --- DONNEES ---
+        // === DATA ===
         const ALBUM_COVERS = {
             "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
             "2069": "https://i.postimg.cc/G2wTdwgJ/0x1900_000000_80_0_0.jpg",
@@ -411,6 +409,7 @@
             ]
         };
 
+        // --- INITIALISATION ---
         // 1. Création de la base de données plate
         const PLK_DATABASE = [];
         Object.values(PLK_RAW_DISCOGRAPHY).flat().forEach(item => {
@@ -430,21 +429,14 @@
         let currentSong = null;
         let usedIndices = [];
         let timerInterval = null;
-        let gameStep = 1;
+        let gameStep = 1; // 1: Titre, 2: Album
         let attemptsTitle = 2;
         let attemptsAlbum = 1;
 
-        // DOM HELPERS
+        // 3. DOM Elements (Sécurisés)
         const getEl = (id) => document.getElementById(id);
 
-        // 3. INITIALISATION
-        document.addEventListener('DOMContentLoaded', () => {
-            const bestEl = getEl('best-streak');
-            if(bestEl) bestEl.innerText = bestStreak;
-            
-            // On lance le jeu dès que la page est prête
-            startGame();
-        });
+        // --- FONCTIONS DU JEU ---
 
         function updateVolume(val) {
             const audio = getEl('game-audio');
@@ -452,21 +444,24 @@
         }
 
         function startGame() {
-            // Tentative de lecture immédiate (sera bloquée si pas d'interaction, mais on essaye)
             const audio = getEl('game-audio');
             if(audio) {
-                // Petite astuce : on joue du silence pour "chauffer" le moteur audio
+                // Débloquer l'audio contexte
                 audio.play().then(() => {
                     audio.pause();
                     audio.currentTime = 0;
-                }).catch(() => {
-                    // Si bloqué, on ajoute un listener global pour débloquer au premier clic
-                    document.addEventListener('click', () => {
-                        if(audio.paused && currentSong) audio.play();
-                    }, { once: true });
-                });
+                }).catch(e => console.log("Audio unlock:", e));
             }
-            nextRound();
+
+            const startOverlay = getEl('start-overlay');
+            if(startOverlay) {
+                startOverlay.style.opacity = '0';
+                startOverlay.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    startOverlay.classList.add('hidden-force');
+                    nextRound();
+                }, 500);
+            }
         }
 
         function nextRound() {
@@ -474,68 +469,68 @@
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // --- RESET UI ---
+            // Reset UI
             const revealContainer = getEl('reveal-container');
-            if (revealContainer) {
+            const vinylContainer = getEl('vinyl-container');
+            const diskEl = getEl('disk');
+            const inputEl = getEl('input-guess');
+            const statusText = getEl('status-text');
+            const stepInfoEl = getEl('step-info');
+            const attemptsInfoEl = getEl('attempts-count');
+
+            if(revealContainer) {
                 revealContainer.classList.remove('state-visible');
                 revealContainer.classList.add('state-hidden');
             }
-            
-            const vinylContainer = getEl('vinyl-container');
-            if (vinylContainer) {
+            if(vinylContainer) {
                 vinylContainer.classList.remove('state-hidden');
                 vinylContainer.classList.add('state-visible');
             }
+            if(diskEl) diskEl.classList.remove('disk-paused');
             
-            const diskEl = getEl('disk');
-            if (diskEl) diskEl.classList.remove('disk-paused');
-            
-            const inputEl = getEl('input-guess');
-            if (inputEl) {
+            if(inputEl) {
                 inputEl.value = "";
                 inputEl.placeholder = "TITRE DU SON...";
                 inputEl.disabled = false;
-                inputEl.classList.remove('border-green-500', 'border-red-500');
+                inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
                 inputEl.focus();
             }
-            
-            const statusText = getEl('status-text');
-            if (statusText) {
+            if(statusText) {
                 statusText.innerText = "Écoute en cours...";
                 statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
             }
-
-            const stepInfoEl = getEl('step-info');
-            if (stepInfoEl) {
+            if(stepInfoEl) {
                 stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
                 stepInfoEl.className = "text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold";
             }
-            
-            const attemptsInfoEl = getEl('attempts-count');
-            if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
+            if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
 
-            // --- CHOIX DU SON ---
+            // Sélection Son
             if (usedIndices.length === PLK_DATABASE.length) usedIndices = [];
-            
             let randomIndex;
             do {
                 randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
             } while (usedIndices.includes(randomIndex));
-            
             usedIndices.push(randomIndex);
             currentSong = PLK_DATABASE[randomIndex];
 
-            // Cover Neutre
+            // Mise à jour Pochette Disque
             const coverEl = getEl('disk-cover');
             if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
 
-            // Audio
+            // Lancement Audio
             const audio = getEl('game-audio');
             if (currentSong.url && audio) {
                 audio.src = currentSong.url;
                 audio.volume = 0.5; 
                 audio.currentTime = 0;
-                audio.play().catch(e => console.log("Autoplay blocked, waiting for interaction"));
+                
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Erreur lecture (attente interaction):", error);
+                    });
+                }
             }
 
             startTimer();
@@ -568,7 +563,29 @@
             }, 1000);
         }
 
-        // Comparaison
+        // VRAIE LOGIQUE DE COMPARAISON (LEVENSHTEIN MATRIX)
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            Math.min(
+                                matrix[i][j - 1] + 1, // insertion
+                                matrix[i - 1][j] + 1  // deletion
+                            )
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
         function isCloseMatch(input, target) {
             if (!target) return false;
             const clean = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
@@ -578,14 +595,12 @@
             if (a === b) return true;
             if (b.length > 3 && b.includes(a)) return true;
             
-            // Levenshtein simple
-            if(a.length === 0) return false;
-            if(a.length < 3) return false;
+            const dist = levenshtein(a, b);
+            const maxLength = Math.max(a.length, b.length);
+            const similarity = 1 - (dist / maxLength);
             
-            let matchCount = 0;
-            const len = Math.min(a.length, b.length);
-            for(let i=0; i<len; i++) { if(a[i] === b[i]) matchCount++; }
-            return (matchCount / Math.max(a.length, b.length)) > 0.65;
+            // 65% de similarité acceptée
+            return similarity > 0.65;
         }
 
         window.submitGuess = () => {
@@ -598,7 +613,8 @@
             const attemptsInfoEl = getEl('attempts-count');
             const statusText = getEl('status-text');
 
-            if (gameStep === 1) { // TITRE
+            if (gameStep === 1) {
+                // GUESS TITRE
                 if (isCloseMatch(guess, currentSong.title)) {
                     gameStep = 2;
                     inputEl.value = "";
@@ -618,12 +634,13 @@
                 } else {
                     attemptsTitle--;
                     if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
-                    inputEl.classList.add('border-red-500', 'animate-shake');
-                    setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
+                    inputEl.classList.add('border-red-500');
+                    setTimeout(() => inputEl.classList.remove('border-red-500'), 500);
                     
                     if (attemptsTitle <= 0) handleLoss("Mauvais titre");
                 }
-            } else { // ALBUM
+            } else {
+                // GUESS ALBUM
                 if (isCloseMatch(guess, currentSong.album)) {
                     handleWin();
                 } else {
@@ -635,9 +652,8 @@
 
         function handleWin() {
             clearInterval(timerInterval);
-            
             const inputEl = getEl('input-guess');
-            if(inputEl) inputEl.classList.add('border-green-500', 'text-green-400');
+            if(inputEl) inputEl.classList.add('border-green-500');
             
             const statusText = getEl('status-text');
             if(statusText) {
@@ -656,35 +672,38 @@
                 if(bestEl) bestEl.innerText = bestStreak;
             }
             
-            showReveal(true); // True = Victoire = Musique continue
+            // VICTOIRE : On NE COUPE PAS le son
+            showReveal(true);
         }
 
         function handleLoss(reason) {
             clearInterval(timerInterval);
             const audio = getEl('game-audio');
-            if(audio) audio.pause(); // Arrêt musique car perdu
+            if(audio) audio.pause(); // DEFAITE : On coupe le son
             
             const inputEl = getEl('input-guess');
-            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
+            if(inputEl) inputEl.classList.add('border-red-500');
             
             const statusText = getEl('status-text');
             if(statusText) {
                 statusText.innerText = reason || "ERREUR...";
                 statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
             }
-            showReveal(false); // False = Défaite
+            showReveal(false);
         }
 
         function showReveal(isWin) {
             const vinylContainer = getEl('vinyl-container');
             const revealContainer = getEl('reveal-container');
 
+            // Transition : Cache le vinyle
             if(vinylContainer) {
                 vinylContainer.classList.remove('state-visible');
                 vinylContainer.classList.add('state-hidden');
             }
 
             setTimeout(() => {
+                // Affiche la pochette
                 if(revealContainer) {
                     revealContainer.classList.remove('state-hidden');
                     revealContainer.classList.add('state-visible');
@@ -695,6 +714,7 @@
                 
                 const revealCoverEl = getEl('reveal-cover');
                 if(revealCoverEl) {
+                    // Fallback si pas de cover spécifique
                     const coverUrl = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
                     revealCoverEl.src = coverUrl;
                 }
@@ -713,12 +733,12 @@
                 }
                 
                 if (isWin) {
-                    // Si gagné, on laisse la musique et on attend 8s
+                    // Si gagné : la musique continue, on attend 8s
                     setTimeout(() => {
                         nextRound();
                     }, 8000); 
                 } else {
-                    // Si perdu, on attend 2s pour lire la réponse, puis Game Over
+                    // Si perdu : on attend 2s pour lire la réponse, puis Game Over
                     setTimeout(() => {
                         showGameOver();
                     }, 2000);
@@ -744,6 +764,17 @@
             if(gameOverOverlay) gameOverOverlay.classList.remove('hidden-force');
         }
 
+        // Init au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            const bestEl = document.getElementById('best-streak');
+            if(bestEl) bestEl.innerText = localStorage.getItem('plk_best_streak') || 0;
+            
+            // Initialisation du bouton
+            const btnStart = document.getElementById('btn-start');
+            if(btnStart) btnStart.addEventListener('click', startGame);
+        });
+
+        // Triche pour le dev (Tapez "cheat" dans la console)
         window.submitGuess = submitGuess;
         window.updateVolume = updateVolume;
 
