@@ -24,7 +24,6 @@
                     animation: {
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
-                        'spin-slow-reverse': 'spin 10s linear infinite reverse',
                         'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                         'float': 'float 6s ease-in-out infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -52,7 +51,7 @@
     <style>
         body { background-color: #020617; color: #eee; overflow: hidden; }
         .bg-animated { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #020617 70%); }
-        .glass-hud { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; }
+        .glass-hud { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; }
         .disk-spin { animation: spin 4s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -61,6 +60,14 @@
         .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2); }
         .input-cyber::placeholder { color: rgba(255,255,255,0.2); }
         .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
+        
+        /* Classes utilitaires pour gérer l'affichage */
+        .hidden-force { display: none !important; }
+        .opacity-0-pointer-none { opacity: 0; pointer-events: none; }
+        .opacity-100-pointer-auto { opacity: 1; pointer-events: auto; }
+        
+        /* Pour éviter le flash au chargement */
+        #reveal-container, #game-over-overlay { pointer-events: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono relative">
@@ -68,10 +75,10 @@
     <div class="bg-animated"></div>
     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
-    <!-- AUDIO PLAYER GLOBAL -->
+    <!-- AUDIO PLAYER (INVISIBLE) -->
     <audio id="game-audio" preload="auto"></audio>
 
-    <!-- HUD -->
+    <!-- HUD (TOP) -->
     <nav class="absolute top-0 w-full p-6 z-50 flex items-start justify-between pointer-events-none">
         <div class="pointer-events-auto flex items-center gap-4">
             <a href="streak_selection.html" class="glass-hud w-12 h-12 flex items-center justify-center text-blue-300 hover:text-white transition-all cursor-pointer">
@@ -105,26 +112,27 @@
     <!-- ZONE PRINCIPALE -->
     <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
         
-        <!-- CONTAINER 1 : REVELATION (ID: reveal-container) -->
+        <!-- CONTAINER 1 : REVELATION (POCHETTE TOURNANTE) -->
         <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-all duration-700 ease-out opacity-0 pointer-events-none scale-95">
-            <!-- Pochette Carrée Tournante -->
+            
+            <!-- Pochette -->
             <div class="relative mb-8">
-                <div class="absolute inset-0 bg-blue-600 blur-[50px] opacity-40 animate-pulse"></div>
-                <img id="reveal-cover" src="" class="w-64 h-64 md:w-80 md:h-80 object-cover shadow-[0_0_50px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-spin-slow relative z-10">
+                <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
+                <img id="reveal-cover" src="" class="w-72 h-72 md:w-96 md:h-96 object-cover shadow-[0_0_60px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-[spin_10s_linear_infinite] relative z-10">
             </div>
 
             <!-- Infos -->
-            <div class="text-center z-10 bg-black/80 backdrop-blur-md p-6 rounded-xl border border-blue-500/30 min-w-[300px]">
+            <div class="text-center z-10 bg-black/80 backdrop-blur-md p-6 rounded-xl border border-blue-500/30 min-w-[320px]">
                 <div class="text-blue-400 text-xs font-mono tracking-[0.4em] mb-2 uppercase">Identifié</div>
                 <h2 id="res-title" class="text-3xl md:text-5xl font-display font-black text-white uppercase tracking-tight text-glow-blue mb-3 truncate max-w-lg">TITRE</h2>
-                <div class="inline-flex flex-col items-center gap-1">
+                <div class="inline-flex flex-col items-center gap-2">
                     <span class="px-4 py-1 bg-blue-600 text-white rounded text-sm font-bold uppercase shadow-[0_0_15px_#2563eb]" id="res-album">ALBUM</span>
-                    <span id="res-feat" class="text-xs text-blue-300 font-mono italic mt-1 hidden">Feat. Artistes</span>
+                    <span id="res-feat" class="text-xs text-blue-300 font-mono italic hidden">Feat. Artistes</span>
                 </div>
             </div>
         </div>
 
-        <!-- CONTAINER 2 : JEU (ID: vinyl-container) -->
+        <!-- CONTAINER 2 : JEU (DISQUE) -->
         <div id="vinyl-container" class="relative transition-all duration-500 ease-in-out opacity-100 scale-100">
             <div class="visualizer-circle"></div>
             <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-float">
@@ -132,7 +140,6 @@
                 <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
                     <div class="absolute inset-0 rounded-full border-[60px] border-[#0a0a0a] opacity-80" style="background: repeating-radial-gradient(#111 0, #111 2px, #000 3px, #000 4px);"></div>
                     <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent opacity-30 pointer-events-none"></div>
-                    <!-- Pochette Centrale (Neutre) -->
                     <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-900 border-4 border-black flex items-center justify-center relative z-20 shadow-[0_0_20px_black] overflow-hidden">
                         <img id="disk-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
                     </div>
@@ -140,6 +147,11 @@
             </div>
             <div class="mt-16 text-center">
                 <div class="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-blue-900/20 border border-blue-500/30">
+                    <div class="flex gap-1 h-4 items-end">
+                        <div class="w-1 bg-blue-400 animate-[bounce_1s_infinite] h-2"></div>
+                        <div class="w-1 bg-blue-400 animate-[bounce_1.2s_infinite] h-4"></div>
+                        <div class="w-1 bg-blue-400 animate-[bounce_0.8s_infinite] h-3"></div>
+                    </div>
                     <span id="status-text" class="text-blue-300 font-mono text-sm font-bold tracking-widest uppercase">Écoute en cours...</span>
                 </div>
             </div>
@@ -172,7 +184,7 @@
             </div>
             <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
             <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
-            <button onclick="startGame()" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105">
+            <button id="btn-start" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105">
                 <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3"><i class="fa-solid fa-play text-sm"></i> LANCER LA SESSION</span>
             </button>
         </div>
@@ -197,6 +209,17 @@
     </div>
 
     <script>
+        // --- INITIALISATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialisation du bouton Start
+            const btnStart = document.getElementById('btn-start');
+            if (btnStart) btnStart.addEventListener('click', startGame);
+            
+            // Init best score display
+            const best = localStorage.getItem('plk_best_streak') || 0;
+            document.getElementById('best-streak').innerText = best;
+        });
+
         // --- DONNEES ---
         const ALBUM_COVERS = {
             "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
@@ -446,15 +469,19 @@
         let attemptsTitle = 2;
         let attemptsAlbum = 1;
 
-        const audioEl = document.getElementById('game-audio'); 
-        const diskEl = document.getElementById('disk');
-        const inputEl = document.getElementById('input-guess');
-        const timerDisplay = document.getElementById('timer-display');
-        const coverEl = document.getElementById('disk-cover');
-        const stepInfoEl = document.getElementById('step-info');
-        const attemptsInfoEl = document.getElementById('attempts-count');
+        // Utilisation de getElementById avec vérification à l'intérieur des fonctions
+        // pour éviter les erreurs si les éléments ne sont pas encore là.
 
-        document.getElementById('best-streak').innerText = bestStreak;
+        document.addEventListener('DOMContentLoaded', () => {
+            const bestEl = document.getElementById('best-streak');
+            if (bestEl) bestEl.innerText = bestStreak;
+            
+            // Fix pour le bouton Start qui n'était pas lié
+            const btnStart = document.getElementById('btn-start');
+            if(btnStart) {
+                btnStart.addEventListener('click', startGame);
+            }
+        });
 
         function levenshtein(a, b) {
             if(a.length == 0) return b.length; 
@@ -492,35 +519,47 @@
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
             
-            // Tolérance augmentée (0.65) pour accepter plus de fautes comme "aine" au lieu de "haine"
+            // Tolérance 0.65 pour accepter "un peux de aine"
             return similarity > 0.65;
         }
 
         function updateVolume(val) {
-            audioEl.volume = val;
+            const audio = document.getElementById('game-audio');
+            if(audio) audio.volume = val;
         }
 
         function startGame() {
+            // On débloque l'audio sur le clic utilisateur
+            const audio = document.getElementById('game-audio');
+            if(audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(e => console.log("Audio unlock:", e));
+            }
+
             const startOverlay = document.getElementById('start-overlay');
-            startOverlay.style.opacity = '0';
-            startOverlay.style.pointerEvents = 'none';
-            setTimeout(() => {
-                startOverlay.classList.add('hidden-force');
-                nextRound();
-            }, 500);
+            if(startOverlay) {
+                startOverlay.style.opacity = '0';
+                startOverlay.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    startOverlay.classList.add('hidden-force');
+                    nextRound();
+                }, 500);
+            }
         }
 
         function nextRound() {
+            // Reset Game State
             gameStep = 1;
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // Safe DOM manipulation with checks
+            // --- GESTION SÉCURISÉE DU DOM ---
             const revealContainer = document.getElementById('reveal-container');
             if (revealContainer) {
                 revealContainer.classList.remove('opacity-100-pointer-auto');
-                revealContainer.classList.add('opacity-0-pointer-none');
-                revealContainer.classList.add('scale-95'); // Animation reset
+                revealContainer.classList.add('opacity-0-pointer-none', 'scale-95');
             }
             
             const vinylContainer = document.getElementById('vinyl-container');
@@ -529,8 +568,10 @@
                 vinylContainer.classList.add('opacity-100', 'scale-100');
             }
             
+            const diskEl = document.getElementById('disk');
             if (diskEl) diskEl.classList.remove('disk-paused');
             
+            const inputEl = document.getElementById('input-guess');
             if (inputEl) {
                 inputEl.value = "";
                 inputEl.placeholder = "TITRE DU SON...";
@@ -545,9 +586,16 @@
                 statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
             }
 
-            if (stepInfoEl) stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
+            const stepInfoEl = document.getElementById('step-info');
+            if (stepInfoEl) {
+                stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
+                stepInfoEl.className = "text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold";
+            }
+            
+            const attemptsInfoEl = document.getElementById('attempts-count');
             if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
 
+            // --- LOGIQUE SON ---
             if (usedIndices.length === PLK_DATABASE.length) usedIndices = [];
             
             let randomIndex;
@@ -558,17 +606,20 @@
             usedIndices.push(randomIndex);
             currentSong = PLK_DATABASE[randomIndex];
 
+            const coverEl = document.getElementById('disk-cover');
             if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
 
+            const audioEl = document.getElementById('game-audio');
             if (currentSong.url && audioEl) {
                 audioEl.src = currentSong.url;
+                // Force le volume à 0.5 par défaut
                 audioEl.volume = 0.5; 
                 audioEl.currentTime = 0;
-                // Important: On relance la lecture
+                
                 const playPromise = audioEl.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
-                        console.log("Lecture bloquée par le navigateur (attente interaction):", error);
+                        console.log("Erreur lecture (probablement pas de clic):", error);
                     });
                 }
             }
@@ -579,6 +630,8 @@
         function startTimer() {
             clearInterval(timerInterval);
             let timeLeft = 20;
+            const timerDisplay = document.getElementById('timer-display');
+            
             if (timerDisplay) {
                 timerDisplay.innerText = timeLeft + "s";
                 timerDisplay.classList.remove('text-red-500');
@@ -602,36 +655,43 @@
         }
 
         window.submitGuess = () => {
+            const inputEl = document.getElementById('input-guess');
+            const stepInfoEl = document.getElementById('step-info');
+            const attemptsInfoEl = document.getElementById('attempts-count');
+            const statusText = document.getElementById('status-text');
+            
             if (!inputEl) return;
             const guess = inputEl.value.trim();
             if (!guess) return;
 
             if (gameStep === 1) {
+                // GUESS TITRE
                 if (isCloseMatch(guess, currentSong.title)) {
                     gameStep = 2;
                     inputEl.value = "";
                     inputEl.placeholder = "QUEL ALBUM ?";
                     inputEl.classList.add('border-green-500');
                     setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
-                    if (stepInfoEl) {
+                    
+                    if(stepInfoEl) {
                         stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
                         stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
                     }
-                    if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
-                    
-                    const statusText = document.getElementById('status-text');
-                    if (statusText) {
+                    if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
+                    if(statusText) {
                         statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
                         statusText.className = "text-green-400 font-bold tracking-widest uppercase";
                     }
                 } else {
                     attemptsTitle--;
-                    if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
+                    if(attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
                     inputEl.classList.add('border-red-500', 'animate-shake');
                     setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
+                    
                     if (attemptsTitle <= 0) handleLoss("Mauvais titre");
                 }
             } else {
+                // GUESS ALBUM
                 if (isCloseMatch(guess, currentSong.album)) {
                     handleWin();
                 } else {
@@ -643,10 +703,11 @@
 
         function handleWin() {
             clearInterval(timerInterval);
-            if (inputEl) inputEl.classList.add('border-green-500', 'text-green-400');
+            const inputEl = document.getElementById('input-guess');
+            if(inputEl) inputEl.classList.add('border-green-500', 'text-green-400');
             
             const statusText = document.getElementById('status-text');
-            if (statusText) {
+            if(statusText) {
                 statusText.innerText = "CORRECT !";
                 statusText.className = "text-green-400 font-display font-black text-xl tracking-widest uppercase animate-bounce";
             }
@@ -658,22 +719,23 @@
             if(currentStreak > bestStreak) {
                 bestStreak = currentStreak;
                 localStorage.setItem('plk_best_streak', bestStreak);
-                const bestStreakEl = document.getElementById('best-streak');
-                if (bestStreakEl) bestStreakEl.innerText = bestStreak;
+                const bestEl = document.getElementById('best-streak');
+                if(bestEl) bestEl.innerText = bestStreak;
             }
-            
-            // On ne coupe PAS la musique ici (elle continue pendant 8s)
+
             showReveal(true);
         }
 
         function handleLoss(reason) {
             clearInterval(timerInterval);
-            if (audioEl) audioEl.pause(); // On coupe la musique si perdu
+            const audio = document.getElementById('game-audio');
+            if(audio) audio.pause(); // On coupe le son SEULEMENT si perdu
             
-            if (inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
+            const inputEl = document.getElementById('input-guess');
+            if(inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
             
             const statusText = document.getElementById('status-text');
-            if (statusText) {
+            if(statusText) {
                 statusText.innerText = reason || "ERREUR...";
                 statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
             }
@@ -682,32 +744,32 @@
 
         function showReveal(isWin) {
             const vinylContainer = document.getElementById('vinyl-container');
-            if (vinylContainer) {
+            if(vinylContainer) {
                 vinylContainer.classList.remove('scale-100', 'opacity-100');
                 vinylContainer.classList.add('scale-50', 'opacity-0'); 
             }
 
             setTimeout(() => {
                 const revealContainer = document.getElementById('reveal-container');
-                if (revealContainer) {
+                if(revealContainer) {
                     revealContainer.classList.remove('opacity-0-pointer-none', 'scale-95');
                     revealContainer.classList.add('opacity-100-pointer-auto', 'scale-100');
                 }
 
                 const resTitle = document.getElementById('res-title');
-                if (resTitle) resTitle.innerText = currentSong.title;
+                if(resTitle) resTitle.innerText = currentSong.title;
                 
                 const revealCoverEl = document.getElementById('reveal-cover');
-                if (revealCoverEl) {
+                if(revealCoverEl) {
                     const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
                     revealCoverEl.src = realCover;
                 }
                 
                 const albumEl = document.getElementById('res-album');
-                if (albumEl) albumEl.innerText = currentSong.album;
+                if(albumEl) albumEl.innerText = currentSong.album;
                 
                 const featEl = document.getElementById('res-feat');
-                if (featEl) {
+                if(featEl) {
                     if (currentSong.feat) {
                         featEl.innerText = "Feat. " + currentSong.feat;
                         featEl.classList.remove('hidden');
@@ -717,36 +779,35 @@
                 }
                 
                 if (isWin) {
-                    setTimeout(nextRound, 8000); // Musique continue pendant 8s
+                    // Si gagné, on laisse tourner 8 secondes (la musique continue)
+                    setTimeout(() => {
+                        nextRound();
+                    }, 8000); 
                 } else {
-                    setTimeout(showGameOver, 2000); // Petit délai avant écran Game Over
+                    setTimeout(() => {
+                        showGameOver();
+                    }, 2000);
                 }
             }, 500);
         }
 
         function showGameOver() {
             const finalScore = document.getElementById('final-score');
-            if (finalScore) finalScore.innerText = currentStreak;
+            if(finalScore) finalScore.innerText = currentStreak;
             
             const failAnswer = document.getElementById('fail-correct-answer');
-            if (failAnswer) failAnswer.innerText = currentSong.title;
+            if(failAnswer) failAnswer.innerText = currentSong.title;
             
             const failAlbum = document.getElementById('fail-correct-album');
-            if (failAlbum) {
+            if(failAlbum) {
                 let detailText = `Album: ${currentSong.album}`;
                 if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
                 failAlbum.innerText = detailText;
             }
             
             const gameOverOverlay = document.getElementById('game-over-overlay');
-            if (gameOverOverlay) gameOverOverlay.classList.remove('hidden');
+            if(gameOverOverlay) gameOverOverlay.classList.remove('hidden');
         }
-
-        // Exposition des fonctions pour le HTML
-        window.startGame = startGame;
-        window.submitGuess = submitGuess;
-        window.updateVolume = updateVolume;
-
     </script>
 </body>
 </html>
