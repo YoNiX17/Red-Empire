@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Streak PLK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a' },
+                        cyber: { dark: '#020617', panel: '#0f172a' },
+                    },
+                    fontFamily: {
+                        manga: ['Bangers', 'cursive'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 4s linear infinite',
+                        'spin-slow-reverse': 'spin 10s linear infinite reverse',
+                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            'from': { boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6' },
+                            'to': { boxShadow: '0 0 20px #2563eb, 0 0 30px #2563eb' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #020617; color: #eee; overflow: hidden; }
+        
+        /* FOND DYNAMIQUE */
+        .bg-animated {
+            position: fixed; inset: 0; z-index: -2;
+            background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #020617 70%);
+        }
+        .fog {
+            position: fixed; top: 0; left: 0; width: 200%; height: 100%;
+            background: url('https://raw.githubusercontent.com/danielstuart14/CSS_FOG_ANIMATION/master/fog1.png') repeat-x;
+            background-size: contain;
+            animation: fog 60s linear infinite;
+            opacity: 0.3; z-index: -1;
+        }
+        @keyframes fog { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+        /* ATH (HUD) */
+        .glass-hud { 
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); 
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+        }
+
+        /* DISQUE & VISUALISEUR */
+        .disk-spin { animation: spin 4s linear infinite; }
+        .disk-paused { animation-play-state: paused !important; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .visualizer-circle {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 120%; height: 120%; border-radius: 50%;
+            border: 2px dashed rgba(59, 130, 246, 0.3);
+            animation: spin 10s linear infinite reverse;
+        }
+        .visualizer-circle::before {
+            content: ''; position: absolute; inset: -10px; border-radius: 50%;
+            border: 2px dotted rgba(96, 165, 250, 0.5);
+            animation: spin 20s linear infinite;
+        }
+
+        /* INPUT STYLÉ */
+        .input-cyber {
+            background: rgba(2, 6, 23, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        .input-cyber:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+        .input-cyber::placeholder { color: rgba(255,255,255,0.2); }
+
+        /* SLIDER VOLUME */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px #3b82f6;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #1e293b; border-radius: 2px;
+        }
+
+        /* TIMER BAR */
+        .timer-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.5); }
+        .timer-bar-fill { height: 100%; background: #3b82f6; width: 100%; transition: width 1s linear; }
+
+        /* TEXTE NÉON */
+        .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
+
+    </style>
+</head>
+<body class="h-screen flex flex-col font-mono relative">
+
+    <!-- ARRIÈRE-PLAN -->
+    <div class="bg-animated"></div>
+    <div class="fog"></div>
+    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
+
+    <!-- TOP BAR (HUD) -->
+    <nav class="absolute top-0 w-full p-6 z-50 flex items-start justify-between pointer-events-none">
+        
+        <!-- Gauche: Quitter + Volume -->
+        <div class="pointer-events-auto flex items-center gap-4">
+            <a href="streak_selection.html" class="glass-hud w-12 h-12 flex items-center justify-center text-blue-300 hover:text-white hover:bg-blue-900/40 transition-all cursor-pointer border border-blue-500/50 rounded-full">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            
+            <div class="glass-hud px-4 py-2 flex items-center gap-3">
+                <i class="fa-solid fa-volume-high text-blue-400 text-xs"></i>
+                <input type="range" min="0" max="1" step="0.1" value="0.5" class="w-20" oninput="updateVolume(this.value)">
+            </div>
+        </div>
+
+        <!-- Centre: Score Streak -->
+        <div class="flex flex-col items-center mt-2">
+            <div class="relative">
+                <div class="text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]" id="streak-counter">0</div>
+                <div class="absolute -top-4 -right-8 text-xs font-mono text-blue-400 border border-blue-500/50 px-2 py-0.5 rounded bg-black/50 backdrop-blur-sm">STREAK</div>
+            </div>
+        </div>
+
+        <!-- Droite: Best Score + Timer -->
+        <div class="flex flex-col items-end gap-2 pointer-events-auto">
+            <div class="glass-hud px-5 py-3 text-right">
+                <div class="text-[10px] text-blue-400 font-mono tracking-widest uppercase mb-1">Record</div>
+                <div class="font-display font-bold text-2xl text-white flex items-center justify-end gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-500 text-sm"></i>
+                    <span id="best-streak">0</span>
+                </div>
+            </div>
+            <!-- Timer Visuel -->
+            <div class="glass-hud px-4 py-2 flex items-center gap-3 text-red-400 font-display font-bold text-xl" id="timer-display">
+                20s
+            </div>
+        </div>
+    </nav>
+
+    <!-- ZONE PRINCIPALE -->
+    <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
+        
+        <!-- RÉVÉLATION (Pochette Tournante) -->
+        <div id="reveal-container" class="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none opacity-0 transition-opacity duration-700 ease-out scale-95">
+            
+            <!-- Audio (Toujours présent mais caché) -->
+            <audio id="game-audio" class="hidden"></audio>
+
+            <!-- Pochette Carrée Tournante -->
+            <div class="relative mb-8">
+                <div class="absolute inset-0 bg-blue-600 blur-[50px] opacity-40 animate-pulse"></div>
+                <img id="reveal-cover" src="" class="w-64 h-64 md:w-80 md:h-80 object-cover shadow-[0_0_50px_rgba(59,130,246,0.6)] border-4 border-white/10 rounded-lg animate-spin-slow relative z-10">
+            </div>
+
+            <!-- Infos Titre / Album -->
+            <div class="text-center z-10 bg-black/60 backdrop-blur-md p-6 rounded-xl border border-blue-500/30">
+                <div class="text-blue-400 text-xs font-mono tracking-[0.4em] mb-2 uppercase">Identifié</div>
+                <h2 id="res-title" class="text-4xl md:text-6xl font-display font-black text-white leading-none uppercase tracking-tight text-glow-blue mb-3">TITRE DU SON</h2>
+                
+                <div class="inline-flex flex-col items-center gap-1">
+                    <span class="px-4 py-1 bg-blue-600 text-white rounded text-sm font-bold uppercase shadow-[0_0_15px_#2563eb]" id="res-album">ALBUM</span>
+                    <span id="res-feat" class="text-xs text-blue-300 font-mono italic mt-1 hidden">Feat. Artistes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE ÉCOUTE (Disque Vinyle) -->
+        <div id="vinyl-container" class="relative transition-all duration-500 ease-in-out">
+            <!-- Cercles décoratifs (Visualiseur) -->
+            <div class="visualizer-circle"></div>
+            
+            <!-- Le Disque -->
+            <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-float">
+                <!-- Glow derrière -->
+                <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
+                
+                <!-- Disque Physique -->
+                <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
+                    <!-- Sillons -->
+                    <div class="absolute inset-0 rounded-full border-[60px] border-[#0a0a0a] opacity-80" style="background: repeating-radial-gradient(#111 0, #111 2px, #000 3px, #000 4px);"></div>
+                    <!-- Reflets -->
+                    <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent opacity-30 pointer-events-none"></div>
+                    
+                    <!-- Pochette Centrale (Neutre, sans texte PLK) -->
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-900 border-4 border-black flex items-center justify-center relative z-20 shadow-[0_0_20px_black] overflow-hidden">
+                        <img id="disk-cover" src="https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="mt-16 text-center">
+                <div class="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-blue-900/20 border border-blue-500/30">
+                    <div class="flex gap-1 h-4 items-end">
+                        <div class="w-1 bg-blue-400 animate-[bounce_1s_infinite] h-2"></div>
+                        <div class="w-1 bg-blue-400 animate-[bounce_1.2s_infinite] h-4"></div>
+                        <div class="w-1 bg-blue-400 animate-[bounce_0.8s_infinite] h-3"></div>
+                    </div>
+                    <span id="status-text" class="text-blue-300 font-mono text-sm font-bold tracking-widest uppercase">Écoute en cours...</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ZONE DE SAISIE (BAS) -->
+    <div class="fixed bottom-0 w-full p-6 pb-10 z-40 flex justify-center bg-gradient-to-t from-black via-black/80 to-transparent">
+        <div class="w-full max-w-2xl relative group">
+            <!-- Glow effect on hover/focus -->
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-xl opacity-30 blur-lg group-hover:opacity-60 transition duration-500"></div>
+            
+            <div class="relative flex shadow-2xl">
+                <input type="text" id="input-guess" 
+                       placeholder="TITRE DU SON..." 
+                       class="input-cyber flex-1 px-8 py-5 text-xl md:text-2xl rounded-l-xl uppercase transition-all"
+                       autocomplete="off"
+                       onkeydown="if(event.key === 'Enter') submitGuess()">
+                
+                <button onclick="submitGuess()" class="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold px-8 py-5 text-lg md:text-xl rounded-r-xl transition-all border-l border-white/10 hover:shadow-[0_0_30px_#3b82f6]">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="text-center mt-3 flex justify-between px-2">
+                <span class="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em]" id="attempts-info">ESSAIS RESTANTS : <span class="text-white font-bold" id="attempts-count">2</span></span>
+                <span class="text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold" id="step-info">ÉTAPE 1/2 : TITRE</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="start-overlay" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+        <div class="text-center max-w-2xl">
+            <div class="inline-block mb-4 px-4 py-1 border border-blue-500/30 rounded-full bg-blue-900/20">
+                <span class="text-xs font-mono font-bold tracking-[0.2em] text-blue-400 uppercase">MODE SURVIE</span>
+            </div>
+            <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
+            <h2 class="font-display text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white mb-8">ÉDITION PLK</h2>
+            
+            <p class="text-gray-400 font-mono text-sm md:text-base mb-12 tracking-widest leading-relaxed max-w-lg mx-auto border-t border-b border-white/5 py-4">
+                <span class="text-white font-bold">RÈGLES DU JEU :</span><br>
+                1. Trouvez le <span class="text-blue-400">TITRE</span> (2 essais max)<br>
+                2. Trouvez l'<span class="text-blue-400">ALBUM</span> (1 essai max)<br>
+                Une seule erreur fatale = <span class="text-red-500">GAME OVER</span>.
+            </p>
+            
+            <button onclick="startGame()" class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-500 overflow-hidden rounded-full transition-all shadow-[0_0_40px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_rgba(37,99,235,0.6)] hover:scale-105">
+                <span class="relative font-display font-bold text-xl text-white uppercase tracking-widest z-10 flex items-center gap-3">
+                    <i class="fa-solid fa-play text-sm"></i> Lancer la session
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="game-over-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div class="w-full max-w-lg relative">
+            <div class="absolute -inset-1 bg-gradient-to-b from-red-600 to-transparent opacity-50 blur-md"></div>
+            
+            <div class="bg-[#0f172a] border border-red-900/50 p-8 md:p-12 rounded-2xl text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
+                
+                <h2 class="font-display font-black text-6xl md:text-7xl text-red-600 mb-1 tracking-tighter animate-pulse">ÉCHEC</h2>
+                <p class="font-mono text-gray-500 text-sm tracking-[0.5em] mb-8 uppercase">Série Interrompue</p>
+                
+                <div class="flex justify-center items-end gap-2 mb-8">
+                    <div class="text-8xl font-black font-display text-white leading-none" id="final-score">0</div>
+                    <div class="text-lg font-mono text-gray-400 mb-2">PTS</div>
+                </div>
+
+                <div class="bg-red-900/10 border border-red-500/20 p-4 rounded-lg mb-8 text-left">
+                    <div class="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">C'était :</div>
+                    <div id="fail-correct-answer" class="text-white font-display font-bold text-xl truncate">...</div>
+                    <div id="fail-correct-album" class="text-gray-400 font-mono text-sm">Album: ...</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="location.reload()" class="py-4 bg-white text-black font-black font-display text-lg uppercase tracking-wider hover:bg-gray-200 transition-colors rounded-lg">
+                        RÉESSAYER
+                    </button>
+                    <a href="streak_selection.html" class="py-4 border border-white/10 text-gray-400 font-bold font-mono uppercase tracking-wider hover:text-white hover:border-white transition-colors rounded-lg flex items-center justify-center">
+                        QUITTER
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIQUE JAVASCRIPT -->
+    <script type="module">
+        import { ALBUM_COVERS, PLK_RAW_DISCOGRAPHY } from "./plk_database.js";
+
+        // --- TRAITEMENT ET NETTOYAGE DES DONNÉES ---
+        // On convertit la discographie structurée en une liste plate pour le jeu
+        const PLK_DATABASE = [];
+
+        Object.values(PLK_RAW_DISCOGRAPHY).flat().forEach(item => {
+            let processedItem = { ...item };
+            
+            // 1. Gestion des Feats
+            if (processedItem.album.startsWith("Feat.")) {
+                processedItem.feat = processedItem.album.replace("Feat. ", ""); // Stocke l'artiste
+                processedItem.album = "Feat."; // Nettoie le nom de l'album
+            }
+            
+            // 2. Gestion Enna Boost
+            if (processedItem.album.includes("Enna (Boost)")) {
+                processedItem.album = "Enna";
+            }
+
+            // 3. Gestion Single / BO
+            if (processedItem.album.includes("BO") || processedItem.album.includes("Freestyle")) {
+                processedItem.album = "Single";
+            }
+
+            PLK_DATABASE.push(processedItem);
+        });
+
+        // --- ETAT DU JEU ---
+        let currentStreak = 0;
+        let bestStreak = localStorage.getItem('plk_best_streak') || 0;
+        let currentSong = null;
+        let usedIndices = [];
+        let timerInterval = null;
+        let gameStep = 1; // 1: Titre, 2: Album
+        let attemptsTitle = 2;
+        let attemptsAlbum = 1;
+
+        const videoEl = document.getElementById('game-audio'); // Balise audio
+        const diskEl = document.getElementById('disk');
+        const inputEl = document.getElementById('input-guess');
+        const timerDisplay = document.getElementById('timer-display');
+        const coverEl = document.getElementById('disk-cover');
+        const stepInfoEl = document.getElementById('step-info');
+        const attemptsInfoEl = document.getElementById('attempts-count');
+
+        // Init UI
+        document.getElementById('best-streak').innerText = bestStreak;
+
+        // --- FUZZY MATCHING (TOLÉRANCE AUX FAUTES) ---
+        function levenshtein(a, b) {
+            if(a.length == 0) return b.length; 
+            if(b.length == 0) return a.length; 
+            var matrix = [];
+            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
+            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
+            for(var i = 1; i <= b.length; i++){
+                for(var j = 1; j <= a.length; j++){
+                    if(b.charAt(i-1) == a.charAt(j-1)){
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function isCloseMatch(input, target) {
+            if (!target) return false;
+            // Nettoyage agressif : minuscules, suppression ponctuation, accents et espaces
+            const clean = (str) => str.toLowerCase()
+                                      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève accents
+                                      .replace(/[^a-z0-9]/g, '');
+            const normInput = clean(input);
+            const normTarget = clean(target);
+            
+            // Match exact ou inclusion
+            if (normInput === normTarget) return true;
+            if (normInput.length > 3 && normTarget.includes(normInput)) return true;
+            
+            // Levenshtein pour les fautes de frappe
+            const distance = levenshtein(normInput, normTarget);
+            const maxLength = Math.max(normInput.length, normTarget.length);
+            const similarity = 1 - (distance / maxLength);
+            
+            return similarity > 0.70; // 70% de similarité requise
+        }
+
+        // --- GAMEPLAY ---
+        function updateVolume(val) {
+            videoEl.volume = val;
+        }
+
+        function startGame() {
+            const startOverlay = document.getElementById('start-overlay');
+            startOverlay.style.opacity = '0';
+            startOverlay.style.pointerEvents = 'none'; // Fade out
+            setTimeout(() => startOverlay.classList.add('hidden'), 500);
+            nextRound();
+        }
+
+        function nextRound() {
+            // Reset Game State
+            gameStep = 1;
+            attemptsTitle = 2;
+            attemptsAlbum = 1;
+            
+            // Reset UI
+            document.getElementById('reveal-container').classList.add('opacity-0', 'scale-95');
+            document.getElementById('reveal-container').classList.remove('pointer-events-auto');
+            document.getElementById('result-overlay').classList.remove('translate-y-0');
+            document.getElementById('result-overlay').classList.add('translate-y-full');
+            
+            // Vinyl In
+            const vinylContainer = document.getElementById('vinyl-container');
+            vinylContainer.classList.remove('opacity-0', 'scale-50');
+            vinylContainer.classList.add('scale-100', 'opacity-100');
+            
+            diskEl.classList.remove('disk-paused');
+            
+            inputEl.value = "";
+            inputEl.placeholder = "TITRE DU SON...";
+            inputEl.disabled = false;
+            inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
+            inputEl.focus();
+            
+            const statusText = document.getElementById('status-text');
+            statusText.innerText = "Écoute en cours...";
+            statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
+
+            stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
+            stepInfoEl.className = "text-[10px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold";
+            attemptsInfoEl.innerText = attemptsTitle;
+
+            // Selection Son
+            if (usedIndices.length === PLK_DATABASE.length) usedIndices = []; // Reset si fini
+            
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
+            } while (usedIndices.includes(randomIndex));
+
+            usedIndices.push(randomIndex);
+            currentSong = PLK_DATABASE[randomIndex];
+
+            // Mise à jour Pochette Disque (Révélation partielle ou image générique PLK pour ne pas spoil)
+            // On met une image neutre PLK sur le disque qui tourne pour ne pas donner l'album
+            coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
+
+            // Lecture Audio
+            if (currentSong.url) {
+                videoEl.src = currentSong.url;
+                videoEl.play().catch(e => console.log("Autoplay bloqué"));
+            }
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            let timeLeft = 20;
+            timerDisplay.innerText = timeLeft + "s";
+            timerDisplay.classList.remove('text-red-500');
+            timerDisplay.classList.add('text-blue-400');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft + "s";
+                if (timeLeft <= 5) {
+                    timerDisplay.classList.remove('text-blue-400');
+                    timerDisplay.classList.add('text-red-500');
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleLoss("Temps écoulé !");
+                }
+            }, 1000);
+        }
+
+        window.submitGuess = () => {
+            const guess = inputEl.value.trim();
+            if (!guess) return;
+
+            if (gameStep === 1) {
+                // GUESS TITLE
+                if (isCloseMatch(guess, currentSong.title)) {
+                    // Titre trouvé -> Passage à l'étape Album
+                    gameStep = 2;
+                    inputEl.value = "";
+                    inputEl.placeholder = "QUEL ALBUM ?";
+                    inputEl.classList.add('border-green-500'); // Feedback visuel rapide
+                    setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
+                    
+                    stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
+                    stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
+                    attemptsInfoEl.innerText = attemptsAlbum;
+                    
+                    const statusText = document.getElementById('status-text');
+                    statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
+                    statusText.className = "text-green-400 font-bold tracking-widest uppercase";
+                } else {
+                    attemptsTitle--;
+                    attemptsInfoEl.innerText = attemptsTitle;
+                    inputEl.classList.add('border-red-500', 'animate-shake');
+                    setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
+                    
+                    if (attemptsTitle <= 0) {
+                        handleLoss("Mauvais titre");
+                    }
+                }
+            } else if (gameStep === 2) {
+                // GUESS ALBUM
+                if (isCloseMatch(guess, currentSong.album)) {
+                    handleWin();
+                } else {
+                    attemptsAlbum--;
+                    if (attemptsAlbum <= 0) {
+                        handleLoss("Mauvais album");
+                    }
+                }
+            }
+        };
+
+        function handleWin() {
+            clearInterval(timerInterval);
+            
+            // Feedback Input
+            inputEl.classList.add('border-green-500', 'text-green-400');
+            const statusText = document.getElementById('status-text');
+            statusText.innerText = "CORRECT !";
+            statusText.className = "text-green-400 font-display font-black text-xl tracking-widest uppercase animate-bounce";
+
+            // Score
+            currentStreak++;
+            document.getElementById('streak-counter').innerText = currentStreak;
+            if(currentStreak > bestStreak) {
+                bestStreak = currentStreak;
+                localStorage.setItem('plk_best_streak', bestStreak);
+                document.getElementById('best-streak').innerText = bestStreak;
+            }
+
+            showReveal(true);
+        }
+
+        function handleLoss(reason) {
+            clearInterval(timerInterval);
+            videoEl.pause();
+            
+            // Feedback Input
+            inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
+            const statusText = document.getElementById('status-text');
+            statusText.innerText = reason || "ERREUR...";
+            statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
+
+            showReveal(false);
+        }
+
+        function showReveal(isWin) {
+            // Transition Vinyl -> Video
+            const vinylContainer = document.getElementById('vinyl-container');
+            vinylContainer.classList.remove('scale-100', 'opacity-100');
+            vinylContainer.classList.add('scale-50', 'opacity-0'); // Zoom out fade
+
+            setTimeout(() => {
+                const vidCont = document.getElementById('reveal-container');
+                vidCont.classList.remove('opacity-0', 'scale-95');
+                vidCont.classList.add('opacity-100', 'scale-100');
+                
+                // Show Result Bar
+                const resOverlay = document.getElementById('result-overlay');
+                resOverlay.classList.remove('translate-y-full');
+                resOverlay.classList.add('translate-y-0');
+                
+                // Fill Data
+                document.getElementById('res-title').innerText = currentSong.title;
+                
+                // Cover Album Correcte
+                const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+                document.getElementById('reveal-cover').src = realCover;
+                
+                // Affichage Album
+                const albumEl = document.getElementById('res-album');
+                albumEl.innerText = currentSong.album;
+                
+                // Affichage Feat (si existe)
+                const featEl = document.getElementById('res-feat');
+                if (currentSong.feat) {
+                    featEl.innerText = "Feat. " + currentSong.feat;
+                    featEl.classList.remove('hidden');
+                } else {
+                    featEl.classList.add('hidden');
+                }
+                
+                if (isWin) {
+                    // Si gagné, on laisse la musique 8 secondes
+                    setTimeout(() => {
+                        nextRound();
+                    }, 8000); 
+                } else {
+                    // Si perdu, Game Over tout de suite (ou après petit délai)
+                    setTimeout(() => {
+                        showGameOver();
+                    }, 2000);
+                }
+            }, 500);
+        }
+
+        function showGameOver() {
+            document.getElementById('final-score').innerText = currentStreak;
+            document.getElementById('fail-correct-answer').innerText = `${currentSong.title}`;
+            
+            let detailText = `Album: ${currentSong.album}`;
+            if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
+            document.getElementById('fail-correct-album').innerText = detailText;
+            
+            document.getElementById('game-over-overlay').classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
