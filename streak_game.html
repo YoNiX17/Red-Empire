@@ -24,6 +24,7 @@
                     animation: {
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
+                        'spin-slow-reverse': 'spin 10s linear infinite reverse',
                         'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                         'float': 'float 6s ease-in-out infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -59,11 +60,6 @@
         .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2); }
         .input-cyber::placeholder { color: rgba(255,255,255,0.2); }
         .text-glow-blue { text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4); }
-        
-        /* Utilitaires pour masquer/afficher */
-        .hidden-force { display: none !important; }
-        .opacity-0-pointer-none { opacity: 0; pointer-events: none; }
-        .opacity-100-pointer-auto { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="h-screen flex flex-col font-mono relative">
@@ -478,9 +474,7 @@
 
         function isCloseMatch(input, target) {
             if (!target) return false;
-            const clean = (str) => str.toLowerCase()
-                                      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                                      .replace(/[^a-z0-9]/g, '');
+            const clean = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
             const normInput = clean(input);
             const normTarget = clean(target);
             
@@ -499,12 +493,6 @@
         }
 
         function startGame() {
-            // Débloquer l'audio contexte (Mobile/Chrome policy)
-            audioEl.play().then(() => {
-                audioEl.pause();
-                audioEl.currentTime = 0;
-            }).catch(e => console.log("Audio unlock:", e));
-
             const startOverlay = document.getElementById('start-overlay');
             startOverlay.style.opacity = '0';
             startOverlay.style.pointerEvents = 'none';
@@ -515,59 +503,58 @@
         }
 
         function nextRound() {
-            // Reset Game State
             gameStep = 1;
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // Reset UI
+            // Safe DOM access
             const revealContainer = document.getElementById('reveal-container');
-            const vinylContainer = document.getElementById('vinyl-container');
-            const resultOverlay = document.getElementById('result-overlay');
-
-            // Cacher Reveal
-            revealContainer.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-            revealContainer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            
-            // Afficher Vinyl
-            vinylContainer.classList.remove('opacity-0', 'scale-50');
-            vinylContainer.classList.add('opacity-100', 'scale-100');
-            
-            // Reset Overlay
-            if(resultOverlay) {
-                resultOverlay.classList.remove('translate-y-0');
-                resultOverlay.classList.add('translate-y-full');
+            if (revealContainer) {
+                revealContainer.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                revealContainer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             }
-
-            document.getElementById('disk').classList.remove('disk-paused');
             
-            inputEl.value = "";
-            inputEl.placeholder = "TITRE DU SON...";
-            inputEl.disabled = false;
-            inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
-            inputEl.focus();
+            const vinylContainer = document.getElementById('vinyl-container');
+            if (vinylContainer) {
+                vinylContainer.classList.remove('opacity-0', 'scale-50');
+                vinylContainer.classList.add('opacity-100', 'scale-100');
+            }
+            
+            if (diskEl) diskEl.classList.remove('disk-paused');
+            
+            if (inputEl) {
+                inputEl.value = "";
+                inputEl.placeholder = "TITRE DU SON...";
+                inputEl.disabled = false;
+                inputEl.classList.remove('border-green-500', 'border-red-500', 'valid', 'error');
+                inputEl.focus();
+            }
             
             const statusText = document.getElementById('status-text');
-            statusText.innerText = "Écoute en cours...";
-            statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
-
-            stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
-            attemptsInfoEl.innerText = attemptsTitle;
-
-            // Pick Song
-            if (PLK_DATABASE.length > 0) {
-                let randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
-                currentSong = PLK_DATABASE[randomIndex];
+            if (statusText) {
+                statusText.innerText = "Écoute en cours...";
+                statusText.className = "text-blue-300 font-mono text-sm font-bold tracking-widest uppercase";
             }
 
-            // Reset Cover
-            coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
+            if (stepInfoEl) stepInfoEl.innerText = "ÉTAPE 1/2 : TITRE";
+            if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
 
-            // Play
-            if (currentSong && currentSong.url) {
+            if (usedIndices.length === PLK_DATABASE.length) usedIndices = [];
+            
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * PLK_DATABASE.length);
+            } while (usedIndices.includes(randomIndex));
+
+            usedIndices.push(randomIndex);
+            currentSong = PLK_DATABASE[randomIndex];
+
+            if (coverEl) coverEl.src = "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"; 
+
+            if (currentSong.url && audioEl) {
                 audioEl.src = currentSong.url;
-                audioEl.volume = 0.5;
-                audioEl.play().catch(e => console.error("Erreur lecture:", e));
+                audioEl.volume = 0.5; 
+                audioEl.play().catch(e => console.log("Autoplay bloqué: ", e));
             }
 
             startTimer();
@@ -576,11 +563,21 @@
         function startTimer() {
             clearInterval(timerInterval);
             let timeLeft = 20;
-            timerDisplay.innerText = timeLeft + "s";
-            
+            if (timerDisplay) {
+                timerDisplay.innerText = timeLeft + "s";
+                timerDisplay.classList.remove('text-red-500');
+                timerDisplay.classList.add('text-blue-400');
+            }
+
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerDisplay.innerText = timeLeft + "s";
+                if (timerDisplay) {
+                    timerDisplay.innerText = timeLeft + "s";
+                    if (timeLeft <= 5) {
+                        timerDisplay.classList.remove('text-blue-400');
+                        timerDisplay.classList.add('text-red-500');
+                    }
+                }
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     handleLoss("Temps écoulé !");
@@ -588,100 +585,120 @@
             }, 1000);
         }
 
-        // Fuzzy Match (Simplifié)
-        function isCloseMatch(input, target) {
-            if (!target) return false;
-            const clean = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const a = clean(input);
-            const b = clean(target);
-            return a === b || (b.length > 3 && b.includes(a));
-        }
-
         window.submitGuess = () => {
+            if (!inputEl) return;
             const guess = inputEl.value.trim();
             if (!guess) return;
 
-            if (gameStep === 1) { // TITRE
+            if (gameStep === 1) {
                 if (isCloseMatch(guess, currentSong.title)) {
                     gameStep = 2;
                     inputEl.value = "";
                     inputEl.placeholder = "QUEL ALBUM ?";
                     inputEl.classList.add('border-green-500');
                     setTimeout(() => inputEl.classList.remove('border-green-500'), 500);
-                    stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
+                    if (stepInfoEl) {
+                        stepInfoEl.innerText = "ÉTAPE 2/2 : ALBUM";
+                        stepInfoEl.className = "text-[10px] font-mono text-yellow-400 uppercase tracking-[0.2em] font-bold animate-pulse";
+                    }
+                    if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsAlbum;
+                    
                     const statusText = document.getElementById('status-text');
-                    statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
-                    statusText.className = "text-green-400 font-bold tracking-widest uppercase";
+                    if (statusText) {
+                        statusText.innerText = "TITRE VALIDÉ ! ALBUM ?";
+                        statusText.className = "text-green-400 font-bold tracking-widest uppercase";
+                    }
                 } else {
                     attemptsTitle--;
-                    attemptsInfoEl.innerText = attemptsTitle;
+                    if (attemptsInfoEl) attemptsInfoEl.innerText = attemptsTitle;
                     inputEl.classList.add('border-red-500', 'animate-shake');
                     setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-shake'), 500);
                     if (attemptsTitle <= 0) handleLoss("Mauvais titre");
                 }
-            } else { // ALBUM
+            } else {
                 if (isCloseMatch(guess, currentSong.album)) {
                     handleWin();
                 } else {
-                    handleLoss("Mauvais album");
+                    attemptsAlbum--;
+                    if (attemptsAlbum <= 0) handleLoss("Mauvais album");
                 }
             }
         };
 
         function handleWin() {
             clearInterval(timerInterval);
+            if (inputEl) inputEl.classList.add('border-green-500', 'text-green-400');
+            
+            const statusText = document.getElementById('status-text');
+            if (statusText) {
+                statusText.innerText = "CORRECT !";
+                statusText.className = "text-green-400 font-display font-black text-xl tracking-widest uppercase animate-bounce";
+            }
+
             currentStreak++;
-            document.getElementById('streak-counter').innerText = currentStreak;
+            const streakCounter = document.getElementById('streak-counter');
+            if (streakCounter) streakCounter.innerText = currentStreak;
+            
             if(currentStreak > bestStreak) {
                 bestStreak = currentStreak;
                 localStorage.setItem('plk_best_streak', bestStreak);
-                document.getElementById('best-streak').innerText = bestStreak;
+                const bestStreakEl = document.getElementById('best-streak');
+                if (bestStreakEl) bestStreakEl.innerText = bestStreak;
             }
             showReveal(true);
         }
 
         function handleLoss(reason) {
             clearInterval(timerInterval);
-            audioEl.pause();
+            if (audioEl) audioEl.pause();
+            if (inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
+            
+            const statusText = document.getElementById('status-text');
+            if (statusText) {
+                statusText.innerText = reason || "ERREUR...";
+                statusText.className = "text-red-500 font-display font-black text-xl tracking-widest uppercase";
+            }
             showReveal(false);
         }
 
         function showReveal(isWin) {
-            // Switch UI : Hide Vinyl, Show Reveal
-            const revealContainer = document.getElementById('reveal-container');
             const vinylContainer = document.getElementById('vinyl-container');
-            const resultOverlay = document.getElementById('result-overlay');
-
-            vinylContainer.classList.remove('opacity-100', 'scale-100');
-            vinylContainer.classList.add('opacity-0', 'scale-50');
+            if (vinylContainer) {
+                vinylContainer.classList.remove('scale-100', 'opacity-100');
+                vinylContainer.classList.add('scale-50', 'opacity-0'); 
+            }
 
             setTimeout(() => {
-                revealContainer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-                revealContainer.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
-                
-                if(resultOverlay) {
-                    resultOverlay.classList.remove('translate-y-full');
-                    resultOverlay.classList.add('translate-y-0');
+                const revealContainer = document.getElementById('reveal-container');
+                if (revealContainer) {
+                    revealContainer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                    revealContainer.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
                 }
 
-                // Fill Data
-                document.getElementById('res-title').innerText = currentSong.title;
-                const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
-                document.getElementById('reveal-cover').src = realCover;
-                document.getElementById('res-album').innerText = currentSong.album;
+                const resTitle = document.getElementById('res-title');
+                if (resTitle) resTitle.innerText = currentSong.title;
                 
-                // Affichage Feat (si existe)
-                const featEl = document.getElementById('res-feat');
-                if (currentSong.feat) {
-                    featEl.innerText = "Feat. " + currentSong.feat;
-                    featEl.classList.remove('hidden');
-                } else {
-                    featEl.classList.add('hidden');
+                const revealCoverEl = document.getElementById('reveal-cover');
+                if (revealCoverEl) {
+                    const realCover = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+                    revealCoverEl.src = realCover;
                 }
                 
-                // Si gagné, on laisse la musique
+                const albumEl = document.getElementById('res-album');
+                if (albumEl) albumEl.innerText = currentSong.album;
+                
+                const featEl = document.getElementById('res-feat');
+                if (featEl) {
+                    if (currentSong.feat) {
+                        featEl.innerText = "Feat. " + currentSong.feat;
+                        featEl.classList.remove('hidden');
+                    } else {
+                        featEl.classList.add('hidden');
+                    }
+                }
+                
                 if (isWin) {
-                    setTimeout(nextRound, 8000);
+                    setTimeout(nextRound, 8000); 
                 } else {
                     setTimeout(showGameOver, 2000);
                 }
@@ -689,18 +706,23 @@
         }
 
         function showGameOver() {
-            document.getElementById('final-score').innerText = currentStreak;
-            document.getElementById('fail-correct-answer').innerText = currentSong.title;
+            const finalScore = document.getElementById('final-score');
+            if (finalScore) finalScore.innerText = currentStreak;
             
-            let detailText = `Album: ${currentSong.album}`;
-            if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
-            document.getElementById('fail-correct-album').innerText = detailText;
+            const failAnswer = document.getElementById('fail-correct-answer');
+            if (failAnswer) failAnswer.innerText = currentSong.title;
             
-            document.getElementById('game-over-overlay').classList.remove('hidden');
+            const failAlbum = document.getElementById('fail-correct-album');
+            if (failAlbum) {
+                let detailText = `Album: ${currentSong.album}`;
+                if (currentSong.feat) detailText += ` (Feat. ${currentSong.feat})`;
+                failAlbum.innerText = detailText;
+            }
+            
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            if (gameOverOverlay) gameOverOverlay.classList.remove('hidden');
         }
 
-        // --- CORRECTION DU BUG DE LANCEMENT ---
-        // On rend les fonctions accessibles globalement (hors du module)
         window.startGame = startGame;
         window.submitGuess = submitGuess;
         window.updateVolume = updateVolume;
