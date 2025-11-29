@@ -52,7 +52,7 @@
         
         .hidden-force { display: none !important; }
         
-        /* Transitions fluides */
+        /* Transitions */
         .scene-container {
             position: absolute; inset: 0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -104,7 +104,7 @@
     <!-- ZONE PRINCIPALE -->
     <div class="flex-grow flex flex-col items-center justify-center relative z-10 w-full perspective-[1000px]">
         
-        <!-- 1. SCÈNE RÉVÉLATION (Pochette) -->
+        <!-- 1. SCÈNE RÉVÉLATION -->
         <div id="reveal-container" class="scene-container scene-hidden z-20">
             <div class="relative mb-8">
                 <div class="absolute inset-0 bg-blue-600 blur-[60px] opacity-50 animate-pulse"></div>
@@ -120,7 +120,7 @@
             </div>
         </div>
 
-        <!-- 2. SCÈNE JEU (Vinyle) -->
+        <!-- 2. SCÈNE JEU -->
         <div id="vinyl-container" class="scene-container scene-visible">
             <div class="visualizer-circle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_10s_linear_infinite_reverse]"></div>
             <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-[float_6s_ease-in-out_infinite]">
@@ -159,7 +159,7 @@
         </div>
     </div>
 
-    <!-- START OVERLAY (OBLIGATOIRE POUR LE SON) -->
+    <!-- START OVERLAY -->
     <div id="start-overlay" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
         <div class="text-center max-w-2xl">
             <h1 class="font-display text-7xl md:text-9xl font-black text-white mb-2 leading-none text-glow-blue tracking-tighter">STREAK</h1>
@@ -189,7 +189,7 @@
     </div>
 
     <script>
-        // === DATA ===
+        // === DONNEES ===
         const ALBUM_COVERS = {
             "Chambre 140": "https://i.postimg.cc/GpJd8WhY/ab67616d0000b2735f47f03829e4df052424712c.jpg",
             "2069": "https://i.postimg.cc/G2wTdwgJ/0x1900_000000_80_0_0.jpg",
@@ -409,7 +409,6 @@
             ]
         };
 
-        // --- INITIALISATION ---
         // 1. Création de la base de données plate
         const PLK_DATABASE = [];
         Object.values(PLK_RAW_DISCOGRAPHY).flat().forEach(item => {
@@ -479,12 +478,12 @@
             const attemptsInfoEl = getEl('attempts-count');
 
             if(revealContainer) {
-                revealContainer.classList.remove('state-visible');
-                revealContainer.classList.add('state-hidden');
+                revealContainer.classList.remove('scene-visible');
+                revealContainer.classList.add('scene-hidden');
             }
             if(vinylContainer) {
-                vinylContainer.classList.remove('state-hidden');
-                vinylContainer.classList.add('state-visible');
+                vinylContainer.classList.remove('scene-hidden');
+                vinylContainer.classList.add('scene-visible');
             }
             if(diskEl) diskEl.classList.remove('disk-paused');
             
@@ -698,15 +697,15 @@
 
             // Transition : Cache le vinyle
             if(vinylContainer) {
-                vinylContainer.classList.remove('state-visible');
-                vinylContainer.classList.add('state-hidden');
+                vinylContainer.classList.remove('scene-visible');
+                vinylContainer.classList.add('scene-hidden');
             }
 
             setTimeout(() => {
                 // Affiche la pochette
                 if(revealContainer) {
-                    revealContainer.classList.remove('state-hidden');
-                    revealContainer.classList.add('state-visible');
+                    revealContainer.classList.remove('scene-hidden');
+                    revealContainer.classList.add('scene-visible');
                 }
 
                 const resTitle = getEl('res-title');
