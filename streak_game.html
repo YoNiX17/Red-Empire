@@ -24,6 +24,7 @@
                     animation: {
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 4s linear infinite',
+                        'spin-slow-reverse': 'spin 10s linear infinite reverse',
                         'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                         'float': 'float 6s ease-in-out infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -572,12 +573,17 @@
                 revealContainer.classList.remove('pointer-events-auto');
             }
             
-            document.getElementById('result-overlay').classList.remove('translate-y-0');
-            document.getElementById('result-overlay').classList.add('translate-y-full');
+            const resultOverlay = document.getElementById('result-overlay');
+            if (resultOverlay) {
+                resultOverlay.classList.remove('translate-y-0');
+                resultOverlay.classList.add('translate-y-full');
+            }
             
             const vinylContainer = document.getElementById('vinyl-container');
-            vinylContainer.classList.remove('opacity-0', 'scale-50');
-            vinylContainer.classList.add('scale-100', 'opacity-100');
+            if (vinylContainer) {
+                vinylContainer.classList.remove('opacity-0', 'scale-50');
+                vinylContainer.classList.add('scale-100', 'opacity-100');
+            }
             
             diskEl.classList.remove('disk-paused');
             
