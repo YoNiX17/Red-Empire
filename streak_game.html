@@ -56,6 +56,7 @@
         .disk-spin { animation: spin 4s linear infinite; }
         .disk-paused { animation-play-state: paused !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        .visualizer-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; border-radius: 50%; border: 2px dashed rgba(59, 130, 246, 0.3); animation: spin 10s linear infinite reverse; }
         .input-cyber { background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); color: white; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
         .input-cyber:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2); }
         .input-cyber::placeholder { color: rgba(255,255,255,0.2); }
@@ -125,6 +126,7 @@
 
         <!-- CONTAINER 2 : JEU (ID: vinyl-container) -->
         <div id="vinyl-container" class="relative transition-all duration-500 ease-in-out opacity-100 scale-100">
+            <div class="visualizer-circle"></div>
             <div class="relative w-72 h-72 md:w-96 md:h-96 group animate-float">
                 <div class="absolute inset-4 bg-blue-600 rounded-full blur-[60px] opacity-40 animate-pulse"></div>
                 <div id="disk" class="w-full h-full rounded-full bg-[#050505] border border-gray-800 shadow-2xl flex items-center justify-center disk-spin relative z-10 overflow-hidden">
@@ -474,18 +476,24 @@
 
         function isCloseMatch(input, target) {
             if (!target) return false;
-            const clean = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Nettoyage agressif : minuscules, suppression ponctuation, accents et espaces
+            const clean = (str) => str.toLowerCase()
+                                      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève accents
+                                      .replace(/[^a-z0-9]/g, '');
             const normInput = clean(input);
             const normTarget = clean(target);
             
+            // Match exact ou inclusion
             if (normInput === normTarget) return true;
             if (normInput.length > 3 && normTarget.includes(normInput)) return true;
             
+            // Levenshtein pour les fautes de frappe
             const distance = levenshtein(normInput, normTarget);
             const maxLength = Math.max(normInput.length, normTarget.length);
             const similarity = 1 - (distance / maxLength);
             
-            return similarity > 0.70;
+            // Tolérance augmentée (0.65) pour accepter plus de fautes comme "aine" au lieu de "haine"
+            return similarity > 0.65;
         }
 
         function updateVolume(val) {
@@ -497,7 +505,7 @@
             startOverlay.style.opacity = '0';
             startOverlay.style.pointerEvents = 'none';
             setTimeout(() => {
-                startOverlay.classList.add('hidden');
+                startOverlay.classList.add('hidden-force');
                 nextRound();
             }, 500);
         }
@@ -507,11 +515,12 @@
             attemptsTitle = 2;
             attemptsAlbum = 1;
             
-            // Safe DOM access
+            // Safe DOM manipulation with checks
             const revealContainer = document.getElementById('reveal-container');
             if (revealContainer) {
-                revealContainer.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-                revealContainer.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                revealContainer.classList.remove('opacity-100-pointer-auto');
+                revealContainer.classList.add('opacity-0-pointer-none');
+                revealContainer.classList.add('scale-95'); // Animation reset
             }
             
             const vinylContainer = document.getElementById('vinyl-container');
@@ -554,7 +563,14 @@
             if (currentSong.url && audioEl) {
                 audioEl.src = currentSong.url;
                 audioEl.volume = 0.5; 
-                audioEl.play().catch(e => console.log("Autoplay bloqué: ", e));
+                audioEl.currentTime = 0;
+                // Important: On relance la lecture
+                const playPromise = audioEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Lecture bloquée par le navigateur (attente interaction):", error);
+                    });
+                }
             }
 
             startTimer();
@@ -645,12 +661,15 @@
                 const bestStreakEl = document.getElementById('best-streak');
                 if (bestStreakEl) bestStreakEl.innerText = bestStreak;
             }
+            
+            // On ne coupe PAS la musique ici (elle continue pendant 8s)
             showReveal(true);
         }
 
         function handleLoss(reason) {
             clearInterval(timerInterval);
-            if (audioEl) audioEl.pause();
+            if (audioEl) audioEl.pause(); // On coupe la musique si perdu
+            
             if (inputEl) inputEl.classList.add('border-red-500', 'text-red-400', 'animate-shake');
             
             const statusText = document.getElementById('status-text');
@@ -671,8 +690,8 @@
             setTimeout(() => {
                 const revealContainer = document.getElementById('reveal-container');
                 if (revealContainer) {
-                    revealContainer.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-                    revealContainer.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+                    revealContainer.classList.remove('opacity-0-pointer-none', 'scale-95');
+                    revealContainer.classList.add('opacity-100-pointer-auto', 'scale-100');
                 }
 
                 const resTitle = document.getElementById('res-title');
@@ -698,9 +717,9 @@
                 }
                 
                 if (isWin) {
-                    setTimeout(nextRound, 8000); 
+                    setTimeout(nextRound, 8000); // Musique continue pendant 8s
                 } else {
-                    setTimeout(showGameOver, 2000);
+                    setTimeout(showGameOver, 2000); // Petit délai avant écran Game Over
                 }
             }, 500);
         }
@@ -723,6 +742,7 @@
             if (gameOverOverlay) gameOverOverlay.classList.remove('hidden');
         }
 
+        // Exposition des fonctions pour le HTML
         window.startGame = startGame;
         window.submitGuess = submitGuess;
         window.updateVolume = updateVolume;
