@@ -250,20 +250,33 @@
     <div id="gameover-screen" class="hidden fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center">
         <h1 class="font-heading text-[120px] leading-none text-white opacity-10 select-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">GAME OVER</h1>
         
-        <div class="relative z-10 text-center">
+        <div class="relative z-10 text-center w-full max-w-2xl px-4">
             <div class="mb-2 text-plk-blue font-mono text-sm tracking-[0.5em] uppercase">Session Terminée</div>
             <h2 class="font-heading text-6xl text-white mb-12">SCORE FINAL</h2>
             
-            <div class="flex gap-16 justify-center mb-16">
+            <!-- GRID STATS CORRIGÉE (3 Colonnes) -->
+            <div class="grid grid-cols-3 gap-8 mb-16 items-start">
+                
+                <!-- Colonne 1 : Points -->
                 <div class="text-center">
                     <div class="text-gray-500 text-xs font-mono uppercase mb-2">Points</div>
                     <div id="final-score" class="font-heading text-4xl text-white">0</div>
                 </div>
-                <div class="w-px bg-white/10 h-12"></div>
-                <div class="text-center">
-                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Best Streak</div>
-                    <div id="final-best-streak" class="font-heading text-4xl text-plk-blue">0</div>
-                    <div id="new-record-badge" class="hidden mt-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded animate-bounce-in">NOUVEAU RECORD !</div>
+                
+                <!-- Colonne 2 : Série Actuelle (C'est ce qui manquait) -->
+                <div class="text-center border-x border-white/10">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Série</div>
+                    <div id="final-streak" class="font-heading text-4xl text-plk-blue">0</div>
+                </div>
+
+                <!-- Colonne 3 : Best Streak -->
+                <div class="text-center relative">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Record</div>
+                    <div id="final-best-streak" class="font-heading text-4xl text-white">0</div>
+                    <!-- Badge Nouveau Record -->
+                    <div id="new-record-badge" class="hidden absolute top-[-15px] right-[-10px] md:right-[20px] bg-yellow-500 text-black text-[8px] font-bold px-2 py-1 rounded animate-bounce-in transform rotate-12">
+                        NEW !
+                    </div>
                 </div>
             </div>
 
@@ -548,7 +561,7 @@
             // Display UI
             document.getElementById('gameover-screen').classList.remove('hidden');
             document.getElementById('final-score').innerText = score;
-            document.getElementById('final-streak').innerText = streak;
+            document.getElementById('final-streak').innerText = streak; // MAINTENANT ÇA MARCHE
             document.getElementById('final-best-streak').innerText = userBestStreak;
             
             if (isNewRecord) {
