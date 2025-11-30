@@ -28,7 +28,16 @@
                     animation: {
                         'spin-vinyl': 'spin 1.8s linear infinite', // Rotation plus fluide
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-in': 'bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards'
+                    },
+                    keyframes: {
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)', opacity: '1' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
                     }
                 }
             }
@@ -252,8 +261,9 @@
                 </div>
                 <div class="w-px bg-white/10 h-12"></div>
                 <div class="text-center">
-                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Meilleure Série</div>
-                    <div id="final-streak" class="font-heading text-4xl text-plk-blue">0</div>
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Best Streak</div>
+                    <div id="final-best-streak" class="font-heading text-4xl text-plk-blue">0</div>
+                    <div id="new-record-badge" class="hidden mt-2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded animate-bounce-in">NOUVEAU RECORD !</div>
                 </div>
             </div>
 
@@ -271,8 +281,27 @@
     <audio id="audio-player" style="display:none;"></audio>
 
     <script type="module">
-        // Import de la BDD
+        // Import Firebase & Database
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { PLK_RAW_DISCOGRAPHY, ALBUM_COVERS } from './plk_database.js';
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
         // --- VARIABLES JEU ---
         let songs = [];
@@ -283,6 +312,8 @@
         let titleAttempts = 2;
         let albumAttempts = 1;
         let phase = 'waiting';
+        let currentUser = null;
+        let userBestStreak = 0;
 
         // --- DOM ---
         const audio = document.getElementById('audio-player');
@@ -295,8 +326,30 @@
         // Préparation des musiques
         Object.values(PLK_RAW_DISCOGRAPHY).forEach(album => songs.push(...album));
 
+        // --- AUTH & DATA LOADING ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserStats();
+            } else {
+                alert("Connectez-vous pour sauvegarder votre record !");
+                // window.location.href = "index.html"; // Optionnel : Redirection
+            }
+        });
+
+        async function loadUserStats() {
+            if (!currentUser) return;
+            const statsRef = ref(db, `users/${currentUser.uid}/stats/plk`);
+            try {
+                const snapshot = await get(statsRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    userBestStreak = data.best_streak || 0;
+                }
+            } catch (e) { console.error("Erreur chargement stats", e); }
+        }
+
         // --- CHEAT SCRIPT (Exposé Globalement) ---
-        // Tape 'giveAnswer()' dans la console F12 pour remplir la réponse
         window.giveAnswer = () => {
             if(currentSong && phase === 'title') {
                 input.value = currentSong.title;
@@ -314,6 +367,7 @@
             streak = 0;
             updateUI();
             document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('new-record-badge').classList.add('hidden');
             input.disabled = false;
             nextRound();
         };
@@ -472,13 +526,35 @@
             }, 1000);
         }
 
-        function gameOver() {
+        async function gameOver() {
             phase = 'gameover';
             clearInterval(timerInterval);
             audio.pause();
+            
+            // Update Stats Firebase
+            let isNewRecord = false;
+            if (currentUser) {
+                if (streak > userBestStreak) {
+                    userBestStreak = streak;
+                    isNewRecord = true;
+                    // Sauvegarde Firebase
+                    update(ref(db, `users/${currentUser.uid}/stats/plk`), {
+                        best_streak: streak,
+                        last_played: new Date().toISOString()
+                    });
+                }
+            }
+
+            // Display UI
             document.getElementById('gameover-screen').classList.remove('hidden');
             document.getElementById('final-score').innerText = score;
             document.getElementById('final-streak').innerText = streak;
+            document.getElementById('final-best-streak').innerText = userBestStreak;
+            
+            if (isNewRecord) {
+                document.getElementById('new-record-badge').classList.remove('hidden');
+            }
+
             document.getElementById('final-answer').innerText = `${currentSong.title} (${currentSong.album})`;
         }
 
