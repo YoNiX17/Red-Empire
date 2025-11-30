@@ -1,0 +1,137 @@
+// --- COVERS (Images) ---
+// J'utilise ton image de profil par défaut, tu pourras mettre les vraies covers d'albums plus tard
+const DEFAULT_IMG = "https://i.postimg.cc/D0xX2b5w/channels4-profile.jpg";
+
+export const ALBUM_COVERS = {
+    "Pyramide": "https://i.scdn.co/image/ab67616d0000b273932c23074037125580348553", // Cover Pyramide (si dispo, sinon met DEFAULT_IMG)
+    "Carré": "https://i.scdn.co/image/ab67616d0000b27359b75634d25da77226d1b21e", // Cover Carré
+    "Telegram 2": "https://i.scdn.co/image/ab67616d0000b273a16b46d13d5e88e39d461943", 
+    "Telegram": "https://i.scdn.co/image/ab67616d0000b273b6072788307540206559713b",
+    "Feat.": DEFAULT_IMG,
+    "Single": DEFAULT_IMG
+};
+
+// --- DISCOGRAPHIE ---
+export const WERENOI_RAW_DISCOGRAPHY = {
+    "Pyramide": [
+        { title: "16.02.2024", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 16.02.2024.{ext}.mp3" },
+        { title: "Animal", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Animal.{ext}.mp3" },
+        { title: "Chaleur", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Chaleur.{ext}.mp3" },
+        { title: "FBI", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - FBI.{ext}.mp3" },
+        { title: "Je suis en moto", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Je suis en moto.{ext}.mp3" },
+        { title: "La vie de star", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - La vie de star.{ext}.mp3" },
+        { title: "Location", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Location.{ext}.mp3" },
+        { title: "Picasso", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Picasso.{ext}.mp3" },
+        { title: "Pyramide", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Pyramide.{ext}.mp3" },
+        { title: "Pétunias", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Pétunias.{ext}.mp3" },
+        { title: "Téléphérique", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Téléphérique.{ext}.mp3" },
+        { title: "Témoin", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Témoin.{ext}.mp3" },
+        { title: "Vermine", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Vermine.{ext}.mp3" },
+        { title: "Maudit", album: "Pyramide", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Maudit.{ext}.mp3" }
+    ],
+    "Carré": [
+        { title: "10.03.2023", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 10.03.2023.{ext}.mp3" },
+        { title: "3x filtré", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 3x filtré.{ext}.mp3" },
+        { title: "All eyes on me", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - All eyes on me.{ext}.mp3" },
+        { title: "Boussole", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Boussole.{ext}.mp3" },
+        { title: "Chemin d'or", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Chemin d'or.{ext}.mp3" },
+        { title: "Ciao", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Ciao.{ext}.mp3" },
+        { title: "Escorte", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Escorte.{ext}.mp3" },
+        { title: "Grisaille", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Grisaille.{ext}.mp3" },
+        { title: "Intro Rolex", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Intro Rolex.{ext}.mp3" },
+        { title: "L'ancien", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - L'ancien.{ext}.mp3" },
+        { title: "Laboratoire", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Laboratoire.{ext}.mp3" },
+        { title: "Maison hantée", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Maison hantée.{ext}.mp3" },
+        { title: "Millionnaire", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Millionnaire.{ext}.mp3" },
+        { title: "Nos labels c'est du papel", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Nos labels c'est du papel.{ext}.mp3" },
+        { title: "Ordinateur", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Ordinateur.{ext}.mp3" },
+        { title: "Riri", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Riri.{ext}.mp3" },
+        { title: "Rude Boy", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Rude Boy.{ext}.mp3" },
+        { title: "Salaire", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Salaire.{ext}.mp3" },
+        { title: "Sale histoire", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Sale histoire.{ext}.mp3" },
+        { title: "Satan 2", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Satan 2.{ext}.mp3" },
+        { title: "Selfie", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Selfie.{ext}.mp3" },
+        { title: "Titanic", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Titanic.{ext}.mp3" },
+        { title: "Tout seul", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Tout seul.{ext}.mp3" },
+        { title: "Tu connais", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Tu connais.{ext}.mp3" },
+        { title: "Virus", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Virus.{ext}.mp3" },
+        { title: "Vroum Vroum", album: "Carré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Vroum Vroum.{ext}.mp3" }
+    ],
+    "Telegram 2": [
+        { title: "Bang", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Bang.{ext}.mp3" },
+        { title: "CR", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - CR.{ext}.mp3" },
+        { title: "Casse bélier", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Casse bélier.{ext}.mp3" },
+        { title: "Clair de Lune", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Clair de Lune.{ext}.mp3" },
+        { title: "Colisée", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Colisée.{ext}.mp3" },
+        { title: "Crédibilité", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Crédibilité.{ext}.mp3" },
+        { title: "Dans un verre", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Dans un verre.{ext}.mp3" },
+        { title: "Diamant Noir", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Diamant Noir.{ext}.mp3" },
+        { title: "Déjà vu", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Déjà vu.{ext}.mp3" },
+        { title: "Embouteillé", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Embouteillé.{ext}.mp3" },
+        { title: "Emelyne", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Emelyne.{ext}.mp3" },
+        { title: "FTR", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - FTR.{ext}.mp3" },
+        { title: "Faillite", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Faillite.{ext}.mp3" },
+        { title: "Figaro", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Figaro.{ext}.mp3" },
+        { title: "First", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - First.{ext}.mp3" },
+        { title: "Gulfstream", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Gulfstream.{ext}.mp3" },
+        { title: "Industry Plant", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Industry Plant.{ext}.mp3" },
+        { title: "Intro Morphée", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Intro Morphée.{ext}.mp3" },
+        { title: "Jalouse", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Jalouse.{ext}.mp3" },
+        { title: "L'or et la pierre", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - L'or et la pierre.{ext}.mp3" },
+        { title: "La famine", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - La famine.{ext}.mp3" },
+        { title: "Le sas", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Le sas.{ext}.mp3" },
+        { title: "Les codes", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Les codes.{ext}.mp3" },
+        { title: "Magot", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Magot.{ext}.mp3" },
+        { title: "Malus", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Malus.{ext}.mp3" },
+        { title: "Mauvaise", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Mauvaise.{ext}.mp3" },
+        { title: "Money", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Money.{ext}.mp3" },
+        { title: "Moteur brûlant", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Moteur brûlant.{ext}.mp3" },
+        { title: "Ndrangheta", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Ndrangheta.{ext}.mp3" },
+        { title: "Oméga", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Oméga.{ext}.mp3" },
+        { title: "Piano", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Piano.{ext}.mp3" },
+        { title: "Poney", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Poney.{ext}.mp3" },
+        { title: "Rolls Royce", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Rolls Royce.{ext}.mp3" },
+        { title: "Triple V", album: "Telegram 2", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Triple V.{ext}.mp3" }
+    ],
+    "Telegram": [
+        { title: "3 singes", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 3 singes.{ext}.mp3" },
+        { title: "5 étoiles", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 5 étoiles.{ext}.mp3" },
+        { title: "7 vie la", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 7 vie la.{ext}.mp3" },
+        { title: "Alpha", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Alpha.{ext}.mp3" },
+        { title: "Balkans", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Balkans.{ext}.mp3" },
+        { title: "Balmain", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Balmain.{ext}.mp3" },
+        { title: "C63", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - C63.{ext}.mp3" },
+        { title: "Criminel", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Criminel.{ext}.mp3" },
+        { title: "Derek", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Derek.{ext}.mp3" },
+        { title: "Des ténèbres", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Des ténèbres.{ext}.mp3" },
+        { title: "Dispense", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Dispense.{ext}.mp3" },
+        { title: "Faf", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Faf.{ext}.mp3" },
+        { title: "Fort", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Fort.{ext}.mp3" },
+        { title: "Jamal", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Jamal.{ext}.mp3" },
+        { title: "Scarface", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Scarface.{ext}.mp3" },
+        { title: "Solitaire", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Solitaire.{ext}.mp3" },
+        { title: "Vulgaire", album: "Telegram", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - Vulgaire.{ext}.mp3" }
+    ],
+    "Apparitions / Featurings": [
+        { title: "PERFORMANTE", album: "Feat. Dinos", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Dinos - PERFORMANTE.{ext}.mp3" },
+        { title: "La vie de Cesar", album: "Feat. Dosseh", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Dosseh - La vie de Cesar.{ext}.mp3" },
+        { title: "Saison", album: "Feat. HMZ", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/HMZ - Saison.{ext}.mp3" },
+        { title: "DRAGONS", album: "Feat. Hamza", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Hamza - DRAGONS.{ext}.mp3" },
+        { title: "Mélanine", album: "Feat. Heuss L'enfoiré", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Heuss L'enfoiré - Mélanine.{ext}.mp3" },
+        { title: "ON EN REPARLERA", album: "Feat. Hös Copperfield", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Hös Copperfield - ON EN REPARLERA.{ext}.mp3" },
+        { title: "PHOTO", album: "Feat. Hös Copperfield", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Hös Copperfield - PHOTO.{ext}.mp3" },
+        { title: "Tucibi", album: "BO En Passant Pécho", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Kore - Tucibi - Extrait de la BO de « En Passant Pécho ».{ext}.mp3" },
+        { title: "Senor de los Gallos", album: "Feat. Lacrim", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Lacrim - Senor de los Gallos.{ext}.mp3" },
+        { title: "CORDILLÈRE", album: "Feat. Maes", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Maes - CORDILLÈRE.{ext}.mp3" },
+        { title: "BOSS", album: "Feat. No Limit", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/No Limit - BOSS.{ext}.mp3" },
+        { title: "Ali", album: "Feat. Rimkus", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Rimkus - Ali.{ext}.mp3" },
+        { title: "Carré d'as", album: "Feat. Rimkus", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Rimkus - Carré d'as.{ext}.mp3" },
+        { title: "METALLICA", album: "Feat. SDM", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/SDM - METALLICA.{ext}.mp3" },
+        { title: "Under Armour", album: "Feat. Zkr", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Zkr - Under Armour.{ext}.mp3" }
+    ],
+    "Singles / Hors Album": [
+        { title: "11.04.2025", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 11.04.2025.{ext}.mp3" },
+        { title: "6 étoiles", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - 6 étoiles.{ext}.mp3" },
+        { title: "En pétard", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Werenoi/Werenoi - En pétard.{ext}.mp3" }
+    ]
+};
