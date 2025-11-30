@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WERENOI | La League</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        werenoi: { 
+                            gold: '#fbbf24', // Or Werenoi (Amber-400)
+                            dark: '#000000', // Noir profond
+                            concrete: '#27272a' // Gris sombre "Goudron"
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['Anton', 'sans-serif'],
+                        ui: ['Inter', 'sans-serif'],      
+                        mono: ['Rajdhani', 'sans-serif']  
+                    },
+                    animation: {
+                        'spin-vinyl': 'spin 1.8s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-in': 'bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards'
+                    },
+                    keyframes: {
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)', opacity: '1' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #000000; 
+            color: #e2e8f0; 
+            overflow: hidden; 
+        }
+
+        /* FOND : Dégradé radial sombre et or (Ambiance sombre) */
+        .bg-spotlight {
+            background: radial-gradient(circle at 50% 30%, #451a03 0%, #000000 70%); /* Teinte marron/or très sombre */
+            opacity: 0.8;
+        }
+
+        /* EFFET VERRE */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 191, 36, 0.1); /* Bordure dorée très subtile */
+        }
+
+        /* VINYLE RÉALISTE */
+        .vinyl-container {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: #0a0a0a;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Les rainures */
+        .vinyl-grooves {
+            position: absolute;
+            inset: 5px;
+            border-radius: 50%;
+            background: 
+                repeating-radial-gradient(
+                #0a0a0a 0, 
+                #0a0a0a 2px, 
+                #171717 3px, 
+                #171717 4px
+                );
+            background-image: 
+                linear-gradient(135deg, transparent 40%, rgba(251, 191, 36, 0.1) 50%, transparent 60%), /* Reflet doré */
+                repeating-radial-gradient(#0a0a0a 0, #0a0a0a 2px, #171717 3px, #171717 4px);
+        }
+
+        .vinyl-label {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            /* Dégradé Or pour Werenoi */
+            background: linear-gradient(135deg, #fcd34d, #b45309); 
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            border: 4px solid #000000;
+        }
+
+        /* Logo sur le disque */
+        .artist-logo-text {
+            font-family: 'Anton', sans-serif;
+            font-size: 2.5rem;
+            color: #000000;
+            line-height: 1;
+            letter-spacing: -1px;
+            transform: scaleY(1.1);
+        }
+
+        /* Animation Rotation */
+        .spinning { animation: spin-vinyl 4s linear infinite; }
+        .paused { animation-play-state: paused; }
+
+        @keyframes spin-vinyl { 100% { transform: rotate(360deg); } }
+
+        /* Input Clean Werenoi Style */
+        .input-clean {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #52525b;
+            color: white;
+            font-family: 'Anton', sans-serif;
+            letter-spacing: 1px;
+            font-size: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        .input-clean:focus {
+            outline: none;
+            border-color: #fbbf24; /* Focus Gold */
+            box-shadow: 0 10px 20px -10px rgba(251, 191, 36, 0.2);
+        }
+        .input-clean::placeholder {
+            color: #52525b;
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-size: 1.5rem;
+            letter-spacing: 0;
+        }
+
+        /* Style Slider Volume */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #fbbf24; /* Thumb Gold */
+            cursor: pointer;
+            margin-top: -4px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+
+    </style>
+</head>
+<body class="h-screen flex flex-col relative">
+
+    <div class="fixed inset-0 bg-spotlight z-[-1]"></div>
+    <div class="fixed inset-0 z-[-1]" style="background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.1;"></div>
+
+    <nav class="h-24 w-full flex items-center justify-between px-8 md:px-16 z-50 relative">
+        
+        <div class="flex items-center gap-6">
+            <a href="streak_selection.html" class="group flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-werenoi-gold group-hover:border-werenoi-gold group-hover:text-black transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </div>
+            </a>
+
+            <div class="hidden md:flex items-center gap-2 group">
+                <button id="mute-btn" class="text-gray-400 hover:text-werenoi-gold transition-colors">
+                    <i class="fa-solid fa-volume-high" id="vol-icon"></i>
+                </button>
+                <div class="w-0 overflow-hidden group-hover:w-24 transition-all duration-300 ease-out flex items-center">
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-20 ml-2">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center absolute left-1/2 transform -translate-x-1/2">
+            <div class="text-[10px] font-mono text-werenoi-gold uppercase tracking-[0.3em] mb-1">Score Actuel</div>
+            <div class="font-heading text-5xl text-white tracking-wide" id="score-display">0</div>
+        </div>
+
+        <div class="flex flex-col items-end opacity-80">
+            <div class="flex items-center gap-2 text-werenoi-gold">
+                <i class="fa-solid fa-crown"></i> <span class="font-heading text-2xl" id="streak-display">0</span>
+            </div>
+            <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400">Série</div>
+        </div>
+    </nav>
+
+    <div class="md:hidden absolute top-24 left-8 z-40 flex items-center gap-3 bg-black/60 px-3 py-2 rounded-full border border-werenoi-gold/20 backdrop-blur-sm">
+        <i class="fa-solid fa-volume-high text-xs text-werenoi-gold"></i>
+        <input type="range" id="volume-slider-mobile" min="0" max="1" step="0.05" value="0.5" class="w-20">
+    </div>
+
+    <div class="flex-grow flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto">
+        
+        <div class="relative group">
+            
+            <div id="disk-container" class="vinyl-container paused transition-all duration-700">
+                <div class="vinyl-grooves"></div>
+                <div class="vinyl-label">
+                    <span class="artist-logo-text">WERENOI</span>
+                    <div class="h-0.5 w-10 bg-black mt-1 mb-1"></div>
+                    <span class="text-[8px] font-mono font-bold text-black tracking-widest">LA LEAGUE</span>
+                </div>
+                <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-transparent opacity-20 pointer-events-none"></div>
+            </div>
+
+            <div id="cover-reveal" class="absolute inset-0 flex flex-col items-center justify-center opacity-0 scale-90 transition-all duration-500 pointer-events-none z-20">
+                <div class="relative w-[320px] h-[320px] rounded shadow-2xl border border-white/10 overflow-hidden">
+                    <img id="reveal-img" src="" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 inset-x-0 bg-black/90 backdrop-blur-sm p-4 text-center border-t border-werenoi-gold/30">
+                        <p class="text-xs text-werenoi-gold font-mono uppercase tracking-widest mb-1">Projet</p>
+                        <h3 id="reveal-album-text" class="text-xl font-heading text-white uppercase tracking-wide">ALBUM NAME</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-full max-w-md mt-16 mb-8 relative">
+            <div class="flex justify-between text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">
+                <span id="status-text">En attente...</span>
+                <span id="timer-text" class="text-werenoi-gold">20.0</span>
+            </div>
+            <div class="h-[2px] bg-white/10 w-full overflow-hidden relative">
+                <div id="timer-bar" class="absolute top-0 left-0 h-full bg-werenoi-gold w-full shadow-[0_0_15px_#fbbf24] transition-all duration-100 ease-linear"></div>
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl px-4 relative z-30">
+            
+            <div class="absolute -top-12 left-0 w-full flex justify-center gap-4 pointer-events-none">
+                <div id="badge-title" class="hidden px-4 py-1 bg-green-600 text-white font-heading uppercase text-sm tracking-wide transform -skew-x-12 animate-fade-in border border-green-400">
+                    TITRE OK
+                </div>
+                <div id="badge-album" class="hidden px-4 py-1 bg-werenoi-gold text-black font-heading uppercase text-sm tracking-wide transform -skew-x-12 animate-fade-in border border-white/20">
+                    ALBUM OK
+                </div>
+            </div>
+
+            <input type="text" id="input-guess" 
+                   placeholder="ENTREZ LE TITRE..." 
+                   class="input-clean w-full pb-4" 
+                   autocomplete="off" disabled>
+            
+            <div class="text-center mt-6 opacity-40 hover:opacity-100 transition-opacity">
+                <p class="text-[10px] font-mono uppercase tracking-[0.2em]">Appuyez sur Entrée pour valider</p>
+                <p class="text-[10px] font-mono mt-1 text-werenoi-gold">Essais restants : <span id="attempts-count">2</span></p>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="gameover-screen" class="hidden fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
+        <h1 class="font-heading text-[120px] leading-none text-white opacity-5 select-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">GAME OVER</h1>
+        
+        <div class="relative z-10 text-center w-full max-w-2xl px-4">
+            <div class="mb-2 text-werenoi-gold font-mono text-sm tracking-[0.5em] uppercase">La League</div>
+            <h2 class="font-heading text-6xl text-white mb-12">SCORE FINAL</h2>
+            
+            <div class="grid grid-cols-3 gap-8 mb-16 items-start">
+                
+                <div class="text-center">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Points</div>
+                    <div id="final-score" class="font-heading text-4xl text-white">0</div>
+                </div>
+                
+                <div class="text-center border-x border-white/10">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Série</div>
+                    <div id="final-streak" class="font-heading text-4xl text-werenoi-gold">0</div>
+                </div>
+
+                <div class="text-center relative">
+                    <div class="text-gray-500 text-xs font-mono uppercase mb-2">Record</div>
+                    <div id="final-best-streak" class="font-heading text-4xl text-white">0</div>
+                    <div id="new-record-badge" class="hidden absolute top-[-15px] right-[-10px] md:right-[20px] bg-werenoi-gold text-black text-[8px] font-bold px-2 py-1 rounded animate-bounce-in transform rotate-12 border border-white">
+                        NEW RECORD
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-sm font-mono text-gray-400 mb-8 border-b border-white/10 pb-4 inline-block px-8">
+                C'était : <span id="final-answer" class="text-werenoi-gold font-bold ml-2">???</span>
+            </div>
+            <br>
+
+            <div class="flex gap-4 justify-center">
+                <button onclick="startGame()" class="px-10 py-4 bg-werenoi-gold text-black font-heading text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-300 transform skew-x-[-10deg]">
+                    <span class="skew-x-[10deg] inline-block">Rejouer</span>
+                </button>
+                <a href="rapfrstreak.html" class="px-10 py-4 border border-white/20 text-white font-heading text-xl uppercase tracking-wider hover:bg-white/10 transition-colors duration-300 transform skew-x-[-10deg]">
+                    <span class="skew-x-[10deg] inline-block">Classement</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-player" style="display:none;"></audio>
+
+    <script type="module">
+        // Import Firebase & Database
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // ATTENTION: Remplacer l'import ci-dessous par votre fichier de données Werenoi
+        import { WERENOI_RAW_DISCOGRAPHY, ALBUM_COVERS } from './werenoi_database.js'; 
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- VARIABLES JEU ---
+        let songs = [];
+        let currentSong = null;
+        let score = 0;
+        let streak = 0;
+        let timerInterval = null;
+        let titleAttempts = 2;
+        let albumAttempts = 1;
+        let phase = 'waiting';
+        let currentUser = null;
+        let userBestStreak = 0;
+        let currentVolume = parseFloat(localStorage.getItem('werenoi_volume')) || 0.5; // Sauvegarde spécifique Werenoi
+
+        // --- DOM ---
+        const audio = document.getElementById('audio-player');
+        const input = document.getElementById('input-guess');
+        const timerBar = document.getElementById('timer-bar');
+        const timerText = document.getElementById('timer-text');
+        const statusText = document.getElementById('status-text');
+        const diskContainer = document.getElementById('disk-container');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeSliderMobile = document.getElementById('volume-slider-mobile');
+        const muteBtn = document.getElementById('mute-btn');
+        const volIcon = document.getElementById('vol-icon');
+
+        // Préparation des musiques (Adapté Werenoi)
+        if(typeof WERENOI_RAW_DISCOGRAPHY !== 'undefined') {
+            Object.values(WERENOI_RAW_DISCOGRAPHY).forEach(album => songs.push(...album));
+        } else {
+            console.error("Base de données Werenoi non trouvée ! Vérifiez l'import.");
+        }
+
+        // --- GESTION VOLUME ---
+        function setVolume(val) {
+            currentVolume = parseFloat(val);
+            audio.volume = currentVolume;
+            if(volumeSlider) volumeSlider.value = currentVolume;
+            if(volumeSliderMobile) volumeSliderMobile.value = currentVolume;
+            localStorage.setItem('werenoi_volume', currentVolume);
+            
+            // Icon update
+            if(volIcon) {
+                if(currentVolume === 0) volIcon.className = "fa-solid fa-volume-xmark";
+                else if(currentVolume < 0.5) volIcon.className = "fa-solid fa-volume-low";
+                else volIcon.className = "fa-solid fa-volume-high";
+            }
+        }
+
+        // Init Volume
+        setVolume(currentVolume);
+
+        if(volumeSlider) volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+        if(volumeSliderMobile) volumeSliderMobile.addEventListener('input', (e) => setVolume(e.target.value));
+        if(muteBtn) muteBtn.addEventListener('click', () => {
+            if(currentVolume > 0) {
+                localStorage.setItem('werenoi_prev_vol', currentVolume);
+                setVolume(0);
+            } else {
+                setVolume(localStorage.getItem('werenoi_prev_vol') || 0.5);
+            }
+        });
+
+        // --- AUTH & DATA LOADING ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserStats();
+            } else {
+                // Optionnel : Gérer l'état non connecté
+                // alert("Connectez-vous pour sauvegarder votre record !");
+            }
+        });
+
+        async function loadUserStats() {
+            if (!currentUser) return;
+            // Charge les stats depuis la section Werenoi
+            const statsRef = ref(db, `streak/rap_fr/werenoi/${currentUser.uid}`);
+            try {
+                const snapshot = await get(statsRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    userBestStreak = data.best_streak || 0;
+                }
+            } catch (e) { console.error("Erreur chargement stats", e); }
+        }
+
+        // --- CHEAT SCRIPT ---
+        window.giveAnswer = () => {
+            if(currentSong && phase === 'title') {
+                input.value = currentSong.title;
+                input.focus();
+            } else if (currentSong && phase === 'album') {
+                input.value = currentSong.album;
+                input.focus();
+            } else {
+                console.log("Pas de question active.");
+            }
+        };
+
+        window.startGame = () => {
+            score = 0;
+            streak = 0;
+            updateUI();
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('new-record-badge').classList.add('hidden');
+            input.disabled = false;
+            nextRound();
+        };
+
+        function nextRound() {
+            if(songs.length === 0) { alert("Erreur: Aucune chanson chargée."); return; }
+
+            // Reset
+            const randomIndex = Math.floor(Math.random() * songs.length);
+            currentSong = songs[randomIndex];
+            phase = 'title';
+            titleAttempts = 2;
+            albumAttempts = 1;
+
+            // UI Clean
+            diskContainer.classList.remove('opacity-0', 'scale-50');
+            diskContainer.classList.add('spinning');
+            diskContainer.classList.remove('paused');
+            
+            document.getElementById('cover-reveal').classList.add('opacity-0', 'scale-90');
+            document.getElementById('badge-title').classList.add('hidden');
+            document.getElementById('badge-album').classList.add('hidden');
+
+            input.value = "";
+            input.placeholder = "TITRE DU SON ?";
+            input.disabled = false;
+            input.focus();
+            updateAttemptsUI();
+
+            // Audio Start (Random 20s-60s)
+            const offset = 20 + Math.random() * 40;
+            audio.src = currentSong.url;
+            audio.currentTime = offset;
+            audio.volume = currentVolume;
+
+            audio.play().then(() => {
+                startTimer(20);
+                statusText.innerText = "ÉCOUTE EN COURS...";
+                statusText.className = "text-werenoi-gold animate-pulse";
+            }).catch(() => {
+                statusText.innerText = "CLIQUEZ POUR DÉMARRER";
+                document.addEventListener('click', () => { audio.play(); startTimer(20); }, { once: true });
+            });
+        }
+
+        function startTimer(seconds) {
+            clearInterval(timerInterval);
+            let timeLeft = seconds;
+            
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+            void timerBar.offsetWidth;
+            timerBar.style.transition = `width ${seconds}s linear`;
+            timerBar.style.width = '0%';
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                timerText.innerText = Math.max(0, timeLeft).toFixed(1);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 100);
+        }
+
+        function handleTimeOut() {
+            if (phase === 'title') gameOver();
+            else if (phase === 'album') {
+                statusText.innerText = "TEMPS ÉCOULÉ POUR LE PROJET";
+                setTimeout(reveal, 1000);
+            }
+        }
+
+        function submitGuess() {
+            const guess = input.value.trim();
+            if (!guess || phase === 'reveal') return;
+
+            if (phase === 'title') {
+                if (isCloseMatch(guess, currentSong.title)) {
+                    score += 1;
+                    phase = 'album';
+                    
+                    document.getElementById('badge-title').classList.remove('hidden');
+                    input.value = "";
+                    input.placeholder = "QUEL PROJET / ALBUM ?";
+                    
+                    clearInterval(timerInterval);
+                    timerBar.style.transition = 'none';
+                    timerBar.style.width = '100%'; 
+                    
+                    statusText.innerText = "TITRE VALIDÉ ! BONUS PROJET ?";
+                    statusText.className = "text-green-400";
+                    updateUI();
+                } else {
+                    titleAttempts--;
+                    input.classList.add('border-red-500');
+                    setTimeout(() => input.classList.remove('border-red-500'), 500);
+                    
+                    if (titleAttempts <= 0) gameOver();
+                    else input.value = "";
+                    updateAttemptsUI();
+                }
+            } else if (phase === 'album') {
+                let target = currentSong.album;
+                if (target.includes("Feat") && !isCloseMatch(guess, target)) {
+                      const guest = target.replace(/feat\.?/i, '').trim();
+                      if (isCloseMatch(guess, guest)) target = guess;
+                }
+
+                if (isCloseMatch(guess, target)) {
+                    score += 0.5;
+                    document.getElementById('badge-album').classList.remove('hidden');
+                    statusText.innerText = "EXCELLENT !";
+                } else {
+                    statusText.innerText = "PROJET RATÉ...";
+                }
+                updateUI();
+                reveal();
+            }
+        }
+
+        function reveal() {
+            phase = 'reveal';
+            clearInterval(timerInterval);
+            streak++;
+            updateUI();
+
+            diskContainer.classList.add('paused');
+            diskContainer.classList.add('opacity-0', 'scale-50');
+
+            const revealEl = document.getElementById('cover-reveal');
+            revealEl.classList.remove('opacity-0', 'scale-90');
+            
+            // Gestion Cover Werenoi
+            let url = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
+            if (!url && currentSong.album.includes("Feat")) url = ALBUM_COVERS["Feat."];
+            if (!url) url = ALBUM_COVERS["Single"];
+
+            document.getElementById('reveal-img').src = url || "https://placeholder.com/320";
+            document.getElementById('reveal-album-text').innerText = currentSong.album;
+            
+            input.value = `${currentSong.title}`;
+            input.disabled = true;
+
+            let cd = 5; // Réduit à 5s pour plus de dynamisme
+            timerText.innerText = "SUIVANT: " + cd;
+            const int = setInterval(() => {
+                cd--;
+                timerText.innerText = "SUIVANT: " + cd;
+                if (cd <= 0) {
+                    clearInterval(int);
+                    nextRound();
+                }
+            }, 1000);
+        }
+
+        async function gameOver() {
+            phase = 'gameover';
+            clearInterval(timerInterval);
+            audio.pause();
+            
+            // Update Stats Firebase
+            let isNewRecord = false;
+            if (currentUser) {
+                if (streak > userBestStreak) {
+                    userBestStreak = streak;
+                    isNewRecord = true;
+
+                    const userRef = ref(db, `users/${currentUser.uid}`);
+                    let savedUsername = currentUser.displayName;
+                    let savedAvatar = currentUser.photoURL;
+
+                    try {
+                        const userSnap = await get(userRef);
+                        if (userSnap.exists()) {
+                            const uVal = userSnap.val();
+                            if(uVal.username) savedUsername = uVal.username;
+                            if(uVal.avatar) savedAvatar = uVal.avatar;
+                        }
+                    } catch(e) { console.log("Info user fetch error", e); }
+
+                    // Sauvegarde dans la db Werenoi
+                    update(ref(db, `streak/rap_fr/werenoi/${currentUser.uid}`), {
+                        username: savedUsername,
+                        avatar: savedAvatar,
+                        best_streak: streak,
+                        artist: "Werenoi", 
+                        date: new Date().toISOString()
+                    });
+                }
+            }
+
+            // Display UI
+            document.getElementById('gameover-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-streak').innerText = streak;
+            document.getElementById('final-best-streak').innerText = userBestStreak;
+            
+            if (isNewRecord) {
+                document.getElementById('new-record-badge').classList.remove('hidden');
+            }
+
+            document.getElementById('final-answer').innerText = `${currentSong.title} (${currentSong.album})`;
+        }
+
+        function updateUI() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('streak-display').innerText = streak;
+        }
+
+        function updateAttemptsUI() {
+            const el = document.getElementById('attempts-count');
+            el.innerText = phase === 'title' ? titleAttempts : albumAttempts;
+        }
+
+        // --- UTILS ---
+        function isCloseMatch(input, target) {
+            if(!target) return false;
+            const a = clean(input);
+            const b = clean(target);
+            if (a === b) return true;
+            if (b.includes(a) && a.length > 3) return true;
+            return levenshtein(a, b) <= 2;
+        }
+
+        function clean(s) {
+            return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function levenshtein(a, b) {
+            if(a.length == 0) return b.length; 
+            if(b.length == 0) return a.length; 
+            var matrix = [];
+            for(var i = 0; i <= b.length; i++){ matrix[i] = [i]; }
+            for(var j = 0; j <= a.length; j++){ matrix[0][j] = j; }
+            for(var i = 1; i <= b.length; i++){
+                for(var j = 1; j <= a.length; j++){
+                    if(b.charAt(i-1) == a.charAt(j-1)){
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitGuess(); });
+        window.onload = startGame;
+
+    </script>
+</body>
+</html>
