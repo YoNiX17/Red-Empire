@@ -71,7 +71,7 @@ export const TIAKOLA_RAW_DISCOGRAPHY = {
     "Single": [
         { title: "Pousse toi", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Pousse toi.{ext}.mp3" },
         { title: "Sombre mélodie", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Sombre mélodie.{ext}.mp3" },
-        { title: "T.I.A - A COLORS SHOW", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - T.I.A - A COLORS SHOW.{ext}.mp3" }
+        { title: "T.I.A", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - T.I.A - A COLORS SHOW.{ext}.mp3" }
     ],
     "Feat.": [
         { title: "Ami ou ennemi (Alonzo)", album: "Feat.", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Alonzo - Ami ou ennemi.{ext}.mp3" },
