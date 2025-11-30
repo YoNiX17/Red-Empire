@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Streak Leaderboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Anton&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000' },
+                        blue: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                        heading: ['Anton', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; }
+        .glass-panel { 
+            background: rgba(10, 20, 30, 0.85); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(59, 130, 246, 0.2); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); 
+        }
+        
+        .gold-row { background: linear-gradient(90deg, rgba(234, 179, 8, 0.1), transparent); border-left: 4px solid #eab308; }
+        .silver-row { background: linear-gradient(90deg, rgba(148, 163, 184, 0.1), transparent); border-left: 4px solid #94a3b8; }
+        .bronze-row { background: linear-gradient(90deg, rgba(180, 83, 9, 0.1), transparent); border-left: 4px solid #b45309; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-blue-600 selection:text-white flex flex-col min-h-screen bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+
+    <div class="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.15),#030303_80%)] pointer-events-none z-[-1]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-blue-900/30 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-5xl mx-auto px-6 flex items-center justify-between">
+            <a href="streak_selection.html" class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span class="font-mono font-bold tracking-wide">RETOUR</span>
+            </a>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-trophy text-yellow-500"></i>
+                <span class="font-display font-bold text-lg tracking-widest text-white">CLASSEMENT <span class="text-blue-500">RAP FR</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="pt-28 pb-16 px-4 max-w-4xl mx-auto w-full">
+        
+        <!-- HEADER -->
+        <div class="text-center mb-10">
+            <h1 class="font-display text-4xl md:text-5xl font-black text-white mb-2">TOP <span class="text-blue-500">SURVIVORS</span></h1>
+            <p class="text-gray-400 font-mono text-sm tracking-widest uppercase">Les meilleures séries du Rap Français</p>
+        </div>
+
+        <!-- LEADERBOARD LIST -->
+        <div class="glass-panel rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between text-xs font-mono text-gray-400 uppercase tracking-wider">
+                <div class="w-12 text-center">#</div>
+                <div class="flex-1 px-4">Joueur</div>
+                <div class="w-32 text-center">Artiste</div>
+                <div class="w-24 text-right">Série</div>
+            </div>
+            
+            <div id="leaderboard-list" class="flex flex-col">
+                <!-- Loading State -->
+                <div class="p-8 text-center text-gray-500 font-mono animate-pulse">
+                    Chargement des scores...
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function loadLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            // On récupère les scores globaux du Rap FR
+            const scoresRef = query(ref(db, 'streak/rap_fr/global'), orderByChild('best_streak'), limitToLast(50));
+            
+            try {
+                const snapshot = await get(scoresRef);
+                
+                if (snapshot.exists()) {
+                    list.innerHTML = '';
+                    const data = [];
+                    
+                    snapshot.forEach(childSnapshot => {
+                        data.push(childSnapshot.val());
+                    });
+                    
+                    // Firebase renvoie en ordre croissant (du plus petit au plus grand), on inverse
+                    data.reverse();
+
+                    data.forEach((entry, index) => {
+                        const rank = index + 1;
+                        let rowClass = "border-b border-white/5 hover:bg-white/5 transition-colors";
+                        let rankBadge = `<span class="text-gray-500 font-mono font-bold">${rank}</span>`;
+                        
+                        if (rank === 1) { 
+                            rowClass = "gold-row border-b border-white/5"; 
+                            rankBadge = `<i class="fa-solid fa-crown text-yellow-500"></i>`;
+                        } else if (rank === 2) { 
+                            rowClass = "silver-row border-b border-white/5"; 
+                            rankBadge = `<i class="fa-solid fa-medal text-gray-400"></i>`;
+                        } else if (rank === 3) { 
+                            rowClass = "bronze-row border-b border-white/5"; 
+                            rankBadge = `<i class="fa-solid fa-medal text-amber-700"></i>`;
+                        }
+
+                        // Si l'artiste n'est pas défini (anciens scores), on suppose que c'est PLK par défaut ou on met "Inconnu"
+                        const artistName = entry.artist || "PLK"; 
+
+                        const html = `
+                            <div class="${rowClass} flex items-center p-4 text-sm">
+                                <div class="w-12 text-center text-lg">${rankBadge}</div>
+                                <div class="flex-1 px-4 flex items-center gap-3 min-w-0">
+                                    <img src="${entry.avatar || 'https://ui-avatars.com/api/?name=' + entry.username}" class="w-8 h-8 rounded bg-black object-cover border border-white/10">
+                                    <span class="font-bold text-white truncate font-display tracking-wide">${entry.username || 'Anonyme'}</span>
+                                </div>
+                                <div class="w-32 text-center text-xs font-mono">
+                                    <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded border border-blue-500/30">${artistName}</span>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span class="font-heading text-2xl text-blue-400">${entry.best_streak}</span>
+                                </div>
+                            </div>
+                        `;
+                        list.insertAdjacentHTML('beforeend', html);
+                    });
+                } else {
+                    list.innerHTML = '<div class="p-8 text-center text-gray-500">Aucun score enregistré pour le moment.</div>';
+                }
+            } catch (error) {
+                console.error(error);
+                list.innerHTML = '<div class="p-8 text-center text-red-500">Erreur de chargement des scores.</div>';
+            }
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+</html>
