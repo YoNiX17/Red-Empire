@@ -35,33 +35,45 @@
     </script>
     <style>
         body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
-        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.4; pointer-events: none; }
         
-        /* Optimisation Glassmorphism : moins de blur pour la performance */
+        /* Canvas en arrière-plan avec opacité réduite pour perf */
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; pointer-events: none; }
+        
+        /* Optimisation Glassmorphism MAXIMALE */
         .glass-panel { 
-            background: rgba(10, 20, 30, 0.85); 
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(10, 20, 30, 0.9); /* Plus opaque pour moins dépendre du blur */
             border: 1px solid rgba(59, 130, 246, 0.2); 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Ombre simplifiée */
+            /* Blur réduit pour fluidité */
+            backdrop-filter: blur(4px); 
+            -webkit-backdrop-filter: blur(4px);
+            transform: translateZ(0); /* Force GPU */
         }
         
         .cat-card { 
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; 
+            transition: transform 0.2s ease, border-color 0.2s ease; 
             cursor: pointer; 
             position: relative; 
             overflow: hidden; 
-            will-change: transform; /* Optimisation GPU */
+            will-change: transform; 
         }
-        .cat-card:hover { transform: translateY(-5px) scale(1.01); box-shadow: 0 0 30px rgba(59, 130, 246, 0.25); border-color: #3b82f6; }
+        /* Animation hover simplifiée pour éviter le lag */
+        .cat-card:hover { 
+            transform: translateY(-4px); 
+            border-color: #3b82f6; 
+        }
         
         /* Modal Styles */
-        .modal-overlay { opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay { opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { transform: scale(0.95); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
+        .modal-content { transform: scale(0.98); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; }
         .modal-overlay.active .modal-content { transform: scale(1); opacity: 1; }
 
-        .artist-btn { transition: border-color 0.2s ease, background-color 0.2s ease; will-change: transform; }
+        .artist-btn { 
+            transition: border-color 0.2s ease; 
+            will-change: transform; 
+            border-width: 1px;
+        }
         .artist-btn:hover { border-color: #3b82f6; }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -71,15 +83,14 @@
 </head>
 <body class="antialiased selection:bg-blue-600 selection:text-white flex flex-col min-h-screen">
 
-    <!-- Backgrounds -->
     <canvas id="canvas-container"></canvas>
-    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_20%,black_100%)] pointer-events-none z-[-1]"></div>
+    <!-- Vignette simplifiée (CSS gradient au lieu d'image lourde) -->
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_40%,black_100%)] pointer-events-none z-[-1]"></div>
 
-    <!-- NAVIGATION -->
-    <nav class="fixed w-full z-50 border-b border-blue-900/30 bg-black/80 backdrop-blur-md py-4">
+    <nav class="fixed w-full z-50 border-b border-blue-900/30 bg-black/90 py-4">
         <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-3 group">
-                <i class="fa-solid fa-crown text-blue-500 text-2xl group-hover:animate-pulse"></i>
+                <i class="fa-solid fa-crown text-blue-500 text-2xl"></i>
                 <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
             </a>
             <div class="flex items-center space-x-8">
@@ -89,87 +100,83 @@
         </div>
     </nav>
 
-    <!-- HEADER -->
     <section class="pt-32 pb-8 text-center relative z-10 px-4">
         <div class="inline-block mb-2 px-3 py-1 border border-blue-500/30 rounded-full bg-blue-900/20">
             <span class="text-xs font-mono font-bold tracking-[0.2em] text-blue-300 uppercase">SURVIVAL MODE</span>
         </div>
-        <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-[0_0_25px_rgba(59,130,246,0.6)]">
-            STREAK <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">MUSICAL</span>
+        <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-4">
+            STREAK <span class="text-blue-500">MUSICAL</span>
         </h1>
-        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto">Combien de titres pouvez-vous enchaîner sans erreur ?</p>
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto">Combien de titres pouvez-vous enchaîner ?</p>
     </section>
 
-    <!-- SELECTION GRID -->
+    <!-- SELECTION GRID (Centré, Rap FR uniquement) -->
     <section class="flex-grow max-w-6xl mx-auto px-6 lg:px-8 pb-24 w-full relative z-10 flex flex-col justify-center items-center">
-        <!-- Grid centrée avec une seule colonne pour l'instant -->
-        <div class="w-full max-w-lg">
-            
-            <!-- CATEGORIE 1: RAP FR (Centré et mis en valeur) -->
-            <div onclick="openModal('modal-rap')" class="cat-card glass-panel rounded-2xl border border-blue-500/20 group h-96 flex flex-col justify-center items-center relative" data-aos="zoom-in">
-                <div class="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-black z-0"></div>
-                <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')]"></div>
+        <div class="w-full max-w-md">
+            <div onclick="openModal('modal-rap')" class="cat-card glass-panel rounded-2xl border border-blue-500/20 group h-80 flex flex-col justify-center items-center relative" data-aos="fade-up">
+                <!-- Fond statique léger -->
+                <div class="absolute inset-0 bg-gradient-to-b from-blue-900/10 to-black z-0"></div>
                 
-                <div class="relative z-10 text-center p-8 group-hover:translate-y-[-5px] transition-transform duration-500">
-                    <div class="w-32 h-32 mx-auto bg-blue-600/10 rounded-full flex items-center justify-center border-2 border-blue-500 mb-8 shadow-[0_0_30px_rgba(59,130,246,0.2)] animate-float">
-                        <i class="fa-solid fa-microphone text-5xl text-blue-400"></i>
+                <div class="relative z-10 text-center p-8">
+                    <div class="w-28 h-28 mx-auto bg-blue-600/10 rounded-full flex items-center justify-center border-2 border-blue-500 mb-6 shadow-[0_0_20px_rgba(59,130,246,0.2)] animate-float">
+                        <i class="fa-solid fa-microphone text-4xl text-blue-400"></i>
                     </div>
-                    <h2 class="font-display text-4xl font-black text-white mb-3 tracking-wide">RAP FRANÇAIS</h2>
-                    <p class="text-blue-300 font-mono text-sm uppercase tracking-widest border-t border-blue-500/30 pt-4 mt-4 inline-block px-4">
+                    <h2 class="font-display text-3xl font-black text-white mb-2 tracking-wide">RAP FRANÇAIS</h2>
+                    <p class="text-blue-300 font-mono text-xs uppercase tracking-widest border-t border-blue-500/30 pt-3 mt-3 inline-block px-4">
                         La Crème du Rap
                     </p>
                 </div>
             </div>
-
         </div>
     </section>
 
-    <!-- MODAL RAP FR -->
-    <div id="modal-rap" class="modal-overlay fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="modal-content w-full max-w-3xl bg-[#0a0a0a] border border-blue-500/50 rounded-3xl p-1 relative overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.2)]">
+    <!-- MODAL (Optimisé) -->
+    <div id="modal-rap" class="modal-overlay fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
+        <div class="modal-content w-full max-w-3xl bg-[#0a0a0a] border border-blue-500/50 rounded-3xl p-1 relative overflow-hidden shadow-2xl">
             
-            <div class="bg-[#0f172a] rounded-[22px] p-8 relative overflow-hidden">
-                <button onclick="closeModals()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors z-20">
-                    <i class="fa-solid fa-xmark text-3xl"></i>
-                </button>
-
-                <div class="text-center mb-10 relative z-10">
-                    <span class="text-blue-500 font-mono text-xs tracking-[0.3em] uppercase font-bold">Sélectionnez votre artiste</span>
-                    <h3 class="font-display text-4xl text-white font-black mt-2">RAP <span class="text-outline-blue text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white">FRANÇAIS</span></h3>
-                </div>
-
-                <!-- ARTIST GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                    
-                    <!-- ARTISTE 1: PLK (Mise à jour Image) -->
-                    <a href="blindtest_plk.html" class="artist-btn group relative h-48 bg-black border border-white/10 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-blue-500/20">
-                        <!-- Image de fond -->
-                        <img src="https://i.postimg.cc/DZ4p2k9Z/1900x1900-000000-80-0-0.jpg" alt="PLK" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out">
-                        
-                        <!-- Gradient Overlay pour lisibilité -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 group-hover:opacity-70 transition-opacity duration-300"></div>
-                        
-                        <!-- Contenu -->
-                        <div class="absolute bottom-0 w-full p-4 text-center z-10">
-                            <h4 class="font-display text-3xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors drop-shadow-md">PLK</h4>
-                            <span class="text-[10px] font-mono text-gray-300 uppercase tracking-widest bg-black/50 px-2 py-1 rounded border border-white/10">Polak</span>
-                        </div>
-                        
-                        <!-- Indicateur Actif -->
-                        <div class="absolute top-3 right-3 w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e] animate-pulse"></div>
+            <div class="bg-[#0f172a] rounded-[22px] p-8 relative">
+                
+                <div class="flex justify-between items-center mb-8 relative z-20">
+                    <a href="rapfrstreak.html" class="flex items-center gap-2 text-yellow-500 hover:text-yellow-400 transition-colors font-mono text-sm tracking-wider">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span class="border-b border-transparent hover:border-yellow-400">CLASSEMENT</span>
                     </a>
 
-                    <!-- Autres artistes (Placeholders) -->
-                    <div class="artist-btn group relative h-48 bg-black/40 border border-white/10 rounded-xl overflow-hidden flex flex-col items-center justify-center cursor-not-allowed opacity-50">
-                        <i class="fa-solid fa-lock text-2xl text-gray-600 mb-2"></i>
-                        <h4 class="font-display text-xl font-bold text-gray-500">TIAKOLA</h4>
-                        <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider mt-1">Bientôt</span>
+                    <button onclick="closeModals()" class="text-gray-500 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="text-center mb-8 relative z-10">
+                    <span class="text-blue-500 font-mono text-xs tracking-[0.3em] uppercase font-bold">Sélectionnez votre artiste</span>
+                    <h3 class="font-display text-3xl text-white font-black mt-1">RAP <span class="text-blue-500">FRANÇAIS</span></h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                    
+                    <!-- ARTISTE 1: PLK (Optimisé) -->
+                    <a href="streak_plk.html" class="artist-btn group relative h-40 bg-black border border-white/10 rounded-xl overflow-hidden cursor-pointer">
+                        <img src="https://i.postimg.cc/DZ4p2k9Z/1900x1900-000000-80-0-0.jpg" alt="PLK" class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                        
+                        <div class="absolute bottom-0 w-full p-3 text-center z-10">
+                            <h4 class="font-display text-2xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">PLK</h4>
+                            <span class="text-[9px] font-mono text-gray-300 uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded">Polak</span>
+                        </div>
+                        <div class="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></div>
+                    </a>
+
+                    <!-- Autres artistes -->
+                    <div class="artist-btn group relative h-40 bg-black/30 border border-white/5 rounded-xl overflow-hidden flex flex-col items-center justify-center cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-xl text-gray-600 mb-2"></i>
+                        <h4 class="font-display text-lg font-bold text-gray-500">TIAKOLA</h4>
+                        <span class="text-[9px] font-mono text-gray-600 uppercase tracking-wider">Bientôt</span>
                     </div>
 
-                    <div class="artist-btn group relative h-48 bg-black/40 border border-white/10 rounded-xl overflow-hidden flex flex-col items-center justify-center cursor-not-allowed opacity-50">
-                        <i class="fa-solid fa-lock text-2xl text-gray-600 mb-2"></i>
-                        <h4 class="font-display text-xl font-bold text-gray-500">WERENOI</h4>
-                        <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider mt-1">Bientôt</span>
+                    <div class="artist-btn group relative h-40 bg-black/30 border border-white/5 rounded-xl overflow-hidden flex flex-col items-center justify-center cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-xl text-gray-600 mb-2"></i>
+                        <h4 class="font-display text-lg font-bold text-gray-500">WERENOI</h4>
+                        <span class="text-[9px] font-mono text-gray-600 uppercase tracking-wider">Bientôt</span>
                     </div>
 
                 </div>
@@ -177,16 +184,11 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({
-            duration: 600, // Animation plus rapide
-            once: true, // Animation une seule fois
-            disable: 'mobile' // Désactiver sur mobile pour perf
-        });
+        AOS.init({ duration: 500, once: true, disable: 'mobile' }); // Animation plus courte et désactivée sur mobile
 
-        // Particles Optimisées (Nombre réduit de 60 à 25)
+        // Particles ULTRA-LÉGER (15 particules seulement)
         const canvas = document.getElementById('canvas-container');
         const ctx = canvas.getContext('2d');
         let particlesArray;
@@ -212,15 +214,15 @@
             }
         }
 
-        // Réduction drastique du nombre de particules pour la fluidité
+        // Réduction drastique pour fluidité
         function init() { 
             particlesArray = []; 
-            for(let i=0; i<25; i++) { // Réduit de 60 à 25
+            for(let i=0; i<15; i++) { // Seulement 15 particules
                 let size = Math.random() * 2; 
                 let x = Math.random() * innerWidth; 
                 let y = Math.random() * innerHeight; 
-                let dx = (Math.random() - 0.5) * 0.2; // Vitesse réduite
-                let dy = (Math.random() - 0.5) * 0.2; 
+                let dx = (Math.random() - 0.5) * 0.15; // Mouvement très lent
+                let dy = (Math.random() - 0.5) * 0.15; 
                 particlesArray.push(new Particle(x, y, dx, dy, size, '#3b82f6')); 
             } 
         }
@@ -231,15 +233,11 @@
             particlesArray.forEach(p => p.update()); 
         }
         
-        // Debounce resize event
-        let resizeTimeout;
+        // Debounce resize
+        let resizeTimeout; 
         window.addEventListener('resize', ()=>{ 
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                canvas.width=innerWidth; 
-                canvas.height=innerHeight; 
-                init();
-            }, 100);
+            clearTimeout(resizeTimeout); 
+            resizeTimeout = setTimeout(() => { canvas.width=innerWidth; canvas.height=innerHeight; init(); }, 200); 
         }); 
         
         init(); 
