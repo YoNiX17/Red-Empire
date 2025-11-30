@@ -152,6 +152,32 @@
             letter-spacing: 0;
         }
 
+        /* Style Slider Volume */
+        input[type=range] {
+            -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+            width: 100%; /* Specific width is required for Firefox. */
+            background: transparent; /* Otherwise white in Chrome */
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -4px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+
     </style>
 </head>
 <body class="h-screen flex flex-col relative">
@@ -161,15 +187,29 @@
     <div class="fixed inset-0 z-[-1]" style="background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2;"></div>
 
     <!-- NAVBAR -->
-    <nav class="h-24 w-full flex items-center justify-between px-8 md:px-16 z-50">
-        <a href="streak_selection.html" class="group flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
-            <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
+    <nav class="h-24 w-full flex items-center justify-between px-8 md:px-16 z-50 relative">
+        
+        <!-- GAUCHE : QUITTER + VOLUME -->
+        <div class="flex items-center gap-6">
+            <a href="streak_selection.html" class="group flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </div>
+            </a>
+
+            <!-- CONTRÔLE VOLUME -->
+            <div class="hidden md:flex items-center gap-2 group">
+                <button id="mute-btn" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-volume-high" id="vol-icon"></i>
+                </button>
+                <div class="w-0 overflow-hidden group-hover:w-24 transition-all duration-300 ease-out flex items-center">
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-20 ml-2">
+                </div>
             </div>
-        </a>
+        </div>
 
         <!-- SCORE CENTRAL -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center absolute left-1/2 transform -translate-x-1/2">
             <div class="text-[10px] font-mono text-plk-blue uppercase tracking-[0.3em] mb-1">Score Actuel</div>
             <div class="font-heading text-5xl text-white tracking-wide" id="score-display">0</div>
         </div>
@@ -183,6 +223,12 @@
             <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400">Série</div>
         </div>
     </nav>
+
+    <!-- MOBILE VOLUME (Visible only on small screens, top right corner below navbar or custom position) -->
+    <div class="md:hidden absolute top-24 left-8 z-40 flex items-center gap-3 bg-black/40 px-3 py-2 rounded-full border border-white/10 backdrop-blur-sm">
+        <i class="fa-solid fa-volume-high text-xs text-gray-400"></i>
+        <input type="range" id="volume-slider-mobile" min="0" max="1" step="0.05" value="0.5" class="w-20">
+    </div>
 
     <!-- MAIN GAME AREA -->
     <div class="flex-grow flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto">
@@ -206,7 +252,7 @@
             <div id="cover-reveal" class="absolute inset-0 flex flex-col items-center justify-center opacity-0 scale-90 transition-all duration-500 pointer-events-none z-20">
                 <div class="relative w-[320px] h-[320px] rounded shadow-2xl border border-white/10 overflow-hidden">
                     <img id="reveal-img" src="" class="w-full h-full object-cover">
-                    <!-- OVERLAY NOM ALBUM (AJOUTÉ ICI) -->
+                    <!-- OVERLAY NOM ALBUM -->
                     <div class="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-sm p-4 text-center border-t border-plk-blue/30">
                         <p class="text-xs text-plk-blue font-mono uppercase tracking-widest mb-1">Album / Projet</p>
                         <h3 id="reveal-album-text" class="text-xl font-heading text-white uppercase tracking-wide">ALBUM NAME</h3>
@@ -270,7 +316,7 @@
                     <div id="final-score" class="font-heading text-4xl text-white">0</div>
                 </div>
                 
-                <!-- Colonne 2 : Série Actuelle (C'est ce qui manquait pour corriger l'erreur !) -->
+                <!-- Colonne 2 : Série Actuelle -->
                 <div class="text-center border-x border-white/10">
                     <div class="text-gray-500 text-xs font-mono uppercase mb-2">Série</div>
                     <div id="final-streak" class="font-heading text-4xl text-plk-blue">0</div>
@@ -340,6 +386,7 @@
         let phase = 'waiting';
         let currentUser = null;
         let userBestStreak = 0;
+        let currentVolume = parseFloat(localStorage.getItem('plk_volume')) || 0.5; // Load saved volume
 
         // --- DOM ---
         const audio = document.getElementById('audio-player');
@@ -348,9 +395,43 @@
         const timerText = document.getElementById('timer-text');
         const statusText = document.getElementById('status-text');
         const diskContainer = document.getElementById('disk-container');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeSliderMobile = document.getElementById('volume-slider-mobile');
+        const muteBtn = document.getElementById('mute-btn');
+        const volIcon = document.getElementById('vol-icon');
 
         // Préparation des musiques
         Object.values(PLK_RAW_DISCOGRAPHY).forEach(album => songs.push(...album));
+
+        // --- GESTION VOLUME ---
+        function setVolume(val) {
+            currentVolume = parseFloat(val);
+            audio.volume = currentVolume;
+            if(volumeSlider) volumeSlider.value = currentVolume;
+            if(volumeSliderMobile) volumeSliderMobile.value = currentVolume;
+            localStorage.setItem('plk_volume', currentVolume);
+            
+            // Icon update
+            if(volIcon) {
+                if(currentVolume === 0) volIcon.className = "fa-solid fa-volume-xmark";
+                else if(currentVolume < 0.5) volIcon.className = "fa-solid fa-volume-low";
+                else volIcon.className = "fa-solid fa-volume-high";
+            }
+        }
+
+        // Init Volume
+        setVolume(currentVolume);
+
+        if(volumeSlider) volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+        if(volumeSliderMobile) volumeSliderMobile.addEventListener('input', (e) => setVolume(e.target.value));
+        if(muteBtn) muteBtn.addEventListener('click', () => {
+            if(currentVolume > 0) {
+                localStorage.setItem('plk_prev_vol', currentVolume);
+                setVolume(0);
+            } else {
+                setVolume(localStorage.getItem('plk_prev_vol') || 0.5);
+            }
+        });
 
         // --- AUTH & DATA LOADING ---
         onAuthStateChanged(auth, (user) => {
@@ -411,7 +492,7 @@
 
             // UI Clean
             diskContainer.classList.remove('opacity-0', 'scale-50');
-            diskContainer.classList.add('spinning'); // Ça tourne !
+            diskContainer.classList.add('spinning');
             diskContainer.classList.remove('paused');
             
             document.getElementById('cover-reveal').classList.add('opacity-0', 'scale-90');
@@ -428,7 +509,7 @@
             const offset = 20 + Math.random() * 40;
             audio.src = currentSong.url;
             audio.currentTime = offset;
-            audio.volume = 0.5;
+            audio.volume = currentVolume; // Utilisation du volume global
 
             audio.play().then(() => {
                 startTimer(20);
@@ -474,7 +555,6 @@
 
             if (phase === 'title') {
                 if (isCloseMatch(guess, currentSong.title)) {
-                    // TITRE BON
                     score += 1;
                     phase = 'album';
                     
@@ -482,7 +562,6 @@
                     input.value = "";
                     input.placeholder = "QUEL PROJET / ALBUM ?";
                     
-                    // Stop timer titre
                     clearInterval(timerInterval);
                     timerBar.style.transition = 'none';
                     timerBar.style.width = '100%'; 
@@ -501,10 +580,9 @@
                 }
             } else if (phase === 'album') {
                 let target = currentSong.album;
-                // Gestion simple Feat
                 if (target.includes("Feat") && !isCloseMatch(guess, target)) {
                      const guest = target.replace(/feat\.?/i, '').trim();
-                     if (isCloseMatch(guess, guest)) target = guess; // Accepte juste l'artiste
+                     if (isCloseMatch(guess, guest)) target = guess;
                 }
 
                 if (isCloseMatch(guess, target)) {
@@ -525,18 +603,15 @@
             streak++;
             updateUI();
 
-            // Stop Disque & Hide
             diskContainer.classList.add('paused');
             diskContainer.classList.add('opacity-0', 'scale-50');
 
-            // Show Cover
             const revealEl = document.getElementById('cover-reveal');
             revealEl.classList.remove('opacity-0', 'scale-90');
             
-            // Image Logic
             let url = ALBUM_COVERS[currentSong.album] || ALBUM_COVERS["Single"];
             if (!url && currentSong.album.includes("Feat")) url = ALBUM_COVERS["Feat."];
-            if (!url) url = ALBUM_COVERS["Single"]; // Fallback
+            if (!url) url = ALBUM_COVERS["Single"];
 
             document.getElementById('reveal-img').src = url;
             // MISE A JOUR DU TEXTE ALBUM (C'était manquant)
@@ -545,7 +620,6 @@
             input.value = `${currentSong.title}`;
             input.disabled = true;
 
-            // Countdown Next
             let cd = 8;
             timerText.innerText = "SUIVANT: " + cd;
             const int = setInterval(() => {
