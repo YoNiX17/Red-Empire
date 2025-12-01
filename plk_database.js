@@ -11,9 +11,10 @@ export const ALBUM_COVERS = {
     "Single": "https://i.postimg.cc/FR5kN5CH/plk_concert_paris_zenith_800x800.jpg"
 };
 
-// --- DISCOGRAPHIE COMPLÈTE ---
+// --- DISCOGRAPHIE COMPLÈTE CORRIGÉE ---
 export const PLK_RAW_DISCOGRAPHY = {
     "Chambre 140": [
+        // Titres originaux Chambre 140
         { title: "Chambre 140", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Chambre%20140.mp3" },
         { title: "EA7", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20EA7.mp3" },
         { title: "Flash", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Flash.mp3" },
@@ -27,18 +28,36 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "En mieux", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Hamza%20-%20En%20mieux.mp3" },
         { title: "Faut pas", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Jul%20-%20Faut%20pas.mp3" },
         { title: "La nuit", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20TIF%20-%20La%20nuit.mp3" },
-        { title: "Chouchou", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Vacra%20-%20Chouchou.mp3" }
+        { title: "Chouchou", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Vacra%20-%20Chouchou.mp3" },
+        // Corrections ajoutées à Chambre 140
+        { title: "Ptain", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Ptain.mp3" },
+        { title: "La vraie vie", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20vraie%20vie.mp3" },
+        { title: "Attentat", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20OBOY%20-%20Attentat.mp3" },
+        { title: "Dangereux", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dangereux.mp3" },
+        { title: "J'attends", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20J%27attends.mp3" },
+        { title: "Onana", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Onana.mp3" },
+        { title: "Avec les miens", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20les%20miens.mp3" },
+        { title: "Bikini Bottom", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Bikini%20Bottom.mp3" },
+        { title: "A l'envers", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20l%27envers.mp3" },
+        { title: "Mon poto", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mon%20poto.mp3" },
+        { title: "Une pêche une patate", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Une%20p%C3%A9che%20une%20patate.mp3" },
+        { title: "1Eu", album: "Chambre 140", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%201%E2%82%AC%C2%A0%201Eu.mp3" }
     ],
     "2069 (EP)": [
+        // Titres originaux 2069
         { title: "Demain", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Demain.mp3" },
         { title: "Décembre", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20D%C3%A9cembre.mp3" },
         { title: "Nouvelles", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Nouvelles.mp3" },
         { title: "Panama Bende", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Panama%20Bende.mp3" }, 
         { title: "10 minutes", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Dinos%20-%2010%20minutes.mp3" },
-        { title: "77", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Kerchak%20-%2077.mp3" }
+        { title: "77", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Kerchak%20-%2077.mp3" },
+        // Corrections ajoutées à 2069
+        { title: "Pelo", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pelo.mp3" },
+        { title: "Pas de sentiments", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20de%20sentiments.mp3" },
+        { title: "Cash", album: "2069", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Cash.mp3" }
     ],
     "Enna": [
-        { title: "Problèmes", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Probl%C3%A8mes.mp3" },
+        // Titres originaux Enna
         { title: "Pilote", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Hamza%20-%20Pilote%20%28feat.%20Hamza%29.mp3" },
         { title: "On sait jamais", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Niska%20-%20On%20sait%20jamais%20%28feat.%20Niska%29.mp3" },
         { title: "Chandon et Moët", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Heuss%20L%27enfoir%C3%A9%20-%20Chandon%20et%20Mo%C3%ABt%20%28feat.%20Heuss%20l%27Enfoir%C3%A9%29.mp3" },
@@ -50,31 +69,27 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "Mamie", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mamie.mp3" },
         { title: "Alleluia", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Alleluia.mp3" },
         { title: "C'est mort", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20C%27est%20mort.mp3" },
-        { title: "Ptain", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Ptain.mp3" },
         { title: "Les comptes", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Les%20comptes.mp3" },
         { title: "Bénef", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20B%C3%A9nef.mp3" },
         { title: "Terrible", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Terrible.mp3" },
         { title: "3 en 1", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%203%20en%201.mp3" },
         { title: "La vie c'est marrant", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20vie%20c%27est%20marrant.mp3" },
         { title: "Calme", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Calme.mp3" },
-        { title: "La vraie vie", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20vraie%20vie.mp3" },
-        { title: "Attentat", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20OBOY%20-%20Attentat.mp3" },
-        { title: "A la base", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20la%20base.mp3" },
-        { title: "Boost", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Boost.mp3" },
-        { title: "Dangereux", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dangereux.mp3" },
-        { title: "En ville", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SDM%20-%20En%20ville.mp3" },
-        { title: "Hubert et Saïd", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hubert%20et%20Sa%C3%AFd.mp3" },
-        { title: "J'attends", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20J%27attends.mp3" },
-        { title: "La rue", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20rue.mp3" },
-        { title: "Le P", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20P.mp3" },
-        { title: "Onana", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Onana.mp3" },
-        { title: "Pelo", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pelo.mp3" },
-        { title: "Perdu", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Perdu.mp3" },
-        { title: "Faut croire", album: "Enna (Boost)", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Faut%20croire.mp3" }
+        { title: "A la base", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20la%20base.mp3" },
+        { title: "Boost", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Boost.mp3" },
+        { title: "En ville", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SDM%20-%20En%20ville.mp3" },
+        { title: "Hubert et Saïd", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hubert%20et%20Sa%C3%AFd.mp3" },
+        { title: "Perdu", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Perdu.mp3" },
+        // Corrections ajoutées à Enna (provenant de Boost ou d'ailleurs)
+        { title: "Si ça marche plus", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Si%20%C3%A7a%20marche%20plus.mp3" },
+        { title: "Dégaine de bandit", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20D%C3%A9gaine%20de%20bandit.mp3" },
+        { title: "Amérique", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Am%C3%A9rique.mp3" },
+        { title: "R.A.F", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R.A.F.mp3" },
+        { title: "10 Millions", album: "Enna", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%2010%20Millions.mp3" }
     ],
     "Mental": [
+        // Titres originaux Mental
         { title: "Un peu de haine", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Un%20peu%20de%20haine.mp3" },
-        { title: "Problèmes", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Probl%C3%A8mes.mp3" }, 
         { title: "Hola", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hola.mp3" },
         { title: "Travailler", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Travailler.mp3" },
         { title: "Nana", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Nana.mp3" },
@@ -89,9 +104,14 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "Temps perdu", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Temps%20perdu.mp3" },
         { title: "TT", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20TT.mp3" },
         { title: "RS3", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20RS3.mp3" },
-        { title: "Incontrolables", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SCH%20-%20Incontrolables.mp3" }
+        { title: "Incontrolables", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SCH%20-%20Incontrolables.mp3" },
+        // Corrections ajoutées à Mental
+        { title: "Problèmes", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Probl%C3%A8mes.mp3" },
+        { title: "Le P", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20P.mp3" },
+        { title: "Arai", album: "Mental", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Arai.mp3" }
     ],
     "Polak": [
+        // Titres originaux Polak
         { title: "Monégasque", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mon%C3%A9gasque.mp3" },
         { title: "Polak", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Polak.mp3" },
         { title: "Hier", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20SCH%20-%20Hier%20%28feat.%20SCH%29.mp3" },
@@ -110,9 +130,13 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "260", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20260.mp3" },
         { title: "POL AK", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20POL-AK.mp3" },
         { title: "Intro", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Intro.mp3" },
-        { title: "Intr100000", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Intr100000.mp3" }
+        { title: "Intr100000", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Intr100000.mp3" },
+        // Corrections ajoutées à Polak
+        { title: "Émotif", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20%C3%89motif%20%28Booska%201H%29.mp3" },
+        { title: "Enfant du hall", album: "Polak", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Enfant%20du%20hall.mp3" }
     ],
     "Platinum": [
+        // Titres originaux Platinum
         { title: "Pas les mêmes", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20les%20m%C3%AAmes.mp3" },
         { title: "A A A", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20A%20A.mp3" },
         { title: "Dis moi oui", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Dis-moi%20oui.mp3" },
@@ -127,37 +151,29 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "Mentalité", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mentalit%C3%A9.mp3" },
         { title: "Niveau", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Niveau.mp3" },
         { title: "Colis piégés", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Lefa%20-%20Colis%20pi%C3%A9g%C3%A9s%20%28feat.%20Lefa%29.mp3" },
-        { title: "Arai", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Arai.mp3" },
         { title: "Homies", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Homies.mp3" },
-        { title: "Avec les miens", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20les%20miens.mp3" },
         { title: "Amigo", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Amigo.mp3" },
-        { title: "Bikini Bottom", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Bikini%20Bottom.mp3" },
         { title: "Skuu", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%2C%20Krisy%20-%20Skuu%20%28feat.%20Krisy%29.mp3" },
-        { title: "Si ça marche plus", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Si%20%C3%A7a%20marche%20plus.mp3" },
-        { title: "Le son de la street", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Le%20son%20de%20la%20street.mp3" },
         { title: "Flamenco", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Flamenco%20-%20Bonus%20Track.mp3" },
-        { title: "Émotif", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20%C3%89motif%20%28Booska%201H%29.mp3" },
-        { title: "Dégaine de bandit", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20D%C3%A9gaine%20de%20bandit.mp3" },
-        { title: "Amérique", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Am%C3%A9rique.mp3" }
+        // Corrections ajoutées à Platinum
+        { title: "La rue", album: "Platinum", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20La%20rue.mp3" }
     ],
     "Ténébreux": [
+        // Titres originaux Ténébreux
         { title: "Ténébreux", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20T%C3%A9n%C3%A9breux.mp3" },
-        { title: "A l'envers", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20A%20l%27envers.mp3" },
         { title: "All Night", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20All%20Night.mp3" },
-        { title: "Pas de sentiments", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Pas%20de%20sentiments.mp3" },
         { title: "Du mal", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Du%20mal.mp3" },
         { title: "Casino", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Casino.mp3" },
         { title: "Yeux", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Yeux.mp3" },
-        { title: "Mon poto", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Mon%20poto.mp3" },
         { title: "Plata O Plomo", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Plata%20O%20Plomo.mp3" },
         { title: "Shérif", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Sh%C3%A9rif.mp3" },
-        { title: "Enfant du hall", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Enfant%20du%20hall.mp3" },
-        { title: "Une pêche une patate", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Une%20p%C3%A9che%20une%20patate.mp3" },
         { title: "Hall", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Hall.mp3" },
-        { title: "R.A.F", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R.A.F.mp3" },
         { title: "Juste Un Petit Peu", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Juste%20Un%20Petit%20Peu.mp3" },
         { title: "Fin de mois", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Fin%20de%20mois.mp3" },
-        { title: "Cash", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Cash.mp3" }
+        // Corrections ajoutées à Ténébreux
+        { title: "Faut croire", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Faut%20croire.mp3" },
+        { title: "Amigo", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Amigo.mp3" },
+        { title: "Avec moi", album: "Ténébreux", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20moi.mp3" }
     ],
     "Apparitions / Featurings": [
         { title: "Aminata", album: "Feat. 13 Block", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/13%20Block%2C%20PLK%20-%20Aminata%20%28feat.%20PLK%29.mp3" },
@@ -212,9 +228,6 @@ export const PLK_RAW_DISCOGRAPHY = {
         { title: "Tu vois comment", album: "Feat. Zkr", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/Zkr%2C%20PLK%20-%20Tu%20vois%20comment%20.mp3" }
     ],
     "Singles / Hors Album": [
-        { title: "10 Millions", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%2010%20Millions.mp3" },
-        { title: "1Eu", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%201%E2%82%AC%C2%A0%201Eu.mp3" },
-        { title: "Règlement Freestyle #17", album: "Freestyle", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R%C3%A8glement%20Freestyle%20%2317.mp3" },
-        { title: "Avec moi", album: "Single", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20Avec%20moi.mp3" }
+        { title: "Règlement Freestyle #17", album: "Freestyle", url: "https://storage.googleapis.com/blind-test-red-empire/Plk/PLK%20-%20R%C3%A8glement%20Freestyle%20%2317.mp3" }
     ]
 };
