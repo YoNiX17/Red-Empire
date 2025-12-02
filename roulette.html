@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Roulette Aléatoire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        cyber: { dark: '#050505', panel: '#0a0a0a', border: '#ff2e2e' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'spin-reverse': 'spin 25s linear infinite reverse',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(255, 51, 51, 0.1)' },
+                            '50%': { boxShadow: '0 0 40px rgba(255, 51, 51, 0.4)' },
+                        },
+                        popIn: {
+                            '0%': { opacity: 0, transform: 'scale(0.5) translateY(20px)' },
+                            '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030303; color: #e5e5e5; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.6; }
+        
+        .glass-panel { 
+            background: rgba(5, 5, 5, 0.95); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 51, 51, 0.2); 
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(0,0,0,0.5); 
+        }
+
+        /* TEXTAREA STYLE TERMINAL */
+        textarea {
+            background: #080808 !important;
+            border: 1px solid #333 !important;
+            color: #ffcccc !important;
+            font-family: 'Rajdhani', monospace !important;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        textarea:focus { 
+            border-color: #ff3333 !important; 
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.1) !important; 
+            outline: none;
+        }
+
+        /* ROUE - CONTAINER */
+        .wheel-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ANNEAUX DÉCORATIFS FUTURISTES */
+        .ring-outer, .ring-inner {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .ring-outer { 
+            width: 112%; height: 112%; 
+            border: 1px solid rgba(255, 51, 51, 0.1);
+            border-top: 1px solid rgba(255, 51, 51, 0.6);
+            border-bottom: 1px solid rgba(255, 51, 51, 0.6);
+            animation: spin-slow;
+            box-shadow: 0 0 30px rgba(255,51,51,0.05);
+        }
+        
+        .ring-inner { 
+            width: 105%; height: 105%; 
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            animation: spin-reverse; 
+        }
+
+        /* POINTEUR */
+        .wheel-pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8));
+        }
+        .pointer-shape {
+            width: 0; height: 0; 
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #ff3333;
+        }
+        .pointer-shape::after {
+            content: '';
+            position: absolute;
+            top: -45px; left: -5px;
+            width: 10px; height: 10px;
+            background: white; border-radius: 50%;
+            box-shadow: 0 0 10px white;
+        }
+
+        /* BOUTON SPIN */
+        .btn-glitch {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            clip-path: polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%);
+        }
+        .btn-glitch:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(255, 51, 51, 0.4);
+            letter-spacing: 0.3em;
+        }
+        .btn-glitch::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .btn-glitch:hover::before { left: 100%; }
+
+        /* WINNER MODAL */
+        #winner-modal {
+            backdrop-filter: blur(10px);
+        }
+        .winner-card {
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #ff3333;
+            box-shadow: 0 0 100px rgba(255, 51, 51, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-empire-600 selection:text-white flex flex-col min-h-screen">
+
+    <!-- Backgrounds -->
+    <canvas id="canvas-container"></canvas>
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_20%,black_100%)] pointer-events-none z-[-1]"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-empire-900/30 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-crown text-empire-600 text-2xl group-hover:animate-pulse"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors">ACCUEIL</a>
+                <a href="games.html" class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors">MINI-JEUX</a>
+                <span class="text-sm font-mono font-bold text-empire-500 text-glow border-b-2 border-empire-600 pb-1">TOOLS</span>
+            </div>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="md:hidden text-white"><i class="fa-solid fa-bars text-2xl"></i></button>
+        </div>
+         <div id="mobile-menu" class="hidden absolute top-16 left-0 w-full bg-black border-b border-empire-900 p-4 md:hidden">
+            <a href="index.html" class="block py-2 text-gray-400 hover:text-white">ACCUEIL</a>
+            <a href="games.html" class="block py-2 text-gray-400 hover:text-white">MINI-JEUX</a>
+            <a href="#" class="block py-2 text-empire-500 font-bold">TOOLS</a>
+        </div>
+    </nav>
+
+    <!-- MAIN INTERFACE -->
+    <main class="flex-grow pt-32 pb-12 px-4 flex flex-col items-center justify-center min-h-screen relative z-10">
+        
+        <div class="w-full max-w-[1600px] grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
+            
+            <!-- COLONNE GAUCHE : CONTRÔLES -->
+            <div class="lg:col-span-1 glass-panel rounded-2xl p-6 flex flex-col h-full lg:min-h-[750px] border-l-4 border-l-empire-600 relative overflow-hidden">
+                <!-- Déco Cyber -->
+                <div class="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-empire-500/50 rounded-tr-xl"></div>
+                
+                <div class="mb-6 relative z-10">
+                    <h2 class="font-display text-2xl font-bold text-white mb-1 flex items-center gap-3">
+                        <i class="fa-solid fa-database text-empire-500"></i> DONNÉES
+                    </h2>
+                    <div class="h-0.5 w-full bg-gradient-to-r from-empire-600 to-transparent mb-2"></div>
+                    <p class="text-gray-500 text-[10px] font-mono uppercase tracking-widest">1 ligne = 1 choix.</p>
+                </div>
+
+                <!-- Textarea dynamique -->
+                <div class="relative flex-grow mb-6 z-10">
+                    <textarea id="wheel-input" 
+                        class="w-full h-full min-h-[300px] rounded-lg p-4 text-sm resize-none leading-loose shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]"
+                        placeholder="Option 1&#10;Option 2&#10;Option 3&#10;..."></textarea>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="grid grid-cols-2 gap-4 z-10 mb-6">
+                    <button onclick="resetWheel()" class="py-3 px-4 rounded bg-[#111] border border-gray-800 hover:border-red-500 text-gray-400 hover:text-red-500 font-bold font-mono text-xs transition-all flex items-center justify-center gap-2 group tracking-wider">
+                        <i class="fa-solid fa-trash group-hover:animate-bounce"></i> RAZ
+                    </button>
+                    <button onclick="shuffleInputs()" class="py-3 px-4 rounded bg-[#111] border border-empire-600/30 hover:bg-empire-900/20 text-empire-500 font-bold font-mono text-xs transition-all flex items-center justify-center gap-2 group tracking-wider">
+                        <i class="fa-solid fa-shuffle group-hover:rotate-180 transition-transform duration-500"></i> MIX
+                    </button>
+                </div>
+
+                <!-- SECTION SAUVEGARDE (Connecté uniquement) -->
+                <div id="save-section" class="border-t border-white/10 pt-6 hidden">
+                    <h3 class="font-display text-white text-lg mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk text-empire-500"></i> MES LISTES
+                    </h3>
+                    
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="save-name" placeholder="Nom de la liste..." class="bg-black border border-white/20 rounded px-3 py-2 text-xs text-white w-full outline-none focus:border-empire-500">
+                        <button onclick="saveCurrentList()" class="bg-empire-600 hover:bg-empire-500 text-white px-3 py-2 rounded text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div id="saved-lists-container" class="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Injecté par JS -->
+                        <p class="text-gray-600 text-xs italic text-center py-4">Aucune liste sauvegardée</p>
+                    </div>
+                </div>
+
+                <!-- Message Non Connecté -->
+                <div id="login-msg" class="border-t border-white/10 pt-6 text-center">
+                    <p class="text-gray-500 text-xs mb-2">Connectez-vous pour sauvegarder vos listes.</p>
+                    <button onclick="window.login()" class="text-empire-500 hover:text-white font-bold text-xs underline">SE CONNECTER</button>
+                </div>
+
+            </div>
+
+            <!-- COLONNE DROITE : LA ROULETTE (3/4 largeur) -->
+            <div class="lg:col-span-3 flex flex-col items-center justify-center relative py-10">
+                
+                <!-- Titre & Status -->
+                <div class="text-center mb-12 relative z-20">
+                    <div class="inline-block px-4 py-1 border border-empire-500/30 rounded-full bg-empire-900/20 mb-4 backdrop-blur-sm">
+                        <span class="text-[10px] font-mono font-bold text-empire-400 tracking-[0.3em] uppercase">Module de Tirage Quantique</span>
+                    </div>
+                    <h1 class="font-display text-5xl md:text-8xl font-black text-white drop-shadow-[0_0_30px_rgba(255,51,51,0.4)] uppercase tracking-tighter leading-none">
+                        ROULETTE <span class="text-transparent bg-clip-text bg-gradient-to-br from-empire-500 via-white to-empire-500">MK-II</span>
+                    </h1>
+                </div>
+
+                <!-- WRAPPER ROUE -->
+                <div class="wheel-wrapper w-[350px] h-[350px] md:w-[650px] md:h-[650px] relative group">
+                    <div class="ring-outer"></div>
+                    <div class="ring-inner"></div>
+                    <div class="absolute inset-0 bg-empire-600 rounded-full blur-[120px] opacity-10 group-hover:opacity-25 transition-opacity duration-500"></div>
+                    
+                    <canvas id="wheelCanvas" width="1400" height="1400" class="w-full h-full rounded-full shadow-[0_0_60px_rgba(0,0,0,0.8)] border-[8px] border-[#0a0a0a] relative z-10"></canvas>
+                    
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-40 md:h-40 bg-[#050505] rounded-full border-4 border-empire-600 z-20 flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent rounded-full"></div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <i class="fa-solid fa-atom text-empire-500 text-3xl md:text-5xl animate-[spin_8s_linear_infinite]"></i>
+                            <span class="text-[8px] md:text-[10px] text-gray-500 font-mono mt-1 tracking-widest">R.E.S</span>
+                        </div>
+                    </div>
+
+                    <div class="wheel-pointer"><div class="pointer-shape"></div></div>
+                </div>
+
+                <!-- Bouton SPIN -->
+                <div class="mt-20 relative z-20">
+                    <button id="spin-btn" onclick="spinWheel()" class="btn-glitch relative px-20 py-6 bg-empire-700 text-white font-display font-black text-3xl tracking-[0.2em] uppercase shadow-[0_0_40px_rgba(255,51,51,0.3)] hover:bg-empire-600 transition-colors">
+                        LANCER
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL GAGNANT (OVERLAY) -->
+    <div id="winner-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+        <div class="winner-card relative w-full max-w-2xl p-8 md:p-12 text-center rounded-xl animate-pop-in overflow-hidden">
+            <!-- Particules de fond -->
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-empire-600 to-red-900"></div>
+            
+            <div class="relative z-10">
+                <p class="text-gray-400 font-mono text-sm uppercase tracking-[0.5em] mb-6">RÉSULTAT DU TIRAGE</p>
+                
+                <h2 id="winner-text-modal" class="font-display font-black text-5xl md:text-7xl text-white mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.5)] break-words">
+                    ???
+                </h2>
+
+                <div class="flex flex-col md:flex-row justify-center gap-4 mt-8">
+                    <button onclick="closeWinnerModal()" class="px-8 py-3 bg-white text-black font-bold font-mono uppercase tracking-wider rounded hover:bg-gray-200 transition-colors">
+                        GARDER
+                    </button>
+                    <button onclick="removeWinner()" class="px-8 py-3 border border-empire-500 text-empire-500 font-bold font-mono uppercase tracking-wider rounded hover:bg-empire-500 hover:text-white transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-xmark"></i> RETIRER CE CHOIX
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-t border-empire-900/50 bg-black py-8 mt-auto relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            © 2024 Red Empire Systems. Tools Division.
+        </div>
+    </footer>
+
+    <!-- LOGIQUE JAVASCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // CONFIGURATION FIREBASE (Même que auth.js)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
+            authDomain: "red-empire-103d7.firebaseapp.com",
+            databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "red-empire-103d7",
+            storageBucket: "red-empire-103d7.firebasestorage.app",
+            messagingSenderId: "1002924043244",
+            appId: "1:1002924043244:web:e76002c3dc8810017faec9",
+            measurementId: "G-DPG3ZZ68G4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // --- AUTH GESTION ---
+        window.login = () => signInWithPopup(auth, provider);
+        
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            const saveSection = document.getElementById('save-section');
+            const loginMsg = document.getElementById('login-msg');
+
+            if (user) {
+                saveSection.classList.remove('hidden');
+                loginMsg.classList.add('hidden');
+                loadSavedWheels();
+            } else {
+                saveSection.classList.add('hidden');
+                loginMsg.classList.remove('hidden');
+            }
+        });
+
+        // --- LOGIQUE SAUVEGARDE ---
+        window.saveCurrentList = () => {
+            const name = document.getElementById('save-name').value.trim();
+            const content = document.getElementById('wheel-input').value.trim();
+            
+            if (!name) return alert("Entrez un nom pour la liste.");
+            if (!content) return alert("La liste est vide.");
+
+            const wheelRef = ref(db, `users/${currentUser.uid}/saved_wheels/${name}`);
+            set(wheelRef, {
+                name: name,
+                content: content,
+                date: Date.now()
+            });
+            document.getElementById('save-name').value = "";
+        };
+
+        function loadSavedWheels() {
+            const wheelsRef = ref(db, `users/${currentUser.uid}/saved_wheels`);
+            onValue(wheelsRef, (snapshot) => {
+                const container = document.getElementById('saved-lists-container');
+                container.innerHTML = "";
+                
+                const data = snapshot.val();
+                if (!data) {
+                    container.innerHTML = '<p class="text-gray-600 text-xs italic text-center py-4">Aucune liste sauvegardée</p>';
+                    return;
+                }
+
+                Object.values(data).forEach(list => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center justify-between bg-white/5 p-2 rounded hover:bg-white/10 transition-colors group";
+                    div.innerHTML = `
+                        <div class="flex-grow cursor-pointer overflow-hidden" onclick="loadList('${list.name.replace(/'/g, "\\'")}')">
+                            <div class="text-white font-bold text-xs truncate">${list.name}</div>
+                            <div class="text-[10px] text-gray-500 truncate">${list.content.split('\n').length} éléments</div>
+                        </div>
+                        <button onclick="deleteList('${list.name.replace(/'/g, "\\'")}')" class="text-gray-600 hover:text-red-500 px-2 transition-colors">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    `;
+                    // On attache les events manuellement pour éviter les soucis d'échappement
+                    div.querySelector('div').onclick = () => {
+                        document.getElementById('wheel-input').value = list.content;
+                        drawWheel();
+                    };
+                    div.querySelector('button').onclick = () => {
+                        if(confirm('Supprimer cette liste ?')) {
+                            remove(ref(db, `users/${currentUser.uid}/saved_wheels/${list.name}`));
+                        }
+                    };
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        // --- PARTICLES (Fond) ---
+        const canvas = document.getElementById('canvas-container');
+        const ctxBg = canvas.getContext('2d');
+        let particlesArray;
+        
+        function resizeBg() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', () => { resizeBg(); initParticles(); });
+        resizeBg();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.color = Math.random() > 0.8 ? '#ff3333' : '#333';
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.size > 0.2) this.size -= 0.01;
+                if (this.size <= 0.2) { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.size = Math.random()*2 + 1; }
+            }
+            draw() { ctxBg.fillStyle = this.color; ctxBg.beginPath(); ctxBg.arc(this.x, this.y, this.size, 0, Math.PI*2); ctxBg.fill(); }
+        }
+        function initParticles() { particlesArray = []; for(let i=0; i<60; i++) particlesArray.push(new Particle()); }
+        function animateParticles() { requestAnimationFrame(animateParticles); ctxBg.clearRect(0,0,canvas.width, canvas.height); particlesArray.forEach(p => { p.update(); p.draw(); }); }
+        initParticles(); animateParticles();
+
+        // --- ROUE LOGIC ---
+        const wheelCanvas = document.getElementById('wheelCanvas');
+        const ctx = wheelCanvas.getContext('2d');
+        const inputArea = document.getElementById('wheel-input');
+        const spinBtn = document.getElementById('spin-btn');
+        const winnerModal = document.getElementById('winner-modal');
+        const winnerTextModal = document.getElementById('winner-text-modal');
+
+        let segments = [];
+        let currentRotation = 0;
+        let isSpinning = false;
+        let lastWinner = "";
+
+        // Couleurs
+        const colors = ['#b91c1c', '#171717', '#7f1d1d', '#262626']; 
+
+        inputArea.value = "ROUGE\nNOIR\nREJOUER\nJACKPOT\nPERDU\nDOUBLE\nRIEN\nMYSTÈRE";
+        
+        function getSegments() {
+            return inputArea.value.split('\n').filter(line => line.trim() !== '');
+        }
+
+        // Export pour usage HTML
+        window.drawWheel = function() {
+            segments = getSegments();
+            const numSegments = segments.length;
+            if (numSegments === 0) return;
+
+            const centerX = wheelCanvas.width / 2;
+            const centerY = wheelCanvas.height / 2;
+            const radius = wheelCanvas.width / 2 - 40; 
+            const arcSize = (2 * Math.PI) / numSegments;
+
+            ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = i * arcSize + currentRotation;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+                
+                const gradient = ctx.createRadialGradient(centerX, centerY, 100, centerX, centerY, radius);
+                if (i % 2 === 0) { 
+                    gradient.addColorStop(0, '#450a0a');
+                    gradient.addColorStop(0.5, '#b91c1c');
+                    gradient.addColorStop(1, '#7f1d1d');
+                } else { 
+                    gradient.addColorStop(0, '#000000');
+                    gradient.addColorStop(0.5, '#262626');
+                    gradient.addColorStop(1, '#171717');
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                const fontSize = numSegments > 20 ? 25 : (numSegments > 12 ? 35 : 50);
+                ctx.font = `900 ${fontSize}px Rajdhani`; 
+                ctx.shadowColor = "rgba(0,0,0,1)";
+                ctx.shadowBlur = 10;
+                
+                let text = segments[i].toUpperCase();
+                if(text.length > 15) text = text.substring(0, 12) + "...";
+                
+                ctx.fillText(text, radius - 80, 18);
+                ctx.restore();
+            }
+
+            // Bordure
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 10, 0, 2 * Math.PI);
+            ctx.lineWidth = 25;
+            ctx.strokeStyle = '#0f0f0f';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + 20, 0, 2 * Math.PI);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ff3333';
+            ctx.shadowColor = '#ff3333';
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+            ctx.shadowBlur = 0; 
+        }
+
+        inputArea.addEventListener('input', () => { if(!isSpinning) drawWheel(); });
+
+        window.resetWheel = function() {
+            if(isSpinning) return;
+            inputArea.value = "";
+            drawWheel();
+        }
+
+        window.shuffleInputs = function() {
+            if(isSpinning) return;
+            let arr = getSegments();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            inputArea.value = arr.join('\n');
+            drawWheel();
+        }
+
+        window.closeWinnerModal = function() {
+            winnerModal.classList.add('hidden');
+        }
+
+        window.removeWinner = function() {
+            const currentText = inputArea.value;
+            // Échapper les caractères spéciaux regex
+            const escapedWinner = lastWinner.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+            // Remplacer la première occurrence exacte
+            const regex = new RegExp(`^${escapedWinner}$`, 'm'); 
+            
+            // On essaie de retirer la ligne
+            let newText = currentText.replace(regex, '').replace(/^\s*[\r\n]/gm, ''); // Retire aussi les lignes vides
+            
+            inputArea.value = newText.trim();
+            closeWinnerModal();
+            drawWheel();
+        }
+
+        window.spinWheel = function() {
+            if (isSpinning) return;
+            const segs = getSegments();
+            if (segs.length < 2) return alert("Ajoutez au moins 2 options !");
+
+            isSpinning = true;
+            spinBtn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+
+            // Physique rapide
+            let velocity = Math.random() * 0.5 + 0.6; 
+            let friction = 0.98; // Friction augmentée pour arrêt plus rapide
+            let stopThreshold = 0.005; // Seuil d'arrêt plus haut
+
+            function animate() {
+                velocity *= friction;
+                currentRotation += velocity;
+                drawWheel();
+
+                if (velocity > stopThreshold) {
+                    requestAnimationFrame(animate);
+                } else {
+                    finalizeSpin();
+                }
+            }
+            animate();
+        }
+
+        function finalizeSpin() {
+            isSpinning = false;
+            spinBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+            
+            const numSegments = segments.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+            const normalizedRotation = currentRotation % (2 * Math.PI);
+            let index = Math.floor(((3 * Math.PI / 2) - normalizedRotation) / arcSize) % numSegments;
+            
+            if (index < 0) index += numSegments;
+
+            lastWinner = segments[index];
+            
+            // Affichage Modal
+            winnerTextModal.innerText = lastWinner.toUpperCase();
+            winnerModal.classList.remove('hidden');
+            
+            // FX
+            const colors = ['#ff0000', '#ffffff', '#000000', '#b91c1c'];
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: colors, zIndex: 200 });
+        }
+
+        // Init
+        drawWheel();
+        window.addEventListener('resize', drawWheel);
+
+    </script>
+</body>
+</html>
