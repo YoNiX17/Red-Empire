@@ -45,7 +45,7 @@ export const TIAKOLA_RAW_DISCOGRAPHY = {
         { title: "Mise en garde", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Mise en garde.{ext}.mp3" },
         { title: "Mode AV (feat. Niska & Gazo)", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Mode AV (feat. Niska & Gazo).{ext}.mp3" },
         { title: "Parapluie", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Parapluie.{ext}.mp3" },
-        { title: "Riri No camera", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Riri  No camera.{ext}.mp3" },
+        { title: "Riri No camera", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola%20-%20Riri%20%20No%20camera.%7Bext%7D.mp3" },
         { title: "Roro (feat. SDM)", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Roro (feat. SDM).{ext}.mp3" },
         { title: "Sans nouvelle", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Sans nouvelle.{ext}.mp3" },
         { title: "Si j'savais", album: "Mélo", url: "https://storage.googleapis.com/blind-test-red-empire/tiakola/Tiakola - Si j'savais.{ext}.mp3" },
