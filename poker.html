@@ -614,6 +614,8 @@
             el.style.top = `${deckPos.top}px`;
             el.style.zIndex = 100;
             el.style.opacity = '0';
+            // Start facing UP if faceUp is true? No, start upside down (back) usually.
+            // But here we have a bug. Let's make sure we end up correctly.
             el.style.transform = 'scale(0.5) rotate(180deg)';
             
             document.body.appendChild(el);
@@ -623,13 +625,18 @@
                 el.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 
                 // 4. Fly to Target
-                // Adjust for centering in container (approximate)
                 const offsetX = 10; 
                 const offsetY = 10;
                 
                 el.style.left = `${targetPos.left + offsetX}px`;
                 el.style.top = `${targetPos.top + offsetY}px`;
-                el.style.transform = 'scale(1) rotate(0deg)';
+                
+                // FIX: Ensure rotation ends correctly.
+                // If faceUp is true, we want to see front. CSS class flipped does rotateY(180deg).
+                // If we force rotateY(180deg) here inline, it works.
+                const flipTransform = faceUp ? 'rotateY(180deg)' : '';
+                el.style.transform = `scale(1) rotate(0deg) ${flipTransform}`;
+                
                 if(faceUp) el.classList.add('flipped');
                 
                 // 5. Dock into Container after animation
@@ -639,6 +646,8 @@
                     el.style.top = '0';
                     el.style.zIndex = '10';
                     el.style.transition = 'none';
+                    // Clear transform so CSS class takes over fully
+                    el.style.transform = ''; 
                     container.appendChild(el);
                 }, 600);
                 
@@ -735,14 +744,7 @@
                     if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
                     // Postflop Check
                     else if (data.state !== 'preflop') {
-                         // If active player checks and last action was also check (or start of street), round ends?
-                         // In HU: SB(Dealer) acts first postflop.
-                         // If P1 checks, P2 can check -> Round End.
-                         // If P1 bets, P2 calls -> Round End.
-                         // We need to check if this is the "closing" action.
-                         // Simple heuristic: if previous action was check, this check closes it.
                          if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
-                         // Also if first actor (SB) checks, turn goes to BB.
                     }
                 }
 
@@ -789,10 +791,6 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        // Postflop: BB acts first in HU? No, SB acts first in HU postflop.
-                        // Normal ring game: SB acts first.
-                        // HU rule: Button is SB. SB acts first preflop. BB acts first postflop?
-                        // NO: In HU, Button/SB acts first preflop. BB acts first postflop.
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
