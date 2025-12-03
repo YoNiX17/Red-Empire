@@ -51,8 +51,10 @@
         /* CARDS */
         .card-slot { width: 80px; height: 112px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.0); display: flex; align-items: center; justify-content: center; transition: border-color 0.3s; }
         @media (min-width: 1024px) { .card-slot { width: 100px; height: 140px; } }
+        
         .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
+        
         .card.flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; background: #111; overflow: hidden; }
 
@@ -89,7 +91,8 @@
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #ff3333; cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px #ff3333; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px; }
 
-        #deck-pos { position: absolute; top: 20%; left: 20%; width: 0; height: 0; }
+        /* Deck Anchor for Animation */
+        #deck-anchor { position: absolute; top: 20%; left: 20%; width: 0; height: 0; z-index: 999; }
         .dealer-btn { width: 24px; height: 24px; background: white; color: black; border-radius: 50%; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* LOBBY OVERLAY */
@@ -202,7 +205,8 @@
                 </div>
             </div>
             
-            <div id="deck-anchor" class="absolute top-[40%] left-[20%] w-[1px] h-[1px]"></div>
+            <!-- ANCHOR DECK FOR ANIMATION -->
+            <div id="deck-anchor"></div>
         </div>
     </div>
 
@@ -249,7 +253,6 @@
 
     <!-- GAME LOGIC -->
     <script type="module">
-        // CONFIGURATION RED EMPIRE (REALTIME DATABASE)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue, update, remove, push, child, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -269,7 +272,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Helper classes
         const SUITS = ['♠', '♥', '♣', '♦'];
         const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         
@@ -336,21 +338,15 @@
             oppName: document.getElementById('opp-name')
         };
 
-        // 1. Auth & Init
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 els.status.innerText = "Connecté. Entrez le nom de la table.";
-                // Load profile
                 get(child(ref(db), `users/${user.uid}`)).then(snap => {
-                     if(snap.exists()) {
-                         els.myAvatar.src = snap.val().avatar || user.photoURL;
-                     } else {
-                         els.myAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`;
-                     }
+                     if(snap.exists()) els.myAvatar.src = snap.val().avatar || user.photoURL;
+                     else els.myAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`;
                 });
             } else {
-                // Fallback for direct access without login
                  signInAnonymously(auth);
             }
         });
@@ -359,21 +355,16 @@
             const roomName = els.roomInput.value.trim().toUpperCase();
             if(!roomName) return;
             if(!currentUser) return;
-            
             els.status.innerText = "Connexion...";
             els.btnJoin.disabled = true;
-            
             await joinGame(roomName);
         };
 
         async function joinGame(roomName) {
             const roomRef = ref(db, `poker/rooms/${roomName}`);
-            
             try {
                 const snap = await get(roomRef);
-                
                 if (!snap.exists()) {
-                    // Create new game
                     const deck = new Deck().toJSON();
                     const initialData = {
                         created: Date.now(),
@@ -400,9 +391,7 @@
                 } else {
                     const data = snap.val();
                     const players = data.players || {};
-                    
                     if (Object.keys(players).length < 2) {
-                        // Join existing
                         if (!players[currentUser.uid]) {
                             await update(child(roomRef, `players/${currentUser.uid}`), {
                                 chips: 5000,
@@ -420,43 +409,25 @@
                         return;
                     }
                 }
-                
                 gameId = roomName;
                 els.lobby.style.display = 'none';
                 els.roomDisplay.innerHTML = `TABLE: <span class="text-white">${roomName}</span>`;
                 
-                // Gestion de la déconnexion brutale
+                // Cleanup automatique si déconnexion
                 const myPlayerRef = child(roomRef, `players/${currentUser.uid}`);
                 onDisconnect(myPlayerRef).remove();
-
+                
                 startGameListener(roomRef);
-
-            } catch (e) {
-                console.error(e);
-                els.status.innerText = "Erreur de connexion.";
-                els.btnJoin.disabled = false;
-            }
+            } catch (e) { console.error(e); els.status.innerText = "Erreur de connexion."; els.btnJoin.disabled = false; }
         }
 
-        // Fonction de nettoyage explicite
         window.leaveMatch = async () => {
-            if (!gameId || !currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-
+            if (!gameId || !currentUser) { window.location.href = 'index.html'; return; }
             const roomRef = ref(db, `poker/rooms/${gameId}`);
-            
-            // Supprimer le joueur
             await remove(child(roomRef, `players/${currentUser.uid}`));
-            
-            // Vérifier si la salle est vide
+            // Clean empty room
             const snap = await get(child(roomRef, 'players'));
-            if (!snap.exists()) {
-                // Salle vide, on nettoie
-                await remove(roomRef);
-            }
-            
+            if (!snap.exists()) await remove(roomRef);
             location.reload();
         };
 
@@ -465,32 +436,24 @@
                 const data = snap.val();
                 if(!data) return;
                 renderGame(data);
-                
-                // Host logic: trigger start
                 if (data.state === 'ready_to_start') {
-                    // Only the first player (host) should trigger this to avoid conflicts
                     const pIds = Object.keys(data.players);
-                    if (pIds[0] === currentUser.uid) {
-                        startNewHand(roomRef, data);
-                    }
+                    if (pIds[0] === currentUser.uid) startNewHand(roomRef, data);
                 }
             });
         }
 
-        // --- GAMEPLAY LOGIC ---
-
         async function startNewHand(roomRef, data) {
             const deck = new Deck(); 
             const pIds = Object.keys(data.players);
+            if(pIds.length < 2) return; // Safety
+
             const p1Id = pIds[0];
             const p2Id = pIds[1];
-            
-            // Logic Dealer Swap
             let p1 = data.players[p1Id];
             let p2 = data.players[p2Id];
             let newP1Dealer = !p1.isDealer;
 
-            // Deal
             const h1 = [deck.pop(), deck.pop()];
             const h2 = [deck.pop(), deck.pop()];
             
@@ -513,7 +476,7 @@
             updates[`deck`] = deck.toJSON();
             updates[`board`] = [];
             updates[`pot`] = sbAmt + bbAmt;
-            updates[`currentBet`] = 50;
+            updates[`currentBet`] = 50; // SB must add 50 to call
             updates[`state`] = 'preflop';
             updates[`turn`] = activePlayerUid;
             updates[`lastAction`] = { type: 'new_hand', amount: 0 };
@@ -537,16 +500,9 @@
             const oppId = pIds.find(id => id !== myId);
             
             if(!data.players[myId]) return; 
-
             const me = data.players[myId];
-            
-            // Gérer le cas où l'adversaire se déconnecte
-            let opp = null;
-            if (oppId && data.players[oppId]) {
-                opp = data.players[oppId];
-            }
+            let opp = oppId ? data.players[oppId] : null;
 
-            // 1. Text Info
             els.pot.innerText = data.pot;
             els.pChips.innerText = me.chips;
             els.pHud.classList.toggle('active', data.turn === myId);
@@ -556,13 +512,11 @@
                 els.oHud.classList.toggle('active', data.turn === oppId);
                 els.oppName.innerText = opp.name;
                 els.oppAvatar.src = opp.avatar;
-                
                 if (me.isDealer) { els.dPlayer.classList.remove('hidden'); els.dOpp.classList.add('hidden'); }
                 else { els.dPlayer.classList.add('hidden'); els.dOpp.classList.remove('hidden'); }
             } else {
                 els.oChips.innerText = "---";
                 els.gStatus.innerText = "EN ATTENTE D'UN JOUEUR...";
-                // Disable controls if no opponent
                 els.controls.fold.disabled = true;
                 els.controls.check.disabled = true;
                 els.controls.raise.disabled = true;
@@ -570,37 +524,33 @@
                 return;
             }
 
-            // 2. Status
             if(data.state === 'showdown') els.gStatus.innerText = "SHOWDOWN !";
             else if (data.turn === myId) els.gStatus.innerText = "À VOUS DE JOUER";
             else els.gStatus.innerText = "ADVERSAIRE RÉFLÉCHIT...";
 
-            // 3. Cards
-            // My Hand
+            // ANIMATED CARDS
             const myHand = me.hand || [];
             if (myHand.length !== localState.myHandLength || data.lastAction.type === 'new_hand') {
                 els.pHand.innerHTML = '';
-                myHand.forEach(c => createVisualCard(els.pHand, c, true));
+                myHand.forEach((c, i) => createVisualCard(els.pHand, c, true, i * 200));
                 localState.myHandLength = myHand.length;
             }
 
-            // Opp Hand
             const oppHand = opp.hand || [];
             if (oppHand.length !== localState.oppHandLength || data.lastAction.type === 'new_hand') {
                 els.oHand.innerHTML = '';
                 const showOpp = (data.state === 'showdown');
-                oppHand.forEach(c => createVisualCard(els.oHand, c, showOpp));
+                oppHand.forEach((c, i) => createVisualCard(els.oHand, c, showOpp, i * 200));
                 localState.oppHandLength = oppHand.length;
             }
 
-            // Board
             const board = data.board || [];
             if (board.length > localState.boardLength) {
                 const newCards = board.slice(localState.boardLength);
                 newCards.forEach((c, i) => {
                     const slot = document.getElementById(`community-${localState.boardLength + i}`);
                     slot.innerHTML = '';
-                    createVisualCard(slot, c, true);
+                    createVisualCard(slot, c, true, i * 300);
                 });
                 sfx.deal();
                 localState.boardLength = board.length;
@@ -609,21 +559,19 @@
                 localState.boardLength = 0;
             }
 
-            // 4. Action Bubble
             if(data.lastAction && data.lastAction.actor === oppId) {
                 const txt = getActionText(data.lastAction);
                 showBubble(txt);
             }
 
-            // 5. Controls
             updateControls(data, me);
         }
 
-        function createVisualCard(container, cardData, faceUp) {
+        // --- NEW ANIMATION FUNCTION ---
+        function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
             const el = document.createElement('div');
             el.className = `card ${faceUp ? 'flipped' : ''}`;
-            el.style.position = 'relative';
             el.innerHTML = `
                 <div class="card-face card-front dark-theme">
                     <div class="card-val-tl ${card.getColor()}">${card.value}</div>
@@ -632,8 +580,33 @@
                 </div>
                 <div class="card-face card-back"></div>
             `;
+            
+            // Animation Logic
+            const deckPos = document.getElementById('deck-anchor').getBoundingClientRect();
+            const targetPos = container.getBoundingClientRect();
+            
+            // Calculate start position relative to container
+            // We can't use fixed/absolute easily without breaking layout, so we use transform.
+            // But container is relative. 
+            
+            // Better approach: Append to body fixed, animate, then move to container.
+            // Simplified for stability: Just animate from offset.
+            
+            el.style.opacity = '0';
             container.appendChild(el);
-            el.animate([{transform: 'scale(0.8)'}, {transform: 'scale(1)'}], {duration: 200});
+            
+            setTimeout(() => {
+                el.style.transition = 'none';
+                el.style.opacity = '1';
+                el.style.transform = `translate(${deckPos.left - targetPos.left}px, ${deckPos.top - targetPos.top}px) scale(0.5) rotate(180deg)`;
+                
+                // Force reflow
+                el.offsetHeight; 
+                
+                el.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                el.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
+                if(faceUp) el.classList.add('flipped');
+            }, delay);
         }
 
         function getActionText(act) {
@@ -654,7 +627,6 @@
         }
 
         function updateControls(data, me) {
-            // FIX: Use currentUser.uid because 'me' object does not contain uid key
             const myTurn = (data.turn === currentUser.uid) && (data.state !== 'showdown');
             
             els.controls.fold.disabled = !myTurn;
@@ -667,15 +639,18 @@
             const toCall = data.currentBet;
             els.controls.check.innerText = (toCall === 0) ? "CHECK" : `SUIVRE (${toCall})`;
             
-            let minR = Math.max(data.minRaise, toCall * 2);
+            // Slider logic: Min raise is usually big blind or double the previous bet
+            // We use total bet approach
+            let minR = data.currentBet > 0 ? (data.currentBet * 2) : 100;
             if(minR > me.chips) minR = me.chips;
+            
             els.controls.slider.min = minR;
             els.controls.slider.max = me.chips;
             els.controls.slider.value = minR;
             els.controls.val.innerText = minR;
+            els.controls.raise.innerText = `MISER ${minR}`;
         }
 
-        // Actions
         els.controls.fold.onclick = () => sendMove('fold');
         els.controls.check.onclick = () => {
              const isCall = els.controls.check.innerText.includes("SUIVRE");
@@ -694,7 +669,6 @@
             els.controls.fold.disabled = true;
             const roomRef = ref(db, `poker/rooms/${gameId}`);
             
-            // Transaction to avoid race conditions
             await runTransaction(roomRef, (data) => {
                 if (!data) return;
                 
@@ -704,15 +678,17 @@
                 const oppUid = pIds[oppIdx];
                 const me = data.players[currentUser.uid];
                 
-                if (data.turn !== currentUser.uid) return; // Not my turn
+                if (data.turn !== currentUser.uid) return; 
 
                 let nextTurn = oppUid;
                 let resetBet = false;
                 let roundEnded = false;
 
+                // LOGIQUE MISE CAPPEE (Pas de négatif)
+                const myStack = me.chips;
+
                 if (type === 'fold') {
                     data.state = 'waiting_for_new_hand';
-                    // FIX: use currentUser.uid
                     data.lastAction = { type: 'fold', actor: currentUser.uid, amount: 0 };
                     data.players[oppUid].chips += data.pot;
                     data.pot = 0;
@@ -720,36 +696,48 @@
                 }
 
                 if (type === 'check') {
-                    // FIX: use currentUser.uid
                     data.lastAction = { type: 'check', actor: currentUser.uid };
-                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
+                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true; // BB Check preflop -> End
                     else if (data.state !== 'preflop') {
                          if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
                     }
                 }
 
                 if (type === 'call') {
-                    const diff = data.currentBet;
+                    let diff = data.currentBet;
+                    if (diff > myStack) diff = myStack; // All-in partiel
+
                     data.pot += diff;
                     me.chips -= diff;
-                    // FIX: use currentUser.uid
                     data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
-                    resetBet = true;
                     
+                    // Si je call, la mise à suivre retombe à 0 (sauf cas spécial preflop)
+                    data.currentBet = 0; 
+
+                    // Exception Preflop : Si le Dealer call la BB, la BB a l'option (pas fini)
                     if (data.state === 'preflop' && me.isDealer) {
-                        resetBet = false;
+                        resetBet = false; // Le tour continue vers BB
                     } else {
                         roundEnded = true;
                     }
                 }
 
                 if (type === 'raise') {
-                    const diff = amount;
-                    data.pot += diff;
-                    me.chips -= diff;
-                    data.currentBet = diff; 
-                    // FIX: use currentUser.uid
-                    data.lastAction = { type: 'raise', actor: currentUser.uid, amount: diff };
+                    let raiseAmt = amount; 
+                    if (raiseAmt > myStack) raiseAmt = myStack;
+                    
+                    // Calcul du "surcoût" par rapport à ce qu'il y a déjà à payer
+                    // Dans ce modèle simplifié, 'amount' est ce qu'on ajoute au pot
+                    data.pot += raiseAmt;
+                    me.chips -= raiseAmt;
+                    
+                    // La nouvelle mise à suivre pour l'adversaire
+                    // C'est le montant ajouté - ce qu'il avait déjà mis? 
+                    // Simplifié: c'est le montant de la relance "nette"
+                    data.currentBet = raiseAmt - data.currentBet; 
+                    if (data.currentBet < 0) data.currentBet = raiseAmt; // Safety
+
+                    data.lastAction = { type: 'raise', actor: currentUser.uid, amount: raiseAmt };
                     roundEnded = false;
                 }
 
@@ -761,6 +749,7 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
+                        // Postflop: BB acts first
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid;
                     } else if (data.state === 'flop') {
@@ -780,7 +769,6 @@
                         nextTurn = null;
                     }
                 } else {
-                     if (resetBet) data.currentBet = 0;
                      data.turn = nextTurn;
                 }
 
@@ -788,7 +776,6 @@
             });
         }
 
-        // Listen for Showdown trigger
         let processedShowdown = false;
         onValue(ref(db, `poker/rooms/${gameId}`), async (snap) => {
              const data = snap.val();
@@ -806,7 +793,7 @@
         });
 
         async function resolveShowdown(data) {
-            // Simple Random Winner for Demo (Replace with HandEvaluator)
+            // TODO: Integrate HandEvaluator here for real winner
             const pIds = Object.keys(data.players);
             const winnerId = pIds[Math.floor(Math.random() * pIds.length)];
             
