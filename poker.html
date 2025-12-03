@@ -8,6 +8,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
     
+    <!-- MOTEUR DE POKER (POKERSOLVER) -->
+    <script src="https://cdn.jsdelivr.net/npm/pokersolver@2.1.4/pokersolver.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -55,26 +58,19 @@
         .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
         
-        /* IMPORTANT: La classe flipped applique la rotation 180deg */
         .card.flipped { transform: rotateY(180deg); }
-        
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; background: #111; overflow: hidden; }
 
-        /* DESIGN "RED EMPIRE" FACE AVANT */
+        /* DESIGN "RED EMPIRE" */
         .card-front.dark-theme { background: radial-gradient(circle at center, rgba(40,40,40,1) 0%, rgba(5,5,5,1) 120%); border: 1px solid #444; box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px rgba(251, 191, 36, 0.15); }
         .card-front.dark-theme::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; pointer-events: none; }
-        
-        /* La face avant est tournée de 180deg de base, donc quand la carte (parent) tourne de 180deg, la face avant devient visible (360deg) */
         .card-front { transform: rotateY(180deg); color: #111; font-family: 'Cinzel', serif; }
         
-        /* DOS ROUGE STYLE CASINO SIMPLIFIÉ */
         .card-back { background-color: #990000; background-image: linear-gradient(45deg, #7a0000 25%, transparent 25%, transparent 75%, #7a0000 75%, #7a0000), linear-gradient(45deg, #7a0000 25%, transparent 25%, transparent 75%, #7a0000 75%, #7a0000); background-position: 0 0, 10px 10px; background-size: 20px 20px; display: flex; align-items: center; justify-content: center; border: 5px solid #e5e5e5; }
         .card-back::after { content: 'RE'; font-family: 'Orbitron', sans-serif; font-weight: 800; color: #990000; background: #e5e5e5; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: none; padding: 0; }
 
-        .suit-red { color: #dc2626; }
-        .suit-black { color: #171717; }
-        .card-front.dark-theme .suit-red { color: #ff1a1a; text-shadow: 0 0 5px rgba(255, 0, 0, 0.8), 0 0 10px rgba(255, 0, 0, 0.4); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); }
-        .card-front.dark-theme .suit-black { color: #e0e7ff; text-shadow: 0 0 5px rgba(200, 200, 255, 0.6), 0 0 10px rgba(200, 200, 255, 0.2); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.9)); }
+        .suit-red { color: #ff1a1a; text-shadow: 0 0 5px rgba(255, 0, 0, 0.8); }
+        .suit-black { color: #e0e7ff; text-shadow: 0 0 5px rgba(200, 200, 255, 0.6); }
         
         .card-val-tl { position: absolute; top: 6px; left: 8px; font-size: 1.4rem; font-weight: 700; line-height: 1; font-family: 'Rajdhani', sans-serif; letter-spacing: -1px; }
         .card-val-br { position: absolute; bottom: 6px; right: 8px; font-size: 1.4rem; font-weight: 700; line-height: 1; transform: rotate(180deg); font-family: 'Rajdhani', sans-serif; letter-spacing: -1px; }
@@ -95,7 +91,6 @@
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #ff3333; cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px #ff3333; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px; }
 
-        /* Deck Anchor for Animation */
         #deck-anchor { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; z-index: 999; }
         .dealer-btn { width: 24px; height: 24px; background: white; color: black; border-radius: 50%; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
@@ -286,17 +281,25 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        const SUITS = ['♠', '♥', '♣', '♦'];
-        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const SUITS = ['s', 'h', 'c', 'd']; // Spades, Hearts, Clubs, Diamonds
+        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
         
+        // Helper to convert to PokerSolver format
+        function toSolverCard(card) {
+            return card.value + card.suit;
+        }
+
         class Card {
             constructor(suit, value) { this.suit = suit; this.value = value; this.id = Math.random().toString(36).substr(2, 9); }
-            getColor() { return (this.suit === '♥' || this.suit === '♦') ? 'suit-red' : 'suit-black'; }
-            getIntValue() {
-                if (this.value === 'A') return 14; if (this.value === 'K') return 13;
-                if (this.value === 'Q') return 12; if (this.value === 'J') return 11;
-                return parseInt(this.value);
+            // Visual Helpers
+            getSymbol() {
+                if(this.suit === 's') return '♠';
+                if(this.suit === 'h') return '♥';
+                if(this.suit === 'c') return '♣';
+                if(this.suit === 'd') return '♦';
+                return '?';
             }
+            getColor() { return (this.suit === 'h' || this.suit === 'd') ? 'suit-red' : 'suit-black'; }
         }
 
         class Deck {
@@ -314,20 +317,6 @@
             }
             pop() { return this.cards.pop(); }
             toJSON() { return this.cards; }
-        }
-        
-        // --- HAND EVALUATOR (BASIC) ---
-        class HandEvaluator {
-            static evaluate(cards) {
-                // Simplified High Card for demo robustness
-                if (!cards || cards.length === 0) return { score: 0, name: "Vide" };
-                const vals = cards.map(c => {
-                    if (c.value === 'A') return 14; if (c.value === 'K') return 13;
-                    if (c.value === 'Q') return 12; if (this.value === 'J') return 11;
-                    return parseInt(c.value) || 0;
-                }).sort((a,b)=>b-a);
-                return { score: vals.reduce((a,v)=>a+v,0), name: "Hauteur " + vals[0] };
-            }
         }
 
         // --- MULTIPLAYER ENGINE ---
@@ -444,7 +433,6 @@
                 els.lobby.style.display = 'none';
                 els.roomDisplay.innerHTML = `TABLE: <span class="text-white">${roomName}</span>`;
                 
-                // Cleanup automatique si déconnexion
                 const myPlayerRef = child(roomRef, `players/${currentUser.uid}`);
                 onDisconnect(myPlayerRef).remove();
                 
@@ -456,7 +444,6 @@
             if (!gameId || !currentUser) { window.location.href = 'index.html'; return; }
             const roomRef = ref(db, `poker/rooms/${gameId}`);
             await remove(child(roomRef, `players/${currentUser.uid}`));
-            // Clean empty room
             const snap = await get(child(roomRef, 'players'));
             if (!snap.exists()) await remove(roomRef);
             location.reload();
@@ -490,25 +477,23 @@
             const h2 = [deck.pop(), deck.pop()];
             
             let sbAmt = 50, bbAmt = 100;
-            
             let p1Chips = Math.max(0, p1.chips);
             let p2Chips = Math.max(0, p2.chips);
             let activePlayerUid;
             let p1Contrib = 0, p2Contrib = 0;
 
-            // Dealer = SB = Acts First
             if (newP1Dealer) {
                 p1Contrib = Math.min(sbAmt, p1Chips);
                 p2Contrib = Math.min(bbAmt, p2Chips);
                 p1Chips -= p1Contrib;
                 p2Chips -= p2Contrib;
-                activePlayerUid = p1Id; 
+                activePlayerUid = p1Id; // SB acts first preflop
             } else {
                 p2Contrib = Math.min(sbAmt, p2Chips);
                 p1Contrib = Math.min(bbAmt, p1Chips);
                 p2Chips -= p2Contrib;
                 p1Chips -= p1Contrib;
-                activePlayerUid = p2Id; 
+                activePlayerUid = p2Id; // SB acts first preflop
             }
             
             const currentBetToCall = Math.abs(p1Contrib - p2Contrib); 
@@ -582,7 +567,6 @@
             const oppHand = opp.hand || [];
             if (oppHand.length !== localState.oppHandLength || data.lastAction.type === 'new_hand') {
                 els.oHand.innerHTML = '';
-                // Show cards only on showdown
                 const showOpp = (data.state === 'showdown' || data.state === 'waiting_for_new_hand');
                 oppHand.forEach((c, i) => createVisualCard(els.oHand, c, showOpp, i * 200));
                 localState.oppHandLength = oppHand.length;
@@ -621,17 +605,16 @@
             updateControls(data, me);
         }
 
-        // --- FIXED ANIMATION FUNCTION (FLIGHT & ROTATION) ---
         function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
-            
             const el = document.createElement('div');
-            // Si faceUp, la classe flipped gère le style final (rotateY 180)
-            el.className = `card ${faceUp ? 'flipped' : ''}`;
+            
+            // Initial State
+            el.className = 'card';
             el.innerHTML = `
                 <div class="card-face card-front dark-theme">
                     <div class="card-val-tl ${card.getColor()}">${card.value}</div>
-                    <div class="card-suit-center ${card.getColor()}">${card.suit}</div>
+                    <div class="card-suit-center ${card.getColor()}">${card.getSymbol()}</div>
                     <div class="card-val-br ${card.getColor()}">${card.value}</div>
                 </div>
                 <div class="card-face card-back"></div>
@@ -640,12 +623,13 @@
             const deckPos = document.getElementById('deck-anchor').getBoundingClientRect();
             const targetPos = container.getBoundingClientRect();
             
+            // Start Fixed
             el.style.position = 'fixed';
             el.style.left = `${deckPos.left}px`;
             el.style.top = `${deckPos.top}px`;
             el.style.zIndex = 100;
             el.style.opacity = '0';
-            el.style.transform = 'scale(0.5) rotateY(0deg)'; // Dos visible
+            el.style.transform = 'scale(0.5) rotateY(0deg)'; 
             
             document.body.appendChild(el);
             
@@ -658,18 +642,18 @@
                 el.style.left = `${targetPos.left + offsetX}px`;
                 el.style.top = `${targetPos.top + offsetY}px`;
                 
-                // Si faceUp, on anime vers 180deg pour révéler la face
                 const rot = faceUp ? 'rotateY(180deg)' : 'rotateY(0deg)';
                 el.style.transform = `scale(1) ${rot}`;
                 
-                // Docking
                 setTimeout(() => {
                     el.style.position = 'relative';
                     el.style.left = 'auto';
                     el.style.top = 'auto';
                     el.style.zIndex = 'auto';
                     el.style.transition = 'none';
-                    el.style.transform = ''; // On laisse le CSS (classe .flipped) prendre le relais
+                    el.style.transform = ''; 
+                    // Important: add 'flipped' class ONLY if faceUp is true to maintain rotation
+                    if (faceUp) el.classList.add('flipped');
                     container.appendChild(el);
                 }, 600);
                 
@@ -757,20 +741,18 @@
                     data.lastAction = { type: 'fold', actor: currentUser.uid, amount: 0 };
                     data.players[oppUid].chips += data.pot;
                     data.pot = 0;
-                    // Win triggered by fold
                     data.lastAction = { type: 'win', actor: oppUid }; 
                     return data; 
                 }
 
                 if (type === 'check') {
                     data.lastAction = { type: 'check', actor: currentUser.uid };
-                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
+                    if (data.state === 'preflop' && !me.isDealer) {
+                        roundEnded = true;
+                    }
                     else if (data.state !== 'preflop') {
-                         // If opponent checked before me, round ends
-                         if (prevAction.type === 'check') roundEnded = true;
-                         // Or if I am the second to check (Dealer acts first, checks -> BB checks -> End)
-                         // In HU postflop: SB (Dealer) acts first.
-                         // If SB checks, BB turn. If BB checks, round ended = true.
+                         if (prevAction.type === 'check' && prevAction.actor !== currentUser.uid) roundEnded = true;
+                         if (prevAction.type === 'new_hand' && me.isDealer) roundEnded = false; // First check postflop
                     }
                 }
 
@@ -781,10 +763,11 @@
                     data.pot += diff;
                     me.chips -= diff;
                     data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
+                    
                     data.currentBet = 0; 
 
                     if (data.state === 'preflop' && me.isDealer) {
-                        resetBet = false; // BB has option
+                        resetBet = false; 
                     } else {
                         roundEnded = true;
                     }
@@ -809,11 +792,6 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        // Postflop: BB acts first? No, SB acts first.
-                        // Wait, in HU, Dealer is SB.
-                        // Preflop: SB acts first.
-                        // Postflop: BB acts first.
-                        // Correct: Find BB.
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
@@ -830,7 +808,7 @@
                         nextTurn = bbUid;
                     } else if (data.state === 'river') {
                         data.state = 'showdown';
-                        nextTurn = null; // No turn, wait for resolution
+                        nextTurn = null;
                     }
                 } 
                 
@@ -859,26 +837,22 @@
         });
 
         async function resolveShowdown(data) {
-            // Simple High Card logic for MVP
+            // SOLVED: Use pokersolver lib
             const pIds = Object.keys(data.players);
-            let bestScore = -1;
-            let winnerId = null;
-
-            pIds.forEach(id => {
-                // Combine hand + board
-                const fullHand = [...data.players[id].hand, ...data.board];
-                const res = HandEvaluator.evaluate(fullHand);
-                if (res.score > bestScore) {
-                    bestScore = res.score;
-                    winnerId = id;
-                }
+            const hands = pIds.map(id => {
+                const p = data.players[id];
+                const cards = [...p.hand, ...data.board].map(c => toSolverCard(c));
+                return { id: id, hand: Hand.solve(cards) };
             });
             
+            const winnerHand = Hand.winners(hands.map(h => h.hand))[0];
+            const winner = hands.find(h => h.hand === winnerHand);
+            
             const updates = {};
-            updates[`players/${winnerId}/chips`] = data.players[winnerId].chips + data.pot;
+            updates[`players/${winner.id}/chips`] = data.players[winner.id].chips + data.pot;
             updates[`pot`] = 0;
             updates[`state`] = 'waiting_for_new_hand';
-            updates[`lastAction`] = { type: 'win', actor: winnerId };
+            updates[`lastAction`] = { type: 'win', actor: winner.id, desc: winnerHand.descr };
             
             await update(ref(db, `poker/rooms/${gameId}`), updates);
         }
