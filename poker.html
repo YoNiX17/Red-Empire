@@ -55,12 +55,16 @@
         .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
         
+        /* IMPORTANT: La classe flipped applique la rotation 180deg */
         .card.flipped { transform: rotateY(180deg); }
+        
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; background: #111; overflow: hidden; }
 
         /* DESIGN "RED EMPIRE" FACE AVANT */
         .card-front.dark-theme { background: radial-gradient(circle at center, rgba(40,40,40,1) 0%, rgba(5,5,5,1) 120%); border: 1px solid #444; box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px rgba(251, 191, 36, 0.15); }
         .card-front.dark-theme::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; pointer-events: none; }
+        
+        /* La face avant est tournée de 180deg de base, donc quand la carte (parent) tourne de 180deg, la face avant devient visible (360deg) */
         .card-front { transform: rotateY(180deg); color: #111; font-family: 'Cinzel', serif; }
         
         /* DOS ROUGE STYLE CASINO SIMPLIFIÉ */
@@ -592,8 +596,10 @@
         function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
             
-            // 1. Create Card
+            // 1. Create Card (FIX: Apply flipped class here correctly)
             const el = document.createElement('div');
+            // If faceUp is true, we want to see the front. CSS handles this via 'flipped' class which rotates Y 180.
+            // The card-front has rotateY(180), so when flipped, it becomes 360 (visible).
             el.className = `card ${faceUp ? 'flipped' : ''}`;
             el.innerHTML = `
                 <div class="card-face card-front dark-theme">
@@ -614,9 +620,10 @@
             el.style.top = `${deckPos.top}px`;
             el.style.zIndex = 100;
             el.style.opacity = '0';
-            // Start facing UP if faceUp is true? No, start upside down (back) usually.
-            // But here we have a bug. Let's make sure we end up correctly.
-            el.style.transform = 'scale(0.5) rotate(180deg)';
+            
+            // FIX: Initial state should match the "Back" facing user, scaled down.
+            // RotateY(0) shows back.
+            el.style.transform = 'scale(0.5) rotate(0deg)';
             
             document.body.appendChild(el);
             
@@ -627,27 +634,24 @@
                 // 4. Fly to Target
                 const offsetX = 10; 
                 const offsetY = 10;
-                
                 el.style.left = `${targetPos.left + offsetX}px`;
                 el.style.top = `${targetPos.top + offsetY}px`;
                 
-                // FIX: Ensure rotation ends correctly.
-                // If faceUp is true, we want to see front. CSS class flipped does rotateY(180deg).
-                // If we force rotateY(180deg) here inline, it works.
-                const flipTransform = faceUp ? 'rotateY(180deg)' : '';
-                el.style.transform = `scale(1) rotate(0deg) ${flipTransform}`;
-                
-                if(faceUp) el.classList.add('flipped');
+                // FIX: During animation, we must manually rotate if flipped
+                // CSS Class handles the final state, but transition needs explicit values.
+                // If faceUp, rotateY(180deg).
+                const rot = faceUp ? 'rotateY(180deg)' : 'rotateY(0deg)';
+                el.style.transform = `scale(1) rotate(0deg) ${rot}`;
                 
                 // 5. Dock into Container after animation
                 setTimeout(() => {
+                    // IMPORTANT: Reset styles to let CSS classes take over and positioning relative to container
                     el.style.position = 'relative';
-                    el.style.left = '0';
-                    el.style.top = '0';
-                    el.style.zIndex = '10';
+                    el.style.left = 'auto';
+                    el.style.top = 'auto';
+                    el.style.zIndex = 'auto';
                     el.style.transition = 'none';
-                    // Clear transform so CSS class takes over fully
-                    el.style.transform = ''; 
+                    el.style.transform = ''; // Clear transform to let CSS class rule
                     container.appendChild(el);
                 }, 600);
                 
@@ -730,6 +734,9 @@
                 // SAFETY: Prevent negative chips
                 const myStack = Math.max(0, me.chips);
 
+                // FIX: Check previous action logic for ending round
+                const prevAction = data.lastAction || {};
+
                 if (type === 'fold') {
                     data.state = 'waiting_for_new_hand';
                     data.lastAction = { type: 'fold', actor: currentUser.uid, amount: 0 };
@@ -740,30 +747,29 @@
 
                 if (type === 'check') {
                     data.lastAction = { type: 'check', actor: currentUser.uid };
-                    // Preflop BB Check (Option) -> Flop
-                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
-                    // Postflop Check
+                    
+                    // Preflop: BB Check (Option) -> Flop (Round Ends)
+                    if (data.state === 'preflop' && !me.isDealer) {
+                        roundEnded = true;
+                    }
+                    // Postflop: If prev action was check (and not from me), round ends.
+                    // Or if I am 2nd to act and checked.
                     else if (data.state !== 'preflop') {
-                         // If active player checks and last action was also check (or start of street), round ends?
-                         // In HU: SB(Dealer) acts first postflop.
-                         // If P1 checks, P2 can check -> Round End.
-                         // If P1 bets, P2 calls -> Round End.
-                         // We need to check if this is the "closing" action.
-                         // Simple heuristic: if previous action was check, this check closes it.
-                         if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
-                         // Also if first actor (SB) checks, turn goes to BB.
+                         if (prevAction.type === 'check') {
+                             roundEnded = true;
+                         }
+                         // Special case: Start of street, first player checks -> not end
                     }
                 }
 
                 if (type === 'call') {
                     let diff = data.currentBet;
-                    if (diff > myStack) diff = myStack; // Cap at stack
+                    if (diff > myStack) diff = myStack; 
 
                     data.pot += diff;
                     me.chips -= diff;
                     data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
                     
-                    // If Call, usually betting is closed for this level
                     data.currentBet = 0; 
 
                     // EXCEPTION PREFLOP : If Dealer calls BB, BB has option.
@@ -780,10 +786,6 @@
                     
                     data.pot += raiseAmt;
                     me.chips -= raiseAmt;
-                    
-                    // Update currentBet (difference to call for opponent)
-                    // Simplified: the raise sets the new bar.
-                    // If I raise 200, opp has to match 200 (minus what they put in? Logic simplified here)
                     data.currentBet = raiseAmt; 
 
                     data.lastAction = { type: 'raise', actor: currentUser.uid, amount: raiseAmt };
@@ -798,10 +800,8 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        // Postflop: BB acts first in HU? No, SB acts first in HU postflop.
-                        // Normal ring game: SB acts first.
-                        // HU rule: Button is SB. SB acts first preflop. BB acts first postflop?
-                        // NO: In HU, Button/SB acts first preflop. BB acts first postflop.
+                        
+                        // Postflop: BB (Opponent of Dealer) acts first
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
