@@ -55,16 +55,12 @@
         .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
         
-        /* IMPORTANT: La classe flipped applique la rotation 180deg */
         .card.flipped { transform: rotateY(180deg); }
-        
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; background: #111; overflow: hidden; }
 
         /* DESIGN "RED EMPIRE" FACE AVANT */
         .card-front.dark-theme { background: radial-gradient(circle at center, rgba(40,40,40,1) 0%, rgba(5,5,5,1) 120%); border: 1px solid #444; box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px rgba(251, 191, 36, 0.15); }
         .card-front.dark-theme::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; pointer-events: none; }
-        
-        /* La face avant est tournée de 180deg de base, donc quand la carte (parent) tourne de 180deg, la face avant devient visible (360deg) */
         .card-front { transform: rotateY(180deg); color: #111; font-family: 'Cinzel', serif; }
         
         /* DOS ROUGE STYLE CASINO SIMPLIFIÉ */
@@ -596,10 +592,10 @@
         function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
             
-            // 1. Create Card (FIX: Apply flipped class here correctly)
             const el = document.createElement('div');
-            // If faceUp is true, we want to see the front. CSS handles this via 'flipped' class which rotates Y 180.
-            // The card-front has rotateY(180), so when flipped, it becomes 360 (visible).
+            // La classe flipped gère la rotation finale. 
+            // Si faceUp est true, on veut voir la face. La face est rotateY(180) dans le CSS.
+            // Donc on doit faire tourner la carte (parent) de 180deg pour révéler la face.
             el.className = `card ${faceUp ? 'flipped' : ''}`;
             el.innerHTML = `
                 <div class="card-face card-front dark-theme">
@@ -610,20 +606,17 @@
                 <div class="card-face card-back"></div>
             `;
             
-            // 2. Get Positions
+            // Positions
             const deckPos = document.getElementById('deck-anchor').getBoundingClientRect();
             const targetPos = container.getBoundingClientRect();
             
-            // 3. Start at Deck (Fixed position to act as absolute anchor)
+            // Initial : au centre, petit, dos visible (rotateY 0)
             el.style.position = 'fixed';
             el.style.left = `${deckPos.left}px`;
             el.style.top = `${deckPos.top}px`;
             el.style.zIndex = 100;
             el.style.opacity = '0';
-            
-            // FIX: Initial state should match the "Back" facing user, scaled down.
-            // RotateY(0) shows back.
-            el.style.transform = 'scale(0.5) rotate(0deg)';
+            el.style.transform = 'scale(0.5) rotateY(0deg)'; 
             
             document.body.appendChild(el);
             
@@ -631,27 +624,25 @@
                 el.style.opacity = '1';
                 el.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 
-                // 4. Fly to Target
                 const offsetX = 10; 
                 const offsetY = 10;
+                
                 el.style.left = `${targetPos.left + offsetX}px`;
                 el.style.top = `${targetPos.top + offsetY}px`;
                 
-                // FIX: During animation, we must manually rotate if flipped
-                // CSS Class handles the final state, but transition needs explicit values.
-                // If faceUp, rotateY(180deg).
-                const rot = faceUp ? 'rotateY(180deg)' : 'rotateY(0deg)';
-                el.style.transform = `scale(1) rotate(0deg) ${rot}`;
+                // Animation vers la destination.
+                // Si faceUp, on tourne de 180deg. Sinon on reste à 0.
+                const targetRot = faceUp ? '180deg' : '0deg';
+                el.style.transform = `scale(1) rotateY(${targetRot})`;
                 
-                // 5. Dock into Container after animation
+                // Docking
                 setTimeout(() => {
-                    // IMPORTANT: Reset styles to let CSS classes take over and positioning relative to container
                     el.style.position = 'relative';
                     el.style.left = 'auto';
                     el.style.top = 'auto';
                     el.style.zIndex = 'auto';
                     el.style.transition = 'none';
-                    el.style.transform = ''; // Clear transform to let CSS class rule
+                    el.style.transform = ''; // On nettoie pour laisser la classe CSS gérer
                     container.appendChild(el);
                 }, 600);
                 
@@ -755,10 +746,9 @@
                     // Postflop: If prev action was check (and not from me), round ends.
                     // Or if I am 2nd to act and checked.
                     else if (data.state !== 'preflop') {
-                         if (prevAction.type === 'check') {
+                         if (prevAction.type === 'check' && prevAction.actor !== currentUser.uid) {
                              roundEnded = true;
                          }
-                         // Special case: Start of street, first player checks -> not end
                     }
                 }
 
@@ -820,8 +810,11 @@
                         data.state = 'showdown';
                         nextTurn = null;
                     }
-                } else {
-                     data.turn = nextTurn;
+                } 
+                
+                // IMPORTANT FIX: Update data.turn even if round ended (unless Showdown)
+                if (data.state !== 'showdown' && data.state !== 'waiting_for_new_hand') {
+                    data.turn = nextTurn;
                 }
 
                 return data;
