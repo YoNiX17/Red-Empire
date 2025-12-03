@@ -52,7 +52,7 @@
         .card-slot { width: 80px; height: 112px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.0); display: flex; align-items: center; justify-content: center; transition: border-color 0.3s; }
         @media (min-width: 1024px) { .card-slot { width: 100px; height: 140px; } }
         
-        .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; }
+        .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
         
         .card.flipped { transform: rotateY(180deg); }
@@ -92,7 +92,7 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px; }
 
         /* Deck Anchor for Animation */
-        #deck-anchor { position: absolute; top: 20%; left: 20%; width: 0; height: 0; z-index: 999; }
+        #deck-anchor { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; z-index: 999; }
         .dealer-btn { width: 24px; height: 24px; background: white; color: black; border-radius: 50%; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* LOBBY OVERLAY */
@@ -142,6 +142,9 @@
             <div class="table-rim-light"></div>
             <div class="table-felt-pattern"></div>
             <div class="table-logo"><i class="fa-solid fa-dragon"></i></div>
+            
+            <!-- CENTRAL DECK POSITION -->
+            <div id="deck-anchor"></div>
 
             <!-- COMMUNITY AREA -->
             <div class="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center z-10">
@@ -204,9 +207,6 @@
                     <div id="dealer-player" class="absolute -right-4 top-1/2 transform -translate-y-1/2 dealer-btn hidden">D</div>
                 </div>
             </div>
-            
-            <!-- ANCHOR DECK FOR ANIMATION -->
-            <div id="deck-anchor"></div>
         </div>
     </div>
 
@@ -446,37 +446,58 @@
         async function startNewHand(roomRef, data) {
             const deck = new Deck(); 
             const pIds = Object.keys(data.players);
-            if(pIds.length < 2) return; // Safety
+            if(pIds.length < 2) return; 
 
             const p1Id = pIds[0];
             const p2Id = pIds[1];
             let p1 = data.players[p1Id];
             let p2 = data.players[p2Id];
+            
+            // Logic Dealer Swap (simple toggle based on previous)
             let newP1Dealer = !p1.isDealer;
 
             const h1 = [deck.pop(), deck.pop()];
             const h2 = [deck.pop(), deck.pop()];
             
             let sbAmt = 50, bbAmt = 100;
-            let p1Chips = p1.chips;
-            let p2Chips = p2.chips;
+            
+            // Chips deduction (with safety for negatives)
+            let p1Chips = Math.max(0, p1.chips);
+            let p2Chips = Math.max(0, p2.chips);
             let activePlayerUid;
 
+            // DEALER IS SB in Heads-Up.
+            // SB posts SB. BB posts BB.
+            // SB acts FIRST preflop.
+            
+            let p1Contrib = 0, p2Contrib = 0;
+
             if (newP1Dealer) {
-                p1Chips -= sbAmt;
-                p2Chips -= bbAmt;
-                activePlayerUid = p1Id; 
+                // P1 is Dealer/SB
+                p1Contrib = Math.min(sbAmt, p1Chips);
+                p2Contrib = Math.min(bbAmt, p2Chips);
+                p1Chips -= p1Contrib;
+                p2Chips -= p2Contrib;
+                activePlayerUid = p1Id; // SB acts first preflop
             } else {
-                p2Chips -= sbAmt;
-                p1Chips -= bbAmt;
-                activePlayerUid = p2Id;
+                // P2 is Dealer/SB
+                p2Contrib = Math.min(sbAmt, p2Chips);
+                p1Contrib = Math.min(bbAmt, p1Chips);
+                p2Chips -= p2Contrib;
+                p1Chips -= p1Contrib;
+                activePlayerUid = p2Id; // SB acts first preflop
             }
             
+            // Current Bet = The amount needed to call the Big Blind.
+            // Since SB posted 50 and BB posted 100, the difference to call is 50.
+            // The currentBet variable stores the DIFFERENCE to match the highest bet.
+            const currentBetToCall = Math.abs(p1Contrib - p2Contrib); 
+
             const updates = {};
             updates[`deck`] = deck.toJSON();
             updates[`board`] = [];
-            updates[`pot`] = sbAmt + bbAmt;
-            updates[`currentBet`] = 50; // SB must add 50 to call
+            updates[`pot`] = p1Contrib + p2Contrib;
+            updates[`currentBet`] = currentBetToCall; 
             updates[`state`] = 'preflop';
             updates[`turn`] = activePlayerUid;
             updates[`lastAction`] = { type: 'new_hand', amount: 0 };
@@ -567,9 +588,11 @@
             updateControls(data, me);
         }
 
-        // --- NEW ANIMATION FUNCTION ---
+        // --- FIXED ANIMATION FUNCTION (FLIGHT) ---
         function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
+            
+            // 1. Create Card
             const el = document.createElement('div');
             el.className = `card ${faceUp ? 'flipped' : ''}`;
             el.innerHTML = `
@@ -581,32 +604,45 @@
                 <div class="card-face card-back"></div>
             `;
             
-            // Animation Logic
+            // 2. Get Positions
             const deckPos = document.getElementById('deck-anchor').getBoundingClientRect();
             const targetPos = container.getBoundingClientRect();
             
-            // Calculate start position relative to container
-            // We can't use fixed/absolute easily without breaking layout, so we use transform.
-            // But container is relative. 
-            
-            // Better approach: Append to body fixed, animate, then move to container.
-            // Simplified for stability: Just animate from offset.
-            
+            // 3. Start at Deck (Fixed position to act as absolute anchor)
+            el.style.position = 'fixed';
+            el.style.left = `${deckPos.left}px`;
+            el.style.top = `${deckPos.top}px`;
+            el.style.zIndex = 100;
             el.style.opacity = '0';
-            container.appendChild(el);
+            el.style.transform = 'scale(0.5) rotate(180deg)';
+            
+            document.body.appendChild(el);
             
             setTimeout(() => {
-                el.style.transition = 'none';
                 el.style.opacity = '1';
-                el.style.transform = `translate(${deckPos.left - targetPos.left}px, ${deckPos.top - targetPos.top}px) scale(0.5) rotate(180deg)`;
+                el.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 
-                // Force reflow
-                el.offsetHeight; 
+                // 4. Fly to Target
+                // Adjust for centering in container (approximate)
+                const offsetX = 10; 
+                const offsetY = 10;
                 
-                el.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                el.style.transform = 'translate(0, 0) scale(1) rotate(0deg)';
+                el.style.left = `${targetPos.left + offsetX}px`;
+                el.style.top = `${targetPos.top + offsetY}px`;
+                el.style.transform = 'scale(1) rotate(0deg)';
                 if(faceUp) el.classList.add('flipped');
-            }, delay);
+                
+                // 5. Dock into Container after animation
+                setTimeout(() => {
+                    el.style.position = 'relative';
+                    el.style.left = '0';
+                    el.style.top = '0';
+                    el.style.zIndex = '10';
+                    el.style.transition = 'none';
+                    container.appendChild(el);
+                }, 600);
+                
+            }, delay + 50);
         }
 
         function getActionText(act) {
@@ -639,8 +675,6 @@
             const toCall = data.currentBet;
             els.controls.check.innerText = (toCall === 0) ? "CHECK" : `SUIVRE (${toCall})`;
             
-            // Slider logic: Min raise is usually big blind or double the previous bet
-            // We use total bet approach
             let minR = data.currentBet > 0 ? (data.currentBet * 2) : 100;
             if(minR > me.chips) minR = me.chips;
             
@@ -684,8 +718,8 @@
                 let resetBet = false;
                 let roundEnded = false;
 
-                // LOGIQUE MISE CAPPEE (Pas de négatif)
-                const myStack = me.chips;
+                // SAFETY: Prevent negative chips
+                const myStack = Math.max(0, me.chips);
 
                 if (type === 'fold') {
                     data.state = 'waiting_for_new_hand';
@@ -697,26 +731,35 @@
 
                 if (type === 'check') {
                     data.lastAction = { type: 'check', actor: currentUser.uid };
-                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true; // BB Check preflop -> End
+                    // Preflop BB Check (Option) -> Flop
+                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
+                    // Postflop Check
                     else if (data.state !== 'preflop') {
+                         // If active player checks and last action was also check (or start of street), round ends?
+                         // In HU: SB(Dealer) acts first postflop.
+                         // If P1 checks, P2 can check -> Round End.
+                         // If P1 bets, P2 calls -> Round End.
+                         // We need to check if this is the "closing" action.
+                         // Simple heuristic: if previous action was check, this check closes it.
                          if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
+                         // Also if first actor (SB) checks, turn goes to BB.
                     }
                 }
 
                 if (type === 'call') {
                     let diff = data.currentBet;
-                    if (diff > myStack) diff = myStack; // All-in partiel
+                    if (diff > myStack) diff = myStack; // Cap at stack
 
                     data.pot += diff;
                     me.chips -= diff;
                     data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
                     
-                    // Si je call, la mise à suivre retombe à 0 (sauf cas spécial preflop)
+                    // If Call, usually betting is closed for this level
                     data.currentBet = 0; 
 
-                    // Exception Preflop : Si le Dealer call la BB, la BB a l'option (pas fini)
+                    // EXCEPTION PREFLOP : If Dealer calls BB, BB has option.
                     if (data.state === 'preflop' && me.isDealer) {
-                        resetBet = false; // Le tour continue vers BB
+                        resetBet = false; // Round continues to BB
                     } else {
                         roundEnded = true;
                     }
@@ -726,16 +769,13 @@
                     let raiseAmt = amount; 
                     if (raiseAmt > myStack) raiseAmt = myStack;
                     
-                    // Calcul du "surcoût" par rapport à ce qu'il y a déjà à payer
-                    // Dans ce modèle simplifié, 'amount' est ce qu'on ajoute au pot
                     data.pot += raiseAmt;
                     me.chips -= raiseAmt;
                     
-                    // La nouvelle mise à suivre pour l'adversaire
-                    // C'est le montant ajouté - ce qu'il avait déjà mis? 
-                    // Simplifié: c'est le montant de la relance "nette"
-                    data.currentBet = raiseAmt - data.currentBet; 
-                    if (data.currentBet < 0) data.currentBet = raiseAmt; // Safety
+                    // Update currentBet (difference to call for opponent)
+                    // Simplified: the raise sets the new bar.
+                    // If I raise 200, opp has to match 200 (minus what they put in? Logic simplified here)
+                    data.currentBet = raiseAmt; 
 
                     data.lastAction = { type: 'raise', actor: currentUser.uid, amount: raiseAmt };
                     roundEnded = false;
@@ -749,9 +789,12 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        // Postflop: BB acts first
+                        // Postflop: BB acts first in HU? No, SB acts first in HU postflop.
+                        // Normal ring game: SB acts first.
+                        // HU rule: Button is SB. SB acts first preflop. BB acts first postflop?
+                        // NO: In HU, Button/SB acts first preflop. BB acts first postflop.
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
-                        nextTurn = bbUid;
+                        nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
                         data.state = 'turn';
                         const deck = data.deck;
