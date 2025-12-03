@@ -744,7 +744,14 @@
                     if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
                     // Postflop Check
                     else if (data.state !== 'preflop') {
+                         // If active player checks and last action was also check (or start of street), round ends?
+                         // In HU: SB(Dealer) acts first postflop.
+                         // If P1 checks, P2 can check -> Round End.
+                         // If P1 bets, P2 calls -> Round End.
+                         // We need to check if this is the "closing" action.
+                         // Simple heuristic: if previous action was check, this check closes it.
                          if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
+                         // Also if first actor (SB) checks, turn goes to BB.
                     }
                 }
 
@@ -791,6 +798,10 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
+                        // Postflop: BB acts first in HU? No, SB acts first in HU postflop.
+                        // Normal ring game: SB acts first.
+                        // HU rule: Button is SB. SB acts first preflop. BB acts first postflop?
+                        // NO: In HU, Button/SB acts first preflop. BB acts first postflop.
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
