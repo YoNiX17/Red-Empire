@@ -127,9 +127,9 @@
             <div class="hidden md:flex items-center gap-2 text-xs font-mono text-gray-500">
                 <span id="room-display">TABLE: <span class="text-white">---</span></span>
             </div>
-             <a href="index.html" class="text-gray-400 hover:text-white transition-colors text-xs font-mono font-bold">
+             <button onclick="window.leaveMatch()" class="text-gray-400 hover:text-white transition-colors text-xs font-mono font-bold cursor-pointer">
                 QUITTER
-            </a>
+            </button>
         </div>
     </nav>
 
@@ -425,6 +425,10 @@
                 els.lobby.style.display = 'none';
                 els.roomDisplay.innerHTML = `TABLE: <span class="text-white">${roomName}</span>`;
                 
+                // Gestion de la déconnexion brutale
+                const myPlayerRef = child(roomRef, `players/${currentUser.uid}`);
+                onDisconnect(myPlayerRef).remove();
+
                 startGameListener(roomRef);
 
             } catch (e) {
@@ -433,6 +437,28 @@
                 els.btnJoin.disabled = false;
             }
         }
+
+        // Fonction de nettoyage explicite
+        window.leaveMatch = async () => {
+            if (!gameId || !currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const roomRef = ref(db, `poker/rooms/${gameId}`);
+            
+            // Supprimer le joueur
+            await remove(child(roomRef, `players/${currentUser.uid}`));
+            
+            // Vérifier si la salle est vide
+            const snap = await get(child(roomRef, 'players'));
+            if (!snap.exists()) {
+                // Salle vide, on nettoie
+                await remove(roomRef);
+            }
+            
+            location.reload();
+        };
 
         function startGameListener(roomRef) {
             onValue(roomRef, (snap) => {
@@ -513,7 +539,12 @@
             if(!data.players[myId]) return; 
 
             const me = data.players[myId];
-            const opp = data.players[oppId];
+            
+            // Gérer le cas où l'adversaire se déconnecte
+            let opp = null;
+            if (oppId && data.players[oppId]) {
+                opp = data.players[oppId];
+            }
 
             // 1. Text Info
             els.pot.innerText = data.pot;
@@ -531,6 +562,11 @@
             } else {
                 els.oChips.innerText = "---";
                 els.gStatus.innerText = "EN ATTENTE D'UN JOUEUR...";
+                // Disable controls if no opponent
+                els.controls.fold.disabled = true;
+                els.controls.check.disabled = true;
+                els.controls.raise.disabled = true;
+                els.controls.slider.disabled = true;
                 return;
             }
 
@@ -618,7 +654,8 @@
         }
 
         function updateControls(data, me) {
-            const myTurn = (data.turn === me.uid) && (data.state !== 'showdown');
+            // FIX: Use currentUser.uid because 'me' object does not contain uid key
+            const myTurn = (data.turn === currentUser.uid) && (data.state !== 'showdown');
             
             els.controls.fold.disabled = !myTurn;
             els.controls.check.disabled = !myTurn;
@@ -675,28 +712,19 @@
 
                 if (type === 'fold') {
                     data.state = 'waiting_for_new_hand';
-                    data.lastAction = { type: 'fold', actor: me.uid, amount: 0 };
+                    // FIX: use currentUser.uid
+                    data.lastAction = { type: 'fold', actor: currentUser.uid, amount: 0 };
                     data.players[oppUid].chips += data.pot;
                     data.pot = 0;
-                    // New hand logic handled by listener effect or separate trigger?
-                    // In transaction, simpler to mark state and let listener handle re-deal
-                    // But we need a way to trigger deal after delay. 
-                    // We'll use a 'cleanup' state that clients react to.
                     return data; 
                 }
 
                 if (type === 'check') {
-                    data.lastAction = { type: 'check', actor: me.uid };
-                    // Preflop Check (BB Option) -> Round End
+                    // FIX: use currentUser.uid
+                    data.lastAction = { type: 'check', actor: currentUser.uid };
                     if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
-                    // Postflop Check
                     else if (data.state !== 'preflop') {
-                        // If I'm second to act (dealer in postflop acts last usually? No, SB acts first)
-                        // HU: SB acts first. So P1(Dealer) acts first.
-                        // If P1 check, P2 turn. If P2 check, round end.
-                        // Need to know who acted first. 
-                        // Simple heuristic: if last action was also check, round ends.
-                         if (data.lastAction.type === 'check' && data.lastAction.actor !== me.uid) roundEnded = true;
+                         if (data.lastAction.type === 'check' && data.lastAction.actor !== currentUser.uid) roundEnded = true;
                     }
                 }
 
@@ -704,10 +732,10 @@
                     const diff = data.currentBet;
                     data.pot += diff;
                     me.chips -= diff;
-                    data.lastAction = { type: 'call', actor: me.uid, amount: diff };
+                    // FIX: use currentUser.uid
+                    data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
                     resetBet = true;
                     
-                    // Preflop: If Dealer calls, BB has option (no round end).
                     if (data.state === 'preflop' && me.isDealer) {
                         resetBet = false;
                     } else {
@@ -719,8 +747,9 @@
                     const diff = amount;
                     data.pot += diff;
                     me.chips -= diff;
-                    data.currentBet = diff; // New to call
-                    data.lastAction = { type: 'raise', actor: me.uid, amount: diff };
+                    data.currentBet = diff; 
+                    // FIX: use currentUser.uid
+                    data.lastAction = { type: 'raise', actor: currentUser.uid, amount: diff };
                     roundEnded = false;
                 }
 
@@ -732,7 +761,6 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        // Postflop: BB (Opponent of Dealer) acts first
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid;
                     } else if (data.state === 'flop') {
@@ -758,10 +786,6 @@
 
                 return data;
             });
-
-            // After transaction, handle special states like 'showdown' or 'waiting_for_new_hand' logic (delayed)
-            // This part is complex in pure client-side. 
-            // We'll let the listener detect 'showdown' state and trigger resolution locally by Host.
         }
 
         // Listen for Showdown trigger
