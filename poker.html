@@ -55,12 +55,16 @@
         .card { width: 80px; height: 112px; position: absolute; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @media (min-width: 1024px) { .card { width: 100px; height: 140px; } }
         
+        /* IMPORTANT: La classe flipped applique la rotation 180deg */
         .card.flipped { transform: rotateY(180deg); }
+        
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #333; background: #111; overflow: hidden; }
 
         /* DESIGN "RED EMPIRE" FACE AVANT */
         .card-front.dark-theme { background: radial-gradient(circle at center, rgba(40,40,40,1) 0%, rgba(5,5,5,1) 120%); border: 1px solid #444; box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px rgba(251, 191, 36, 0.15); }
         .card-front.dark-theme::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3; pointer-events: none; }
+        
+        /* La face avant est tournée de 180deg de base, donc quand la carte (parent) tourne de 180deg, la face avant devient visible (360deg) */
         .card-front { transform: rotateY(180deg); color: #111; font-family: 'Cinzel', serif; }
         
         /* DOS ROUGE STYLE CASINO SIMPLIFIÉ */
@@ -98,6 +102,10 @@
         /* LOBBY OVERLAY */
         #lobby-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .lobby-box { background: #111; border: 2px solid #333; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 0 50px rgba(255, 51, 51, 0.2); }
+        
+        /* TOAST */
+        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(0,0,0,0.95); border: 2px solid #ff3333; padding: 30px 50px; border-radius: 15px; z-index: 100; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; box-shadow: 0 0 50px rgba(255, 51, 51, 0.3); }
+        .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -225,6 +233,12 @@
             <button id="btn-raise" class="btn-game btn-raise" disabled>MISER</button>
         </div>
     </div>
+    
+    <!-- TOAST -->
+    <div id="toast" class="toast">
+        <h2 id="toast-title" class="font-display text-3xl font-bold text-white mb-2">VICTOIRE</h2>
+        <p id="toast-msg" class="font-mono text-gold-500 text-lg">...</p>
+    </div>
 
     <!-- SFX -->
     <script>
@@ -301,6 +315,20 @@
             pop() { return this.cards.pop(); }
             toJSON() { return this.cards; }
         }
+        
+        // --- HAND EVALUATOR (BASIC) ---
+        class HandEvaluator {
+            static evaluate(cards) {
+                // Simplified High Card for demo robustness
+                if (!cards || cards.length === 0) return { score: 0, name: "Vide" };
+                const vals = cards.map(c => {
+                    if (c.value === 'A') return 14; if (c.value === 'K') return 13;
+                    if (c.value === 'Q') return 12; if (this.value === 'J') return 11;
+                    return parseInt(c.value) || 0;
+                }).sort((a,b)=>b-a);
+                return { score: vals.reduce((a,v)=>a+v,0), name: "Hauteur " + vals[0] };
+            }
+        }
 
         // --- MULTIPLAYER ENGINE ---
         
@@ -335,7 +363,10 @@
             oHud: document.getElementById('opp-hud'),
             myAvatar: document.getElementById('my-avatar'),
             oppAvatar: document.getElementById('opp-avatar'),
-            oppName: document.getElementById('opp-name')
+            oppName: document.getElementById('opp-name'),
+            toast: document.getElementById('toast'),
+            toastTitle: document.getElementById('toast-title'),
+            toastMsg: document.getElementById('toast-msg')
         };
 
         onAuthStateChanged(auth, (user) => {
@@ -453,7 +484,6 @@
             let p1 = data.players[p1Id];
             let p2 = data.players[p2Id];
             
-            // Logic Dealer Swap (simple toggle based on previous)
             let newP1Dealer = !p1.isDealer;
 
             const h1 = [deck.pop(), deck.pop()];
@@ -461,36 +491,26 @@
             
             let sbAmt = 50, bbAmt = 100;
             
-            // Chips deduction (with safety for negatives)
             let p1Chips = Math.max(0, p1.chips);
             let p2Chips = Math.max(0, p2.chips);
             let activePlayerUid;
-
-            // DEALER IS SB in Heads-Up.
-            // SB posts SB. BB posts BB.
-            // SB acts FIRST preflop.
-            
             let p1Contrib = 0, p2Contrib = 0;
 
+            // Dealer = SB = Acts First
             if (newP1Dealer) {
-                // P1 is Dealer/SB
                 p1Contrib = Math.min(sbAmt, p1Chips);
                 p2Contrib = Math.min(bbAmt, p2Chips);
                 p1Chips -= p1Contrib;
                 p2Chips -= p2Contrib;
-                activePlayerUid = p1Id; // SB acts first preflop
+                activePlayerUid = p1Id; 
             } else {
-                // P2 is Dealer/SB
                 p2Contrib = Math.min(sbAmt, p2Chips);
                 p1Contrib = Math.min(bbAmt, p1Chips);
                 p2Chips -= p2Contrib;
                 p1Chips -= p1Contrib;
-                activePlayerUid = p2Id; // SB acts first preflop
+                activePlayerUid = p2Id; 
             }
             
-            // Current Bet = The amount needed to call the Big Blind.
-            // Since SB posted 50 and BB posted 100, the difference to call is 50.
-            // The currentBet variable stores the DIFFERENCE to match the highest bet.
             const currentBetToCall = Math.abs(p1Contrib - p2Contrib); 
 
             const updates = {};
@@ -545,7 +565,9 @@
                 return;
             }
 
-            if(data.state === 'showdown') els.gStatus.innerText = "SHOWDOWN !";
+            if(data.state === 'showdown') {
+                els.gStatus.innerText = "SHOWDOWN !";
+            }
             else if (data.turn === myId) els.gStatus.innerText = "À VOUS DE JOUER";
             else els.gStatus.innerText = "ADVERSAIRE RÉFLÉCHIT...";
 
@@ -560,7 +582,8 @@
             const oppHand = opp.hand || [];
             if (oppHand.length !== localState.oppHandLength || data.lastAction.type === 'new_hand') {
                 els.oHand.innerHTML = '';
-                const showOpp = (data.state === 'showdown');
+                // Show cards only on showdown
+                const showOpp = (data.state === 'showdown' || data.state === 'waiting_for_new_hand');
                 oppHand.forEach((c, i) => createVisualCard(els.oHand, c, showOpp, i * 200));
                 localState.oppHandLength = oppHand.length;
             }
@@ -584,18 +607,26 @@
                 const txt = getActionText(data.lastAction);
                 showBubble(txt);
             }
+            
+            // Show Winner Toast
+            if (data.lastAction && data.lastAction.type === 'win') {
+                 const winnerId = data.lastAction.actor;
+                 const msg = winnerId === myId ? "VOUS AVEZ GAGNÉ" : "ADVERSAIRE GAGNE";
+                 els.toastTitle.innerText = winnerId === myId ? "VICTOIRE" : "DÉFAITE";
+                 els.toastMsg.innerText = msg;
+                 els.toast.classList.add('show');
+                 setTimeout(() => els.toast.classList.remove('show'), 3000);
+            }
 
             updateControls(data, me);
         }
 
-        // --- FIXED ANIMATION FUNCTION (FLIGHT) ---
+        // --- FIXED ANIMATION FUNCTION (FLIGHT & ROTATION) ---
         function createVisualCard(container, cardData, faceUp, delay = 0) {
             const card = new Card(cardData.suit, cardData.value);
             
             const el = document.createElement('div');
-            // La classe flipped gère la rotation finale. 
-            // Si faceUp est true, on veut voir la face. La face est rotateY(180) dans le CSS.
-            // Donc on doit faire tourner la carte (parent) de 180deg pour révéler la face.
+            // Si faceUp, la classe flipped gère le style final (rotateY 180)
             el.className = `card ${faceUp ? 'flipped' : ''}`;
             el.innerHTML = `
                 <div class="card-face card-front dark-theme">
@@ -606,17 +637,15 @@
                 <div class="card-face card-back"></div>
             `;
             
-            // Positions
             const deckPos = document.getElementById('deck-anchor').getBoundingClientRect();
             const targetPos = container.getBoundingClientRect();
             
-            // Initial : au centre, petit, dos visible (rotateY 0)
             el.style.position = 'fixed';
             el.style.left = `${deckPos.left}px`;
             el.style.top = `${deckPos.top}px`;
             el.style.zIndex = 100;
             el.style.opacity = '0';
-            el.style.transform = 'scale(0.5) rotateY(0deg)'; 
+            el.style.transform = 'scale(0.5) rotateY(0deg)'; // Dos visible
             
             document.body.appendChild(el);
             
@@ -626,14 +655,12 @@
                 
                 const offsetX = 10; 
                 const offsetY = 10;
-                
                 el.style.left = `${targetPos.left + offsetX}px`;
                 el.style.top = `${targetPos.top + offsetY}px`;
                 
-                // Animation vers la destination.
-                // Si faceUp, on tourne de 180deg. Sinon on reste à 0.
-                const targetRot = faceUp ? '180deg' : '0deg';
-                el.style.transform = `scale(1) rotateY(${targetRot})`;
+                // Si faceUp, on anime vers 180deg pour révéler la face
+                const rot = faceUp ? 'rotateY(180deg)' : 'rotateY(0deg)';
+                el.style.transform = `scale(1) ${rot}`;
                 
                 // Docking
                 setTimeout(() => {
@@ -642,7 +669,7 @@
                     el.style.top = 'auto';
                     el.style.zIndex = 'auto';
                     el.style.transition = 'none';
-                    el.style.transform = ''; // On nettoie pour laisser la classe CSS gérer
+                    el.style.transform = ''; // On laisse le CSS (classe .flipped) prendre le relais
                     container.appendChild(el);
                 }, 600);
                 
@@ -667,7 +694,7 @@
         }
 
         function updateControls(data, me) {
-            const myTurn = (data.turn === currentUser.uid) && (data.state !== 'showdown');
+            const myTurn = (data.turn === currentUser.uid) && (data.state !== 'showdown' && data.state !== 'waiting_for_new_hand');
             
             els.controls.fold.disabled = !myTurn;
             els.controls.check.disabled = !myTurn;
@@ -722,10 +749,7 @@
                 let resetBet = false;
                 let roundEnded = false;
 
-                // SAFETY: Prevent negative chips
                 const myStack = Math.max(0, me.chips);
-
-                // FIX: Check previous action logic for ending round
                 const prevAction = data.lastAction || {};
 
                 if (type === 'fold') {
@@ -733,22 +757,20 @@
                     data.lastAction = { type: 'fold', actor: currentUser.uid, amount: 0 };
                     data.players[oppUid].chips += data.pot;
                     data.pot = 0;
+                    // Win triggered by fold
+                    data.lastAction = { type: 'win', actor: oppUid }; 
                     return data; 
                 }
 
                 if (type === 'check') {
                     data.lastAction = { type: 'check', actor: currentUser.uid };
-                    
-                    // Preflop: BB Check (Option) -> Flop (Round Ends)
-                    if (data.state === 'preflop' && !me.isDealer) {
-                        roundEnded = true;
-                    }
-                    // Postflop: If prev action was check (and not from me), round ends.
-                    // Or if I am 2nd to act and checked.
+                    if (data.state === 'preflop' && !me.isDealer) roundEnded = true;
                     else if (data.state !== 'preflop') {
-                         if (prevAction.type === 'check' && prevAction.actor !== currentUser.uid) {
-                             roundEnded = true;
-                         }
+                         // If opponent checked before me, round ends
+                         if (prevAction.type === 'check') roundEnded = true;
+                         // Or if I am the second to check (Dealer acts first, checks -> BB checks -> End)
+                         // In HU postflop: SB (Dealer) acts first.
+                         // If SB checks, BB turn. If BB checks, round ended = true.
                     }
                 }
 
@@ -759,12 +781,10 @@
                     data.pot += diff;
                     me.chips -= diff;
                     data.lastAction = { type: 'call', actor: currentUser.uid, amount: diff };
-                    
                     data.currentBet = 0; 
 
-                    // EXCEPTION PREFLOP : If Dealer calls BB, BB has option.
                     if (data.state === 'preflop' && me.isDealer) {
-                        resetBet = false; // Round continues to BB
+                        resetBet = false; // BB has option
                     } else {
                         roundEnded = true;
                     }
@@ -777,7 +797,6 @@
                     data.pot += raiseAmt;
                     me.chips -= raiseAmt;
                     data.currentBet = raiseAmt; 
-
                     data.lastAction = { type: 'raise', actor: currentUser.uid, amount: raiseAmt };
                     roundEnded = false;
                 }
@@ -790,8 +809,11 @@
                         const flop = [deck.pop(), deck.pop(), deck.pop()];
                         if(!data.board) data.board = [];
                         data.board.push(...flop);
-                        
-                        // Postflop: BB (Opponent of Dealer) acts first
+                        // Postflop: BB acts first? No, SB acts first.
+                        // Wait, in HU, Dealer is SB.
+                        // Preflop: SB acts first.
+                        // Postflop: BB acts first.
+                        // Correct: Find BB.
                         const bbUid = pIds.find(id => !data.players[id].isDealer);
                         nextTurn = bbUid; 
                     } else if (data.state === 'flop') {
@@ -808,11 +830,10 @@
                         nextTurn = bbUid;
                     } else if (data.state === 'river') {
                         data.state = 'showdown';
-                        nextTurn = null;
+                        nextTurn = null; // No turn, wait for resolution
                     }
                 } 
                 
-                // IMPORTANT FIX: Update data.turn even if round ended (unless Showdown)
                 if (data.state !== 'showdown' && data.state !== 'waiting_for_new_hand') {
                     data.turn = nextTurn;
                 }
@@ -838,9 +859,20 @@
         });
 
         async function resolveShowdown(data) {
-            // TODO: Integrate HandEvaluator here for real winner
+            // Simple High Card logic for MVP
             const pIds = Object.keys(data.players);
-            const winnerId = pIds[Math.floor(Math.random() * pIds.length)];
+            let bestScore = -1;
+            let winnerId = null;
+
+            pIds.forEach(id => {
+                // Combine hand + board
+                const fullHand = [...data.players[id].hand, ...data.board];
+                const res = HandEvaluator.evaluate(fullHand);
+                if (res.score > bestScore) {
+                    bestScore = res.score;
+                    winnerId = id;
+                }
+            });
             
             const updates = {};
             updates[`players/${winnerId}/chips`] = data.players[winnerId].chips + data.pot;
