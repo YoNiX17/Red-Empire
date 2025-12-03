@@ -2,1101 +2,310 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RED EMPIRE | Cyber Poker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Poker Texas Hold'em</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Teko:wght@300;500;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.jsdelivr.net/npm/pokersolver@2.1.4/pokersolver.js"></script>
-
-    <style>
-        :root {
-            --neon-red: #ff2a6d;
-            --neon-cyan: #05d9e8;
-            --neon-purple: #9d4edd;
-            --neon-gold: #f0c040;
-            --dark-bg: #010a13;
-            --panel-bg: rgba(5, 20, 35, 0.9);
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        gold: { 400: '#ffd700', 500: '#ffb800', 600: '#e6a200' },
+                        felt: { 500: '#0d5c2e', 600: '#0a4a24', 700: '#08391b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                        teko: ['Teko', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'chip-bounce': 'chipBounce 0.5s ease-out',
+                        'card-deal': 'cardDeal 0.4s ease-out forwards',
+                        'card-flip': 'cardFlip 0.6s ease-in-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'shake': 'shake 0.5s ease-in-out',
+                        'winner-glow': 'winnerGlow 1s ease-in-out infinite',
+                        'confetti': 'confetti 3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        glow: { '0%': { boxShadow: '0 0 5px #ff3333, 0 0 10px #ff3333' }, '100%': { boxShadow: '0 0 20px #ff3333, 0 0 30px #ff3333' } },
+                        chipBounce: { '0%': { transform: 'translateY(-100px) rotate(180deg)', opacity: '0' }, '100%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' } },
+                        cardDeal: { '0%': { transform: 'translateX(200px) translateY(-100px) rotate(180deg)', opacity: '0' }, '100%': { transform: 'translateX(0) translateY(0) rotate(0deg)', opacity: '1' } },
+                        cardFlip: { '0%': { transform: 'rotateY(0deg)' }, '50%': { transform: 'rotateY(90deg)' }, '100%': { transform: 'rotateY(0deg)' } },
+                        slideUp: { '0%': { transform: 'translateY(50px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        shake: { '0%, 100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-5px)' }, '75%': { transform: 'translateX(5px)' } },
+                        winnerGlow: { '0%, 100%': { boxShadow: '0 0 20px #ffd700, 0 0 40px #ffd700' }, '50%': { boxShadow: '0 0 40px #ffd700, 0 0 80px #ffd700' } },
+                        confetti: { '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' }, '100%': { transform: 'translateY(100vh) rotate(720deg)', opacity: '0' } }
+                    }
+                }
+            }
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
+    </script>
+    
+    <style>
+        * { box-sizing: border-box; }
         body { 
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--dark-bg);
-            color: #e0e0e0;
-            overflow: hidden;
-            user-select: none;
+            background: #030303; 
+            color: #e5e5e5; 
+            overflow-x: hidden;
             min-height: 100vh;
         }
-
-        /* ========== BACKGROUND EFFECTS ========== */
-        .cyber-grid {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(5, 217, 232, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(5, 217, 232, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .scan-line {
+        
+        /* === PARTICULES BACKGROUND === */
+        #particles-canvas {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-            opacity: 0.3;
-            animation: scanMove 4s linear infinite;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        @keyframes scanMove {
-            0% { top: -10px; }
-            100% { top: 100vh; }
-        }
-
-        /* ========== NAVBAR ========== */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: linear-gradient(180deg, rgba(0,10,20,0.95) 0%, rgba(0,5,15,0.9) 100%);
-            border-bottom: 1px solid var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(5, 217, 232, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 100;
-        }
-
-        .navbar::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand-icon {
-            width: 30px;
-            height: 30px;
-            background: var(--neon-red);
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 10px var(--neon-red); }
-            50% { box-shadow: 0 0 25px var(--neon-red), 0 0 40px var(--neon-red); }
-        }
-
-        .brand-text {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1rem;
-            letter-spacing: 3px;
-            background: linear-gradient(90deg, #fff, var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(5, 217, 232, 0.5);
-        }
-
-        .room-info {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--neon-cyan);
-            opacity: 0.8;
-        }
-
-        .btn-leave {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: #666;
-            background: transparent;
-            border: 1px solid #333;
-            padding: 6px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 1px;
-        }
-
-        .btn-leave:hover {
-            color: var(--neon-red);
-            border-color: var(--neon-red);
-            box-shadow: 0 0 15px rgba(255, 42, 109, 0.3);
-        }
-
-        /* ========== GAME LAYOUT ========== */
-        .game-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 60px 15px 15px;
-            gap: 10px;
-        }
-
-        /* ========== OPPONENT AREA ========== */
-        .opponent-area {
-            flex: 0 0 auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding: 10px;
-            min-height: 140px;
-        }
-
-        .player-panel {
-            background: var(--panel-bg);
-            border: 1px solid rgba(5, 217, 232, 0.3);
-            border-radius: 12px;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .player-panel::before {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            border-radius: 12px;
-            padding: 1px;
-            background: linear-gradient(135deg, transparent 40%, rgba(5, 217, 232, 0.3) 50%, transparent 60%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-        }
-
-        .player-panel.active {
-            border-color: var(--neon-gold);
-            box-shadow: 0 0 30px rgba(240, 192, 64, 0.2), inset 0 0 30px rgba(240, 192, 64, 0.05);
-        }
-
-        .player-panel.active::after {
-            content: 'EN JEU';
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.55rem;
-            font-weight: 700;
-            color: var(--neon-gold);
-            background: var(--dark-bg);
-            padding: 2px 10px;
-            letter-spacing: 2px;
-            border: 1px solid var(--neon-gold);
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;
-            border: 2px solid var(--neon-cyan);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .avatar img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            z-index: -1;
+            opacity: 0.4;
         }
-
-        .avatar::after {
+        
+        /* === TABLE DE POKER === */
+        .poker-table {
+            background: radial-gradient(ellipse at center, #0d5c2e 0%, #08391b 60%, #052210 100%);
+            border: 12px solid #2a1a0a;
+            box-shadow: 
+                inset 0 0 100px rgba(0,0,0,0.5),
+                0 0 50px rgba(0,0,0,0.8),
+                0 0 100px rgba(13, 92, 46, 0.3);
+            position: relative;
+        }
+        
+        .poker-table::before {
+            content: '';
+            position: absolute;
+            inset: -12px;
+            border: 4px solid #1a0f05;
+            border-radius: inherit;
+            pointer-events: none;
+        }
+        
+        .poker-table::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, transparent 50%, rgba(5, 217, 232, 0.2) 100%);
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: inherit;
         }
-
-        .player-info {
+        
+        /* === CARTES === */
+        .card {
+            width: 70px;
+            height: 100px;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.8);
             display: flex;
             flex-direction: column;
-            gap: 2px;
-        }
-
-        .player-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-
-        .player-chips {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--neon-gold);
-            display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
         }
-
-        .player-chips i {
-            font-size: 0.7rem;
+        
+        .card:hover {
+            transform: translateY(-5px);
         }
-
-        .hand-container {
-            display: flex;
-            gap: 8px;
-            margin-left: 10px;
+        
+        .card-back {
+            background: linear-gradient(145deg, #990000 0%, #4d0000 100%);
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px),
+                linear-gradient(145deg, #990000 0%, #4d0000 100%);
         }
-
-        .dealer-badge {
+        
+        .card-back::after {
+            content: '♠';
+            font-size: 2rem;
+            color: rgba(255,255,255,0.2);
+        }
+        
+        .card .suit { font-size: 2rem; }
+        .card .value { font-size: 1.5rem; line-height: 1; }
+        .card.red { color: #cc0000; }
+        .card.black { color: #1a1a1a; }
+        
+        .card .corner-tl, .card .corner-br {
             position: absolute;
-            right: -10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 26px;
-            height: 26px;
-            background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+        .card .corner-tl { top: 4px; left: 6px; }
+        .card .corner-br { bottom: 4px; right: 6px; transform: rotate(180deg); }
+        
+        /* === JETONS === */
+        .chip {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.6rem;
-            font-weight: 900;
-            color: #111;
-            box-shadow: 0 0 15px rgba(255,255,255,0.3);
-        }
-
-        .action-bubble {
-            position: absolute;
-            left: -90px;
-            top: 50%;
-            transform: translateY(-50%) scale(0.8);
-            background: var(--neon-cyan);
-            color: var(--dark-bg);
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            white-space: nowrap;
-            box-shadow: 0 0 20px var(--neon-cyan);
-        }
-
-        .action-bubble.show {
-            opacity: 1;
-            transform: translateY(-50%) scale(1);
-        }
-
-        .action-bubble::after {
-            content: '';
-            position: absolute;
-            right: -6px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 6px solid transparent;
-            border-left-color: var(--neon-cyan);
-        }
-
-        /* ========== TABLE AREA ========== */
-        .table-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-weight: bold;
+            font-size: 0.7rem;
             position: relative;
-        }
-
-        .cyber-table {
-            width: 95%;
-            max-width: 800px;
-            aspect-ratio: 2.5/1;
-            background: 
-                radial-gradient(ellipse at 50% 50%, rgba(5, 30, 50, 0.9) 0%, rgba(2, 15, 30, 0.95) 70%, rgba(0, 5, 15, 1) 100%);
-            border-radius: 120px;
-            position: relative;
-            border: 3px solid rgba(5, 217, 232, 0.4);
             box-shadow: 
-                0 0 60px rgba(5, 217, 232, 0.15),
-                inset 0 0 100px rgba(0,0,0,0.5),
-                inset 0 0 30px rgba(5, 217, 232, 0.05);
+                0 4px 10px rgba(0,0,0,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.3),
+                inset 0 -2px 0 rgba(0,0,0,0.3);
+            border: 3px dashed rgba(255,255,255,0.5);
         }
-
-        .cyber-table::before {
-            content: '';
-            position: absolute;
-            inset: 8px;
-            border: 1px solid rgba(5, 217, 232, 0.15);
-            border-radius: 110px;
-            pointer-events: none;
+        
+        .chip-red { background: linear-gradient(145deg, #ff3333, #990000); color: white; }
+        .chip-blue { background: linear-gradient(145deg, #3366ff, #0033cc); color: white; }
+        .chip-green { background: linear-gradient(145deg, #33cc33, #009900); color: white; }
+        .chip-black { background: linear-gradient(145deg, #333333, #000000); color: white; }
+        .chip-gold { background: linear-gradient(145deg, #ffd700, #b8860b); color: #1a1a1a; }
+        
+        /* === JOUEURS === */
+        .player-seat {
+            transition: all 0.3s ease;
         }
-
-        .cyber-table::after {
-            content: '';
-            position: absolute;
-            inset: 20px;
-            border: 1px dashed rgba(5, 217, 232, 0.1);
-            border-radius: 100px;
-            pointer-events: none;
+        
+        .player-seat.active {
+            animation: winnerGlow 1s ease-in-out infinite;
         }
-
-        .table-logo {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 900;
-            letter-spacing: 8px;
-            color: rgba(5, 217, 232, 0.08);
-            text-shadow: 0 0 30px rgba(5, 217, 232, 0.1);
-            pointer-events: none;
+        
+        .player-seat.folded {
+            opacity: 0.4;
+            filter: grayscale(0.8);
         }
-
-        /* POT */
-        .pot-display {
-            position: absolute;
-            top: 15%;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 10;
+        
+        .player-seat.current-turn {
+            box-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
         }
-
-        .pot-label {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.4);
-            letter-spacing: 3px;
-            margin-bottom: 4px;
-        }
-
-        .pot-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--neon-gold);
-            text-shadow: 0 0 20px rgba(240, 192, 64, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pot-value i {
-            font-size: 1.2rem;
-        }
-
-        /* COMMUNITY CARDS */
-        .community-area {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 8px;
-            padding: 12px 20px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            border: 1px solid rgba(5, 217, 232, 0.2);
-        }
-
-        /* GAME STATUS */
-        .game-status {
-            position: absolute;
-            bottom: 12%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 20px var(--neon-cyan);
-            white-space: nowrap;
-        }
-
-        .game-status.waiting {
-            animation: pulse-text 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse-text {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* ========== PLAYER AREA ========== */
-        .player-area {
-            flex: 0 0 auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 10px;
-            min-height: 140px;
-        }
-
-        .my-panel {
-            border-color: var(--neon-red);
-        }
-
-        .my-panel .avatar {
-            border-color: var(--neon-red);
-            box-shadow: 0 0 15px rgba(255, 42, 109, 0.3);
-        }
-
-        .my-panel.active {
-            border-color: var(--neon-gold);
-        }
-
-        /* ========== CARDS ========== */
-        .card-slot {
-            width: 55px;
-            height: 77px;
+        
+        /* === BOUTONS === */
+        .btn-action {
             position: relative;
-        }
-
-        @media (min-width: 640px) {
-            .card-slot { width: 65px; height: 91px; }
-        }
-
-        @media (min-width: 1024px) {
-            .card-slot { width: 75px; height: 105px; }
-        }
-
-        .card {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: default;
-        }
-
-        .card.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card.flipped:hover {
-            transform: rotateY(180deg) translateY(-5px);
-        }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 8px;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
-
-        /* FUTURISTIC CARD FRONT */
-        .card-front {
-            transform: rotateY(180deg);
-            background: linear-gradient(145deg, #0a1520 0%, #050d15 100%);
-            border: 1px solid rgba(5, 217, 232, 0.5);
-            box-shadow: 
-                0 0 15px rgba(5, 217, 232, 0.2),
-                inset 0 0 20px rgba(5, 217, 232, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card-front::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border: 1px solid rgba(5, 217, 232, 0.2);
-            border-radius: 6px;
-            pointer-events: none;
-        }
-
-        .card-front::after {
+        
+        .btn-action::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
-            width: 50%;
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: card-shine 3s ease-in-out infinite;
-        }
-
-        @keyframes card-shine {
-            0%, 100% { left: -100%; }
-            50% { left: 150%; }
-        }
-
-        .card-corner {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .card-corner-tl { top: 5px; left: 6px; }
-        .card-corner-br { bottom: 5px; right: 6px; transform: rotate(180deg); }
-
-        .card-value {
-            font-size: 0.9rem;
-        }
-
-        .card-suit-small {
-            font-size: 0.75rem;
-        }
-
-        .card-suit-center {
-            font-size: 2rem;
-            filter: drop-shadow(0 0 10px currentColor);
-        }
-
-        @media (min-width: 640px) {
-            .card-value { font-size: 1rem; }
-            .card-suit-small { font-size: 0.85rem; }
-            .card-suit-center { font-size: 2.5rem; }
-        }
-
-        .suit-red { 
-            color: var(--neon-red); 
-            text-shadow: 0 0 10px var(--neon-red);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
         }
         
-        .suit-black { 
-            color: var(--neon-cyan); 
-            text-shadow: 0 0 10px var(--neon-cyan);
+        .btn-action:hover::before {
+            left: 100%;
         }
-
-        /* CARD BACK */
-        .card-back {
-            background: linear-gradient(135deg, #1a0a15 0%, #0a0510 100%);
-            border: 2px solid var(--neon-red);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px rgba(255, 42, 109, 0.3);
+        
+        /* === POT === */
+        .pot-area {
+            position: relative;
         }
-
-        .card-back::before {
+        
+        .pot-area::before {
             content: '';
             position: absolute;
-            inset: 6px;
-            border: 1px solid rgba(255, 42, 109, 0.3);
-            border-radius: 4px;
-            background: 
-                repeating-linear-gradient(
-                    45deg,
-                    transparent 0px,
-                    transparent 8px,
-                    rgba(255, 42, 109, 0.1) 8px,
-                    rgba(255, 42, 109, 0.1) 16px
-                );
+            inset: -10px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
         }
-
-        .card-back::after {
-            content: '♦';
-            font-size: 1.5rem;
-            color: var(--neon-red);
-            text-shadow: 0 0 15px var(--neon-red);
-            z-index: 1;
-        }
-
-        /* CARD ANIMATIONS */
-        @keyframes dealCard {
-            0% {
-                opacity: 0;
-                transform: translateY(-50px) rotateZ(-15deg) scale(0.5);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) rotateZ(0) scale(1);
-            }
-        }
-
-        .card.dealing {
-            animation: dealCard 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
-        /* ========== CONTROLS ========== */
-        .controls-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(180deg, rgba(0,5,15,0.95) 0%, rgba(0,10,20,0.98) 100%);
-            border-top: 1px solid var(--neon-cyan);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(5, 217, 232, 0.1);
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 100;
-        }
-
-        .bet-section {
-            flex: 0 0 30%;
-            max-width: 180px;
-            padding-right: 12px;
-            border-right: 1px solid rgba(5, 217, 232, 0.2);
-        }
-
-        .bet-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .bet-label {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.4);
-            letter-spacing: 2px;
-        }
-
-        .bet-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--neon-gold);
-        }
-
-        input[type="range"] {
+        
+        /* === SLIDER === */
+        .raise-slider {
             -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            background: linear-gradient(90deg, rgba(5, 217, 232, 0.2) 0%, rgba(5, 217, 232, 0.4) 100%);
-            border-radius: 3px;
+            appearance: none;
+            height: 8px;
+            background: linear-gradient(90deg, #4d0000, #ff3333);
+            border-radius: 4px;
             outline: none;
         }
-
-        input[type="range"]::-webkit-slider-thumb {
+        
+        .raise-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--neon-gold);
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(145deg, #ffd700, #b8860b);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 15px var(--neon-gold);
-            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
-
-        .buttons-section {
-            flex: 1;
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 14px 8px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-action:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            filter: grayscale(0.8);
-        }
-
-        .btn-action:not(:disabled):hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-action:not(:disabled):active {
-            transform: translateY(1px);
-        }
-
-        .btn-fold {
-            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a25 100%);
-            color: #888;
-            border: 1px solid #444;
-        }
-
-        .btn-fold:not(:disabled):hover {
-            border-color: #666;
-            color: #aaa;
-        }
-
-        .btn-check {
-            background: linear-gradient(135deg, #0a3050 0%, #051a30 100%);
-            color: var(--neon-cyan);
-            border: 1px solid var(--neon-cyan);
-            box-shadow: 0 0 15px rgba(5, 217, 232, 0.2);
-        }
-
-        .btn-check:not(:disabled):hover {
-            background: linear-gradient(135deg, #0a4060 0%, #052540 100%);
-            box-shadow: 0 0 25px rgba(5, 217, 232, 0.4);
-        }
-
-        .btn-raise {
-            background: linear-gradient(135deg, #4a1030 0%, #2a0820 100%);
-            color: var(--neon-red);
-            border: 1px solid var(--neon-red);
-            box-shadow: 0 0 15px rgba(255, 42, 109, 0.2);
-        }
-
-        .btn-raise:not(:disabled):hover {
-            background: linear-gradient(135deg, #5a1540 0%, #3a0a28 100%);
-            box-shadow: 0 0 25px rgba(255, 42, 109, 0.4);
-        }
-
-        /* ========== TOAST ========== */
-        .toast {
+        
+        /* === CONFETTI === */
+        .confetti-piece {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            background: rgba(5, 15, 25, 0.98);
-            padding: 40px 60px;
-            border-radius: 16px;
-            text-align: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 200;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti 3s ease-out forwards;
         }
-
-        .toast.win {
-            border: 2px solid var(--neon-gold);
-            box-shadow: 0 0 60px rgba(240, 192, 64, 0.4);
+        
+        /* === CHAT === */
+        .chat-message {
+            animation: slideUp 0.3s ease-out;
         }
-
-        .toast.lose {
-            border: 2px solid var(--neon-red);
-            box-shadow: 0 0 60px rgba(255, 42, 109, 0.4);
+        
+        /* === GLASS PANEL === */
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 51, 51, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
-
-        .toast.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .toast-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            letter-spacing: 4px;
-        }
-
-        .toast.win .toast-title { color: var(--neon-gold); text-shadow: 0 0 30px var(--neon-gold); }
-        .toast.lose .toast-title { color: var(--neon-red); text-shadow: 0 0 30px var(--neon-red); }
-
-        .toast-msg {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1rem;
-            color: #aaa;
-        }
-
-        /* ========== LOBBY ========== */
-        .lobby-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 5, 15, 0.98);
-            z-index: 300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(20px);
-        }
-
-        .lobby-box {
-            background: linear-gradient(145deg, rgba(10, 25, 40, 0.95) 0%, rgba(5, 15, 25, 0.98) 100%);
-            border: 1px solid var(--neon-cyan);
-            border-radius: 20px;
-            padding: 50px 40px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 0 80px rgba(5, 217, 232, 0.2);
-            position: relative;
-        }
-
-        .lobby-box::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            background: var(--neon-red);
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            opacity: 0.8;
-            box-shadow: 0 0 40px var(--neon-red);
-        }
-
-        .lobby-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            margin-bottom: 5px;
-            margin-top: 20px;
-            background: linear-gradient(90deg, var(--neon-red), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .lobby-subtitle {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.75rem;
-            color: #555;
-            letter-spacing: 5px;
-            margin-bottom: 40px;
-        }
-
-        .lobby-input {
-            width: 100%;
-            background: rgba(0, 10, 20, 0.8);
-            border: 1px solid rgba(5, 217, 232, 0.3);
-            padding: 16px;
-            border-radius: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1rem;
-            color: #fff;
-            text-align: center;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            outline: none;
-            transition: all 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .lobby-input:focus {
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(5, 217, 232, 0.3);
-        }
-
-        .lobby-input::placeholder {
-            color: #444;
-            letter-spacing: 2px;
-        }
-
-        .lobby-btn {
-            width: 100%;
-            padding: 16px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: #fff;
-            background: linear-gradient(135deg, var(--neon-red) 0%, #aa1045 100%);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 0 30px rgba(255, 42, 109, 0.3);
-        }
-
-        .lobby-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 50px rgba(255, 42, 109, 0.5);
-        }
-
-        .lobby-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .lobby-status {
-            margin-top: 20px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            min-height: 20px;
+        
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
+        
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .card { width: 50px; height: 72px; }
+            .card .suit { font-size: 1.5rem; }
+            .card .value { font-size: 1rem; }
+            .chip { width: 35px; height: 35px; font-size: 0.5rem; }
         }
     </style>
 </head>
-<body>
 
-    <div class="cyber-grid"></div>
-    <div class="scan-line"></div>
+<body class="antialiased selection:bg-empire-600 selection:text-white">
 
-    <!-- LOBBY -->
-    <div class="lobby-overlay" id="lobby-overlay">
-        <div class="lobby-box">
-            <h1 class="lobby-title">RED EMPIRE</h1>
-            <p class="lobby-subtitle">CYBER POKER</p>
-            <input type="text" id="room-input" class="lobby-input" placeholder="Nom de table" maxlength="15">
-            <button id="btn-join" class="lobby-btn">CONNEXION</button>
-            <p id="lobby-status" class="lobby-status"></p>
-        </div>
-    </div>
+    <!-- CANVAS PARTICULES -->
+    <canvas id="particles-canvas"></canvas>
+    
+    <!-- VIGNETTE -->
+    <div class="fixed inset-0 bg-[radial-gradient(circle,transparent_30%,black_100%)] pointer-events-none z-0"></div>
+    
+    <!-- SCANLINES -->
+    <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.02] bg-[linear-gradient(to_bottom,transparent_50%,black_50%)] bg-[length:100%_4px]"></div>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="brand">
-            <div class="brand-icon"><i class="fa-solid fa-bolt" style="color: #fff; font-size: 0.8rem;"></i></div>
-            <span class="brand-text">RED EMPIRE</span>
-        </div>
-        <span class="room-info" id="room-display">TABLE: ---</span>
-        <button class="btn-leave" onclick="window.leaveMatch()">QUITTER</button>
-    </nav>
+    <!-- APP REACT -->
+    <div id="poker-app"></div>
 
-    <!-- GAME CONTAINER -->
-    <div class="game-container">
-        
-        <!-- OPPONENT -->
-        <div class="opponent-area">
-            <div class="player-panel" id="opp-hud">
-                <div class="action-bubble" id="opp-bubble">CHECK</div>
-                <div class="avatar">
-                    <img id="opp-avatar" src="https://ui-avatars.com/api/?name=?&background=051a30&color=05d9e8" alt="">
-                </div>
-                <div class="player-info">
-                    <div class="player-name" id="opp-name">ADVERSAIRE</div>
-                    <div class="player-chips"><i class="fa-solid fa-microchip"></i> <span id="opp-chips">---</span></div>
-                </div>
-                <div class="hand-container" id="opp-hand"></div>
-                <div class="dealer-badge" id="dealer-opp" style="display: none;">D</div>
-            </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="table-area">
-            <div class="cyber-table">
-                <div class="table-logo">CYBER POKER</div>
-                
-                <div class="pot-display">
-                    <div class="pot-label">POT</div>
-                    <div class="pot-value"><i class="fa-solid fa-coins"></i> <span id="pot-display">0</span></div>
-                </div>
-
-                <div class="community-area" id="community-area">
-                    <div class="card-slot" id="community-0"></div>
-                    <div class="card-slot" id="community-1"></div>
-                    <div class="card-slot" id="community-2"></div>
-                    <div class="card-slot" id="community-3"></div>
-                    <div class="card-slot" id="community-4"></div>
-                </div>
-
-                <div class="game-status waiting" id="game-status">EN ATTENTE...</div>
-            </div>
-        </div>
-
-        <!-- PLAYER -->
-        <div class="player-area">
-            <div class="player-panel my-panel" id="player-hud">
-                <div class="avatar">
-                    <img id="my-avatar" src="https://ui-avatars.com/api/?name=Me&background=2a0820&color=ff2a6d" alt="">
-                </div>
-                <div class="player-info">
-                    <div class="player-name">VOUS</div>
-                    <div class="player-chips"><i class="fa-solid fa-microchip"></i> <span id="player-chips">---</span></div>
-                </div>
-                <div class="hand-container" id="player-hand"></div>
-                <div class="dealer-badge" id="dealer-player" style="display: none;">D</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CONTROLS -->
-    <div class="controls-bar">
-        <div class="bet-section">
-            <div class="bet-header">
-                <span class="bet-label">MISE</span>
-                <span class="bet-value" id="bet-val-display">0</span>
-            </div>
-            <input type="range" id="bet-slider" min="100" max="5000" value="100" step="50" disabled>
-        </div>
-        <div class="buttons-section">
-            <button class="btn-action btn-fold" id="btn-fold" disabled>PASSER</button>
-            <button class="btn-action btn-check" id="btn-check" disabled>CHECK</button>
-            <button class="btn-action btn-raise" id="btn-raise" disabled>MISER</button>
-        </div>
-    </div>
-
-    <!-- TOAST -->
-    <div class="toast" id="toast">
-        <div class="toast-title" id="toast-title">VICTOIRE</div>
-        <div class="toast-msg" id="toast-msg">Vous remportez le pot !</div>
-    </div>
-
-    <!-- SFX -->
-    <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, type, dur, vol = 0.08) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + dur);
-        }
-        const sfx = {
-            deal: () => { playTone(1200, 'sine', 0.06); },
-            chip: () => { playTone(800, 'triangle', 0.04); setTimeout(() => playTone(1000, 'triangle', 0.03), 40); },
-            turn: () => { playTone(600, 'sine', 0.1); playTone(800, 'sine', 0.1); },
-            win: () => { playTone(523, 'square', 0.1); setTimeout(() => playTone(659, 'square', 0.1), 80); setTimeout(() => playTone(784, 'square', 0.15), 160); },
-            lose: () => { playTone(300, 'sawtooth', 0.25); },
-            fold: () => playTone(200, 'sawtooth', 0.15)
-        };
-    </script>
-
-    <!-- GAME LOGIC -->
+    <!-- FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, update, remove, child, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, child, update, push, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
@@ -1111,553 +320,1245 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
 
-        // ========== CARD UTILITIES ==========
-        const SUITS = ['s', 'h', 'c', 'd'];
-        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+        // Exposer pour React
+        window.firebaseAuth = auth;
+        window.firebaseDB = db;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseChild = child;
+        window.firebaseUpdate = update;
+        window.firebasePush = push;
+        window.firebaseOnValue = onValue;
+        window.firebaseRemove = remove;
+        window.firebaseOnDisconnect = onDisconnect;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseSignIn = () => signInWithPopup(auth, provider);
         
-        const SUIT_SYMBOLS = { s: '♠', h: '♥', c: '♣', d: '♦' };
-        const getSymbol = suit => SUIT_SYMBOLS[suit] || '?';
-        const getColor = suit => (suit === 'h' || suit === 'd') ? 'suit-red' : 'suit-black';
-        const toSolverCard = card => card.value + card.suit;
+        // Signal que Firebase est prêt
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 
-        function createDeck() {
-            const cards = [];
-            for (const s of SUITS) {
-                for (const v of VALUES) {
-                    cards.push({ suit: s, value: v, id: Math.random().toString(36).substr(2, 9) });
+    <!-- REACT APP -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ==========================================
+        // 🃏 CONSTANTES DU JEU
+        // ==========================================
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const HAND_RANKINGS = [
+            'Carte Haute', 'Paire', 'Double Paire', 'Brelan', 
+            'Quinte', 'Couleur', 'Full', 'Carré', 'Quinte Flush', 'Quinte Flush Royale'
+        ];
+
+        const BLINDS = { small: 10, big: 20 };
+        const STARTING_CHIPS = 1000;
+        const MIN_PLAYERS = 2;
+        const MAX_PLAYERS = 8;
+
+        // ==========================================
+        // 🎴 LOGIQUE DU POKER
+        // ==========================================
+        
+        // Créer un deck
+        const createDeck = () => {
+            const deck = [];
+            for (let suit of SUITS) {
+                for (let value of VALUES) {
+                    deck.push({ suit, value, id: `${value}${suit}` });
                 }
             }
-            for (let i = cards.length - 1; i > 0; i--) {
+            return shuffleDeck(deck);
+        };
+
+        // Mélanger
+        const shuffleDeck = (deck) => {
+            const shuffled = [...deck];
+            for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [cards[i], cards[j]] = [cards[j], cards[i]];
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            return cards;
-        }
-
-        // ========== STATE ==========
-        let currentUser = null;
-        let gameId = null;
-        let isHost = false;
-        let localState = {
-            handId: null,
-            boardLength: 0,
-            myHandDealt: false,
-            oppHandDealt: false
-        };
-        let showdownProcessed = false;
-
-        // ========== DOM ==========
-        const $ = id => document.getElementById(id);
-        const els = {
-            lobby: $('lobby-overlay'),
-            roomInput: $('room-input'),
-            btnJoin: $('btn-join'),
-            lobbyStatus: $('lobby-status'),
-            roomDisplay: $('room-display'),
-            playerHand: $('player-hand'),
-            oppHand: $('opp-hand'),
-            community: [0,1,2,3,4].map(i => $(`community-${i}`)),
-            pot: $('pot-display'),
-            playerChips: $('player-chips'),
-            oppChips: $('opp-chips'),
-            gameStatus: $('game-status'),
-            btnFold: $('btn-fold'),
-            btnCheck: $('btn-check'),
-            btnRaise: $('btn-raise'),
-            slider: $('bet-slider'),
-            betVal: $('bet-val-display'),
-            oppBubble: $('opp-bubble'),
-            dealerPlayer: $('dealer-player'),
-            dealerOpp: $('dealer-opp'),
-            playerHud: $('player-hud'),
-            oppHud: $('opp-hud'),
-            myAvatar: $('my-avatar'),
-            oppAvatar: $('opp-avatar'),
-            oppName: $('opp-name'),
-            toast: $('toast'),
-            toastTitle: $('toast-title'),
-            toastMsg: $('toast-msg')
+            return shuffled;
         };
 
-        // ========== AUTH ==========
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                currentUser = user;
-                els.lobbyStatus.textContent = "Connecté. Entrez un nom de table.";
-                const name = user.displayName || 'Player';
-                els.myAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2a0820&color=ff2a6d`;
-            } else {
-                signInAnonymously(auth);
+        // Valeur numérique d'une carte
+        const getCardValue = (value) => {
+            const values = { 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
+            return values[value] || parseInt(value);
+        };
+
+        // Évaluer une main (7 cartes -> meilleure combinaison de 5)
+        const evaluateHand = (cards) => {
+            if (cards.length < 5) return { rank: 0, name: 'Carte Haute', highCards: [] };
+            
+            const allCombinations = getCombinations(cards, 5);
+            let bestHand = { rank: 0, name: 'Carte Haute', highCards: [] };
+            
+            for (let combo of allCombinations) {
+                const hand = evaluateFiveCards(combo);
+                if (hand.rank > bestHand.rank || 
+                    (hand.rank === bestHand.rank && compareHighCards(hand.highCards, bestHand.highCards) > 0)) {
+                    bestHand = hand;
+                }
             }
-        });
-
-        // ========== JOIN GAME ==========
-        els.btnJoin.onclick = async () => {
-            const roomName = els.roomInput.value.trim().toUpperCase();
-            if (!roomName) { els.lobbyStatus.textContent = "Entrez un nom de table !"; return; }
-            if (!currentUser) { els.lobbyStatus.textContent = "Connexion..."; return; }
-            els.lobbyStatus.textContent = "Connexion à la table...";
-            els.btnJoin.disabled = true;
-            await joinGame(roomName);
+            
+            return bestHand;
         };
 
-        async function joinGame(roomName) {
-            const roomRef = ref(db, `poker/rooms/${roomName}`);
-            try {
-                const snap = await get(roomRef);
-                if (!snap.exists()) {
-                    isHost = true;
-                    await set(roomRef, {
-                        created: Date.now(),
-                        handId: 0,
-                        players: {
-                            [currentUser.uid]: {
-                                chips: 5000, hand: [], isDealer: true, betThisRound: 0, hasActed: false,
-                                name: currentUser.displayName || "Joueur 1",
-                                avatar: els.myAvatar.src
-                            }
-                        },
-                        board: [], pot: 0, currentBet: 0, deck: [],
-                        state: 'waiting_for_player', turn: null,
-                        lastAction: { type: 'create' }
-                    });
-                } else {
-                    const data = snap.val();
-                    const pIds = Object.keys(data.players || {});
-                    if (pIds.includes(currentUser.uid)) {
-                        isHost = pIds[0] === currentUser.uid;
-                    } else if (pIds.length < 2) {
-                        isHost = false;
-                        await update(child(roomRef, `players/${currentUser.uid}`), {
-                            chips: 5000, hand: [], isDealer: false, betThisRound: 0, hasActed: false,
-                            name: currentUser.displayName || "Joueur 2",
-                            avatar: els.myAvatar.src
-                        });
-                        await update(roomRef, { state: 'ready_to_start' });
-                    } else {
-                        els.lobbyStatus.textContent = "Table pleine !";
-                        els.btnJoin.disabled = false;
-                        return;
-                    }
+        // Combinaisons
+        const getCombinations = (arr, size) => {
+            if (size > arr.length) return [];
+            if (size === arr.length) return [arr];
+            if (size === 1) return arr.map(el => [el]);
+            
+            const result = [];
+            for (let i = 0; i <= arr.length - size; i++) {
+                const head = arr.slice(i, i + 1);
+                const tailCombos = getCombinations(arr.slice(i + 1), size - 1);
+                for (let combo of tailCombos) {
+                    result.push([...head, ...combo]);
                 }
-                gameId = roomName;
-                els.lobby.style.display = 'none';
-                els.roomDisplay.textContent = `TABLE: ${roomName}`;
-                onDisconnect(child(roomRef, `players/${currentUser.uid}`)).remove();
-                startGameListener(roomRef);
-            } catch (e) {
-                console.error(e);
-                els.lobbyStatus.textContent = "Erreur de connexion.";
-                els.btnJoin.disabled = false;
             }
-        }
-
-        window.leaveMatch = async () => {
-            if (!gameId || !currentUser) { location.reload(); return; }
-            const roomRef = ref(db, `poker/rooms/${gameId}`);
-            await remove(child(roomRef, `players/${currentUser.uid}`));
-            const snap = await get(child(roomRef, 'players'));
-            if (!snap.exists()) await remove(roomRef);
-            location.reload();
+            return result;
         };
 
-        // ========== GAME LISTENER ==========
-        function startGameListener(roomRef) {
-            onValue(roomRef, snap => {
-                const data = snap.val();
-                if (!data) { els.gameStatus.textContent = "Table fermée"; return; }
-                
-                const pIds = Object.keys(data.players || {});
-                isHost = pIds[0] === currentUser.uid;
-                
-                renderGame(data);
-                
-                if (data.state === 'ready_to_start' && isHost) {
-                    setTimeout(() => startNewHand(roomRef, data), 800);
-                }
-                if (data.state === 'waiting_for_new_hand' && isHost) {
-                    setTimeout(() => startNewHand(roomRef, data), 3500);
-                }
-                if (data.state === 'showdown' && isHost && !showdownProcessed) {
-                    showdownProcessed = true;
-                    setTimeout(() => resolveShowdown(data), 2500);
-                }
-                if (data.state !== 'showdown') showdownProcessed = false;
+        // Évaluer 5 cartes
+        const evaluateFiveCards = (cards) => {
+            const values = cards.map(c => getCardValue(c.value)).sort((a, b) => b - a);
+            const suits = cards.map(c => c.suit);
+            
+            const isFlush = suits.every(s => s === suits[0]);
+            const isStraight = checkStraight(values);
+            
+            const valueCounts = {};
+            values.forEach(v => valueCounts[v] = (valueCounts[v] || 0) + 1);
+            const counts = Object.values(valueCounts).sort((a, b) => b - a);
+            
+            // Quinte Flush Royale
+            if (isFlush && isStraight && values[0] === 14) {
+                return { rank: 9, name: 'Quinte Flush Royale', highCards: values };
+            }
+            // Quinte Flush
+            if (isFlush && isStraight) {
+                return { rank: 8, name: 'Quinte Flush', highCards: values };
+            }
+            // Carré
+            if (counts[0] === 4) {
+                return { rank: 7, name: 'Carré', highCards: sortByCount(values, valueCounts) };
+            }
+            // Full
+            if (counts[0] === 3 && counts[1] === 2) {
+                return { rank: 6, name: 'Full', highCards: sortByCount(values, valueCounts) };
+            }
+            // Couleur
+            if (isFlush) {
+                return { rank: 5, name: 'Couleur', highCards: values };
+            }
+            // Quinte
+            if (isStraight) {
+                return { rank: 4, name: 'Quinte', highCards: values };
+            }
+            // Brelan
+            if (counts[0] === 3) {
+                return { rank: 3, name: 'Brelan', highCards: sortByCount(values, valueCounts) };
+            }
+            // Double Paire
+            if (counts[0] === 2 && counts[1] === 2) {
+                return { rank: 2, name: 'Double Paire', highCards: sortByCount(values, valueCounts) };
+            }
+            // Paire
+            if (counts[0] === 2) {
+                return { rank: 1, name: 'Paire', highCards: sortByCount(values, valueCounts) };
+            }
+            // Carte Haute
+            return { rank: 0, name: 'Carte Haute', highCards: values };
+        };
+
+        const checkStraight = (values) => {
+            const sorted = [...new Set(values)].sort((a, b) => b - a);
+            if (sorted.length < 5) return false;
+            
+            // Check normal straight
+            for (let i = 0; i <= sorted.length - 5; i++) {
+                if (sorted[i] - sorted[i + 4] === 4) return true;
+            }
+            
+            // Check A-2-3-4-5
+            if (sorted.includes(14) && sorted.includes(2) && sorted.includes(3) && sorted.includes(4) && sorted.includes(5)) {
+                return true;
+            }
+            
+            return false;
+        };
+
+        const sortByCount = (values, counts) => {
+            return [...values].sort((a, b) => {
+                if (counts[b] !== counts[a]) return counts[b] - counts[a];
+                return b - a;
             });
-        }
+        };
 
-        // ========== START NEW HAND ==========
-        /*
-         * TEXAS HOLD'EM HEADS-UP RULES:
-         * - Dealer (Button) posts Small Blind
-         * - Non-dealer posts Big Blind
-         * - PREFLOP: Dealer acts FIRST (can fold, call, raise)
-         * - POSTFLOP: Non-dealer (BB) acts FIRST
-         * - Round ends when bets are equal AND both players have acted after any raise
-         */
-        async function startNewHand(roomRef, data) {
-            const deck = createDeck();
-            const pIds = Object.keys(data.players);
-            if (pIds.length < 2) return;
+        const compareHighCards = (a, b) => {
+            for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                if (a[i] !== b[i]) return a[i] - b[i];
+            }
+            return 0;
+        };
 
-            const [p1Id, p2Id] = pIds;
-            const p1 = data.players[p1Id];
-            const p2 = data.players[p2Id];
+        // ==========================================
+        // 🎨 COMPOSANTS UI
+        // ==========================================
+
+        // Composant Carte
+        const Card = ({ card, hidden = false, delay = 0, small = false }) => {
+            const isRed = card && (card.suit === '♥' || card.suit === '♦');
+            const sizeClasses = small ? 'w-12 h-16 text-xs' : 'w-[70px] h-[100px]';
             
-            // Alternate dealer each hand
-            const newHandId = (data.handId || 0) + 1;
-            const p1IsDealer = newHandId % 2 === 1 ? p1.isDealer : !p1.isDealer;
+            if (hidden || !card) {
+                return (
+                    <div 
+                        className={`card card-back ${sizeClasses} animate-card-deal`}
+                        style={{ animationDelay: `${delay}ms` }}
+                    />
+                );
+            }
             
-            // Deal cards
-            const h1 = [deck.pop(), deck.pop()];
-            const h2 = [deck.pop(), deck.pop()];
-            
-            // Blinds
-            const SB = 50, BB = 100;
-            let p1Chips = p1.chips, p2Chips = p2.chips;
-            let p1Bet = 0, p2Bet = 0;
-            let dealerUid, bbUid;
-
-            if (p1IsDealer) {
-                dealerUid = p1Id; bbUid = p2Id;
-                p1Bet = Math.min(SB, p1Chips); p1Chips -= p1Bet;
-                p2Bet = Math.min(BB, p2Chips); p2Chips -= p2Bet;
-            } else {
-                dealerUid = p2Id; bbUid = p1Id;
-                p2Bet = Math.min(SB, p2Chips); p2Chips -= p2Bet;
-                p1Bet = Math.min(BB, p1Chips); p1Chips -= p1Bet;
-            }
-
-            // Preflop: Dealer (SB) acts first
-            const updates = {
-                handId: newHandId,
-                deck, board: [],
-                pot: p1Bet + p2Bet,
-                currentBet: BB,
-                state: 'preflop',
-                turn: dealerUid,
-                lastAction: { type: 'new_hand' },
-                [`players/${p1Id}/hand`]: h1,
-                [`players/${p1Id}/chips`]: p1Chips,
-                [`players/${p1Id}/isDealer`]: p1IsDealer,
-                [`players/${p1Id}/betThisRound`]: p1Bet,
-                [`players/${p1Id}/hasActed`]: false,
-                [`players/${p2Id}/hand`]: h2,
-                [`players/${p2Id}/chips`]: p2Chips,
-                [`players/${p2Id}/isDealer`]: !p1IsDealer,
-                [`players/${p2Id}/betThisRound`]: p2Bet,
-                [`players/${p2Id}/hasActed`]: false
-            };
-            await update(roomRef, updates);
-        }
-
-        // ========== RENDER ==========
-        function renderGame(data) {
-            const pIds = Object.keys(data.players || {});
-            const myId = currentUser.uid;
-            const oppId = pIds.find(id => id !== myId);
-            
-            if (!data.players[myId]) return;
-            const me = data.players[myId];
-            const opp = oppId ? data.players[oppId] : null;
-
-            // Display chips & pot
-            els.pot.textContent = data.pot || 0;
-            els.playerChips.textContent = me.chips;
-            els.playerHud.classList.toggle('active', data.turn === myId);
-
-            if (!opp) {
-                els.oppChips.textContent = "---";
-                els.gameStatus.textContent = "EN ATTENTE D'UN JOUEUR...";
-                els.gameStatus.classList.add('waiting');
-                disableControls();
-                return;
-            }
-
-            els.oppChips.textContent = opp.chips;
-            els.oppHud.classList.toggle('active', data.turn === oppId);
-            els.oppName.textContent = opp.name || 'ADVERSAIRE';
-            els.oppAvatar.src = opp.avatar || `https://ui-avatars.com/api/?name=Opp&background=051a30&color=05d9e8`;
-
-            // Dealer badge
-            els.dealerPlayer.style.display = me.isDealer ? 'flex' : 'none';
-            els.dealerOpp.style.display = opp.isDealer ? 'flex' : 'none';
-
-            // Status
-            els.gameStatus.classList.remove('waiting');
-            if (data.state === 'showdown') {
-                els.gameStatus.textContent = "SHOWDOWN";
-            } else if (data.state === 'waiting_for_new_hand') {
-                els.gameStatus.textContent = "NOUVELLE MAIN...";
-            } else if (data.turn === myId) {
-                els.gameStatus.textContent = "À VOUS DE JOUER";
-                sfx.turn();
-            } else {
-                els.gameStatus.textContent = "ADVERSAIRE...";
-            }
-
-            // Render cards
-            const newHand = data.handId !== localState.handId;
-            if (newHand) {
-                els.playerHand.innerHTML = '';
-                els.oppHand.innerHTML = '';
-                els.community.forEach(el => el.innerHTML = '');
-                localState = { handId: data.handId, boardLength: 0, myHandDealt: false, oppHandDealt: false };
-            }
-
-            const myHand = me.hand || [];
-            if (myHand.length === 2 && !localState.myHandDealt) {
-                localState.myHandDealt = true;
-                myHand.forEach((c, i) => setTimeout(() => { createCard(els.playerHand, c, true); sfx.deal(); }, i * 150));
-            }
-
-            const oppHand = opp.hand || [];
-            const showOpp = data.state === 'showdown' || data.state === 'waiting_for_new_hand';
-            if (oppHand.length === 2 && !localState.oppHandDealt) {
-                localState.oppHandDealt = true;
-                oppHand.forEach((c, i) => setTimeout(() => { createCard(els.oppHand, c, showOpp); sfx.deal(); }, i * 150 + 100));
-            }
-            if (showOpp) els.oppHand.querySelectorAll('.card').forEach(c => c.classList.add('flipped'));
-
-            const board = data.board || [];
-            if (board.length > localState.boardLength) {
-                board.slice(localState.boardLength).forEach((c, i) => {
-                    setTimeout(() => { createCard(els.community[localState.boardLength + i], c, true); sfx.deal(); }, i * 120);
-                });
-                localState.boardLength = board.length;
-            }
-
-            // Opponent bubble
-            if (data.lastAction && data.lastAction.actor === oppId && !['new_hand', 'win', 'new_street'].includes(data.lastAction.type)) {
-                showBubble(data.lastAction);
-            }
-
-            // Winner toast
-            if (data.lastAction?.type === 'win') {
-                const isWin = data.lastAction.actor === myId;
-                els.toast.className = `toast ${isWin ? 'win' : 'lose'} show`;
-                els.toastTitle.textContent = isWin ? "VICTOIRE" : "DÉFAITE";
-                els.toastMsg.textContent = data.lastAction.desc || '';
-                if (isWin) sfx.win(); else sfx.lose();
-                setTimeout(() => els.toast.classList.remove('show'), 3500);
-            }
-
-            updateControls(data, me);
-        }
-
-        function createCard(container, cardData, faceUp) {
-            const slot = document.createElement('div');
-            slot.className = 'card-slot';
-            
-            const card = document.createElement('div');
-            card.className = `card dealing${faceUp ? ' flipped' : ''}`;
-            
-            const color = getColor(cardData.suit);
-            const symbol = getSymbol(cardData.suit);
-            
-            card.innerHTML = `
-                <div class="card-face card-front">
-                    <div class="card-corner card-corner-tl ${color}">
-                        <span class="card-value">${cardData.value}</span>
-                        <span class="card-suit-small">${symbol}</span>
+            return (
+                <div 
+                    className={`card ${isRed ? 'red' : 'black'} ${sizeClasses} animate-card-deal`}
+                    style={{ animationDelay: `${delay}ms` }}
+                >
+                    <div className="corner-tl flex flex-col items-center">
+                        <span>{card.value}</span>
+                        <span>{card.suit}</span>
                     </div>
-                    <div class="card-suit-center ${color}">${symbol}</div>
-                    <div class="card-corner card-corner-br ${color}">
-                        <span class="card-value">${cardData.value}</span>
-                        <span class="card-suit-small">${symbol}</span>
+                    <span className="suit">{card.suit}</span>
+                    <div className="corner-br flex flex-col items-center">
+                        <span>{card.value}</span>
+                        <span>{card.suit}</span>
                     </div>
                 </div>
-                <div class="card-face card-back"></div>
-            `;
-            
-            slot.appendChild(card);
-            container.appendChild(slot);
-            setTimeout(() => card.classList.remove('dealing'), 400);
-        }
-
-        function showBubble(action) {
-            const texts = { fold: 'PASSE', check: 'CHECK', call: `SUIT ${action.amount || ''}`, raise: `RELANCE ${action.amount || ''}` };
-            const text = texts[action.type];
-            if (!text) return;
-            if (action.type === 'fold') sfx.fold(); else sfx.chip();
-            els.oppBubble.textContent = text;
-            els.oppBubble.classList.add('show');
-            setTimeout(() => els.oppBubble.classList.remove('show'), 2000);
-        }
-
-        function disableControls() {
-            els.btnFold.disabled = els.btnCheck.disabled = els.btnRaise.disabled = els.slider.disabled = true;
-        }
-
-        function updateControls(data, me) {
-            const myTurn = data.turn === currentUser.uid && !['showdown', 'waiting_for_new_hand', 'waiting_for_player'].includes(data.state);
-            if (!myTurn) { disableControls(); return; }
-
-            els.btnFold.disabled = false;
-            els.slider.disabled = false;
-
-            const myBet = me.betThisRound || 0;
-            const toCall = Math.max(0, data.currentBet - myBet);
-
-            if (toCall === 0) {
-                els.btnCheck.textContent = "CHECK";
-            } else {
-                els.btnCheck.textContent = `SUIVRE ${Math.min(toCall, me.chips)}`;
-            }
-            els.btnCheck.disabled = false;
-
-            // Raise
-            const minRaise = Math.max(data.currentBet * 2, 100);
-            const maxBet = me.chips + myBet;
-            
-            if (me.chips > toCall) {
-                els.btnRaise.disabled = false;
-                els.slider.min = Math.min(minRaise, maxBet);
-                els.slider.max = maxBet;
-                els.slider.value = els.slider.min;
-                els.betVal.textContent = els.slider.value;
-                els.btnRaise.textContent = `MISER ${els.slider.value}`;
-            } else {
-                els.btnRaise.disabled = true;
-            }
-        }
-
-        // ========== CONTROLS ==========
-        els.btnFold.onclick = () => sendMove('fold');
-        els.btnCheck.onclick = () => sendMove(els.btnCheck.textContent.includes('SUIVRE') ? 'call' : 'check');
-        els.btnRaise.onclick = () => sendMove('raise', parseInt(els.slider.value));
-        els.slider.oninput = e => {
-            els.betVal.textContent = e.target.value;
-            els.btnRaise.textContent = `MISER ${e.target.value}`;
+            );
         };
 
-        // ========== SEND MOVE ==========
-        async function sendMove(type, amount = 0) {
-            disableControls();
-            const roomRef = ref(db, `poker/rooms/${gameId}`);
+        // Composant Jeton
+        const Chip = ({ value, className = '' }) => {
+            let chipClass = 'chip-red';
+            if (value >= 100) chipClass = 'chip-black';
+            else if (value >= 50) chipClass = 'chip-gold';
+            else if (value >= 25) chipClass = 'chip-green';
+            else if (value >= 10) chipClass = 'chip-blue';
             
-            await runTransaction(roomRef, data => {
-                if (!data || data.turn !== currentUser.uid) return;
-                
-                const pIds = Object.keys(data.players);
-                const oppId = pIds.find(id => id !== currentUser.uid);
-                const me = data.players[currentUser.uid];
-                const opp = data.players[oppId];
+            return (
+                <div className={`chip ${chipClass} ${className}`}>
+                    {value}
+                </div>
+            );
+        };
 
-                // FOLD
-                if (type === 'fold') {
-                    data.players[oppId].chips += data.pot;
-                    data.pot = 0;
-                    data.state = 'waiting_for_new_hand';
-                    data.lastAction = { type: 'win', actor: oppId, desc: 'Adversaire se couche' };
-                    return data;
-                }
-
-                // CHECK
-                if (type === 'check') {
-                    me.hasActed = true;
-                    data.lastAction = { type: 'check', actor: currentUser.uid };
-                    
-                    // If both have acted and bets equal -> advance
-                    if (opp.hasActed && me.betThisRound === opp.betThisRound) {
-                        advanceStreet(data);
-                    } else {
-                        data.turn = oppId;
-                    }
-                    return data;
-                }
-
-                // CALL
-                if (type === 'call') {
-                    const toCall = Math.min(data.currentBet - me.betThisRound, me.chips);
-                    me.chips -= toCall;
-                    me.betThisRound += toCall;
-                    data.pot += toCall;
-                    me.hasActed = true;
-                    data.lastAction = { type: 'call', actor: currentUser.uid, amount: toCall };
-                    
-                    // After call, if bets equal and opp acted -> advance
-                    if (me.betThisRound === opp.betThisRound) {
-                        advanceStreet(data);
-                    } else {
-                        data.turn = oppId;
-                    }
-                    return data;
-                }
-
-                // RAISE
-                if (type === 'raise') {
-                    const totalBet = Math.min(amount, me.chips + me.betThisRound);
-                    const additional = totalBet - me.betThisRound;
-                    me.chips -= additional;
-                    me.betThisRound = totalBet;
-                    data.pot += additional;
-                    data.currentBet = totalBet;
-                    me.hasActed = true;
-                    opp.hasActed = false; // Opponent must act again after raise
-                    data.lastAction = { type: 'raise', actor: currentUser.uid, amount: totalBet };
-                    data.turn = oppId;
-                    return data;
-                }
-
-                return data;
-            });
-        }
-
-        function advanceStreet(data) {
-            const pIds = Object.keys(data.players);
-            const bbUid = pIds.find(id => !data.players[id].isDealer);
-
-            // Reset for new street
-            pIds.forEach(id => {
-                data.players[id].betThisRound = 0;
-                data.players[id].hasActed = false;
-            });
-            data.currentBet = 0;
-
-            const streets = ['preflop', 'flop', 'turn', 'river'];
-            const idx = streets.indexOf(data.state);
-
-            if (data.state === 'preflop') {
-                data.state = 'flop';
-                data.board = [data.deck.pop(), data.deck.pop(), data.deck.pop()];
-            } else if (data.state === 'flop') {
-                data.state = 'turn';
-                data.board.push(data.deck.pop());
-            } else if (data.state === 'turn') {
-                data.state = 'river';
-                data.board.push(data.deck.pop());
-            } else {
-                data.state = 'showdown';
-                data.turn = null;
-                data.lastAction = { type: 'showdown' };
-                return;
+        // Composant Siège Joueur
+        const PlayerSeat = ({ player, position, isCurrentTurn, isDealer, isSmallBlind, isBigBlind, communityCards }) => {
+            if (!player) {
+                return (
+                    <div className={`player-seat glass-panel rounded-xl p-4 opacity-30 border-dashed border-2 border-gray-600 ${position}`}>
+                        <div className="text-center text-gray-500 font-mono text-sm">
+                            <i className="fa-solid fa-chair text-2xl mb-2 block"></i>
+                            Siège Libre
+                        </div>
+                    </div>
+                );
             }
 
-            // Postflop: BB acts first
-            data.turn = bbUid;
-            data.lastAction = { type: 'new_street', street: data.state };
-        }
+            const handStrength = player.cards && communityCards && communityCards.length >= 3 
+                ? evaluateHand([...player.cards, ...communityCards])
+                : null;
 
-        // ========== SHOWDOWN ==========
-        async function resolveShowdown(data) {
-            const pIds = Object.keys(data.players);
-            const hands = pIds.map(id => {
-                const cards = [...data.players[id].hand, ...data.board].map(toSolverCard);
-                return { id, solved: Hand.solve(cards) };
-            });
+            return (
+                <div className={`player-seat glass-panel rounded-xl p-3 transition-all duration-300 ${position}
+                    ${isCurrentTurn ? 'current-turn ring-2 ring-gold-400' : ''}
+                    ${player.folded ? 'folded' : ''}
+                    ${player.isWinner ? 'animate-winner-glow' : ''}
+                `}>
+                    {/* Badges */}
+                    <div className="absolute -top-2 -right-2 flex gap-1">
+                        {isDealer && (
+                            <div className="w-6 h-6 rounded-full bg-white text-black font-bold text-xs flex items-center justify-center shadow-lg">D</div>
+                        )}
+                        {isSmallBlind && (
+                            <div className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center shadow-lg">SB</div>
+                        )}
+                        {isBigBlind && (
+                            <div className="w-6 h-6 rounded-full bg-empire-600 text-white font-bold text-xs flex items-center justify-center shadow-lg">BB</div>
+                        )}
+                    </div>
+
+                    {/* Avatar & Nom */}
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="relative">
+                            <img 
+                                src={player.avatar || `https://ui-avatars.com/api/?name=${player.name}&background=990000&color=fff`} 
+                                className="w-10 h-10 rounded-full border-2 border-empire-600"
+                                alt={player.name}
+                            />
+                            {isCurrentTurn && (
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse border-2 border-black"></div>
+                            )}
+                        </div>
+                        <div>
+                            <div className="font-display text-sm text-white truncate max-w-[80px]">{player.name}</div>
+                            <div className="flex items-center gap-1 text-gold-400 font-mono text-xs">
+                                <i className="fa-solid fa-coins"></i>
+                                {player.chips?.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cartes du joueur */}
+                    <div className="flex gap-1 justify-center mb-2">
+                        {player.cards ? (
+                            <>
+                                <Card card={player.showCards ? player.cards[0] : null} hidden={!player.showCards} small delay={0} />
+                                <Card card={player.showCards ? player.cards[1] : null} hidden={!player.showCards} small delay={100} />
+                            </>
+                        ) : (
+                            <div className="text-gray-500 text-xs font-mono py-4">En attente</div>
+                        )}
+                    </div>
+
+                    {/* Mise actuelle */}
+                    {player.currentBet > 0 && (
+                        <div className="flex items-center justify-center gap-2 animate-slide-up">
+                            <Chip value={player.currentBet} className="w-8 h-8 text-[8px]" />
+                            <span className="text-empire-500 font-mono text-sm font-bold">{player.currentBet}</span>
+                        </div>
+                    )}
+
+                    {/* Action récente */}
+                    {player.lastAction && (
+                        <div className={`text-center text-xs font-mono mt-1 uppercase tracking-wider
+                            ${player.lastAction === 'fold' ? 'text-gray-500' : ''}
+                            ${player.lastAction === 'raise' ? 'text-empire-500' : ''}
+                            ${player.lastAction === 'call' ? 'text-blue-400' : ''}
+                            ${player.lastAction === 'check' ? 'text-green-400' : ''}
+                            ${player.lastAction === 'all-in' ? 'text-gold-400 animate-pulse' : ''}
+                        `}>
+                            {player.lastAction}
+                        </div>
+                    )}
+
+                    {/* Force de la main */}
+                    {handStrength && player.showCards && (
+                        <div className="text-center text-[10px] font-mono text-gold-400 mt-1 bg-black/50 rounded px-2 py-0.5">
+                            {handStrength.name}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Composant Actions
+        const ActionPanel = ({ 
+            canCheck, 
+            canCall, 
+            callAmount, 
+            minRaise, 
+            maxRaise, 
+            onFold, 
+            onCheck, 
+            onCall, 
+            onRaise, 
+            onAllIn,
+            disabled,
+            playerChips
+        }) => {
+            const [raiseAmount, setRaiseAmount] = useState(minRaise);
             
-            const winners = Hand.winners(hands.map(h => h.solved));
-            const winner = hands.find(h => h.solved === winners[0]);
+            useEffect(() => {
+                setRaiseAmount(minRaise);
+            }, [minRaise]);
 
-            await update(ref(db, `poker/rooms/${gameId}`), {
-                [`players/${winner.id}/chips`]: data.players[winner.id].chips + data.pot,
-                pot: 0,
-                state: 'waiting_for_new_hand',
-                lastAction: { type: 'win', actor: winner.id, desc: winner.solved.descr }
-            });
+            const presetRaises = [
+                { label: '2x', amount: minRaise * 2 },
+                { label: '3x', amount: minRaise * 3 },
+                { label: '1/2 Pot', amount: Math.floor(callAmount * 1.5) },
+                { label: 'Pot', amount: callAmount * 3 },
+            ].filter(p => p.amount <= maxRaise && p.amount >= minRaise);
+
+            return (
+                <div className="glass-panel rounded-xl p-4 space-y-4">
+                    {/* Slider de relance */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono text-gray-400">
+                            <span>Relance: <span className="text-gold-400 font-bold">{raiseAmount}</span></span>
+                            <span>Max: {maxRaise}</span>
+                        </div>
+                        <input 
+                            type="range"
+                            min={minRaise}
+                            max={maxRaise}
+                            value={raiseAmount}
+                            onChange={(e) => setRaiseAmount(parseInt(e.target.value))}
+                            className="raise-slider w-full"
+                            disabled={disabled}
+                        />
+                        {/* Presets */}
+                        <div className="flex gap-2 flex-wrap">
+                            {presetRaises.map((preset, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setRaiseAmount(Math.min(preset.amount, maxRaise))}
+                                    className="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-xs font-mono text-gray-300 transition-colors"
+                                    disabled={disabled}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Boutons d'action */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={onFold}
+                            disabled={disabled}
+                            className="btn-action py-3 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-display font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <i className="fa-solid fa-ban mr-2"></i>FOLD
+                        </button>
+                        
+                        {canCheck ? (
+                            <button
+                                onClick={onCheck}
+                                disabled={disabled}
+                                className="btn-action py-3 px-4 bg-green-700 hover:bg-green-600 text-white font-display font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-check mr-2"></i>CHECK
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onCall}
+                                disabled={disabled || callAmount > playerChips}
+                                className="btn-action py-3 px-4 bg-blue-700 hover:bg-blue-600 text-white font-display font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i className="fa-solid fa-phone mr-2"></i>CALL {callAmount}
+                            </button>
+                        )}
+                        
+                        <button
+                            onClick={() => onRaise(raiseAmount)}
+                            disabled={disabled || raiseAmount > playerChips}
+                            className="btn-action py-3 px-4 bg-empire-700 hover:bg-empire-600 text-white font-display font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <i className="fa-solid fa-arrow-up mr-2"></i>RAISE {raiseAmount}
+                        </button>
+                        
+                        <button
+                            onClick={onAllIn}
+                            disabled={disabled}
+                            className="btn-action py-3 px-4 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black font-display font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse"
+                        >
+                            <i className="fa-solid fa-fire mr-2"></i>ALL-IN
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Confettis
+        const Confetti = ({ active }) => {
+            if (!active) return null;
+            
+            const colors = ['#ff3333', '#ffd700', '#33ff33', '#3333ff', '#ff33ff'];
+            const pieces = Array.from({ length: 50 }, (_, i) => ({
+                id: i,
+                left: Math.random() * 100,
+                delay: Math.random() * 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: Math.random() * 360
+            }));
+
+            return (
+                <div className="fixed inset-0 pointer-events-none z-50">
+                    {pieces.map(piece => (
+                        <div
+                            key={piece.id}
+                            className="confetti-piece"
+                            style={{
+                                left: `${piece.left}%`,
+                                animationDelay: `${piece.delay}s`,
+                                backgroundColor: piece.color,
+                                transform: `rotate(${piece.rotation}deg)`
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 🎮 COMPOSANT PRINCIPAL - LOBBY
+        // ==========================================
+        const Lobby = ({ user, onJoinTable, onCreateTable, tables }) => {
+            const [creating, setCreating] = useState(false);
+            const [tableName, setTableName] = useState('');
+            const [buyIn, setBuyIn] = useState(1000);
+
+            const handleCreate = async () => {
+                if (!tableName.trim()) return;
+                setCreating(true);
+                await onCreateTable(tableName, buyIn);
+                setCreating(false);
+                setTableName('');
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    {/* Header */}
+                    <div className="text-center mb-12">
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <i className="fa-solid fa-crown text-empire-600 text-4xl animate-float"></i>
+                            <h1 className="font-display text-4xl md:text-6xl font-black text-white">
+                                RED <span className="text-empire-500">POKER</span>
+                            </h1>
+                        </div>
+                        <p className="text-gray-400 font-mono">Texas Hold'em Multiplayer</p>
+                        
+                        {/* User info */}
+                        <div className="mt-6 flex items-center justify-center gap-3 glass-panel rounded-full px-6 py-3 inline-flex">
+                            <img src={user.avatar} className="w-8 h-8 rounded-full border-2 border-empire-600" alt="" />
+                            <span className="font-display text-white">{user.name}</span>
+                            <span className="text-gold-400 font-mono text-sm">
+                                <i className="fa-solid fa-coins mr-1"></i>
+                                {user.chips?.toLocaleString() || STARTING_CHIPS}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Create Table */}
+                    <div className="glass-panel rounded-xl p-6 w-full max-w-md mb-8">
+                        <h2 className="font-display text-xl text-white mb-4">
+                            <i className="fa-solid fa-plus-circle text-empire-500 mr-2"></i>
+                            Créer une Table
+                        </h2>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                value={tableName}
+                                onChange={(e) => setTableName(e.target.value)}
+                                placeholder="Nom de la table..."
+                                className="w-full bg-black/50 border border-empire-900 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-empire-500 transition-colors"
+                            />
+                            <div>
+                                <label className="text-gray-400 text-sm font-mono mb-2 block">Buy-in</label>
+                                <div className="flex gap-2">
+                                    {[500, 1000, 2500, 5000].map(amount => (
+                                        <button
+                                            key={amount}
+                                            onClick={() => setBuyIn(amount)}
+                                            className={`flex-1 py-2 rounded font-mono text-sm transition-all ${
+                                                buyIn === amount 
+                                                    ? 'bg-empire-600 text-white' 
+                                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                            }`}
+                                        >
+                                            {amount}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleCreate}
+                                disabled={creating || !tableName.trim()}
+                                className="w-full py-3 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold rounded-lg transition-all disabled:opacity-50"
+                            >
+                                {creating ? (
+                                    <i className="fa-solid fa-spinner fa-spin"></i>
+                                ) : (
+                                    <>
+                                        <i className="fa-solid fa-play mr-2"></i>
+                                        CRÉER LA TABLE
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Tables List */}
+                    <div className="w-full max-w-2xl">
+                        <h2 className="font-display text-xl text-white mb-4">
+                            <i className="fa-solid fa-table-list text-gold-400 mr-2"></i>
+                            Tables Disponibles
+                        </h2>
+                        
+                        {Object.keys(tables).length === 0 ? (
+                            <div className="glass-panel rounded-xl p-8 text-center">
+                                <i className="fa-solid fa-ghost text-4xl text-gray-600 mb-4 block"></i>
+                                <p className="text-gray-500 font-mono">Aucune table disponible</p>
+                                <p className="text-gray-600 text-sm">Créez la première !</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {Object.entries(tables).map(([id, table]) => (
+                                    <div key={id} className="glass-panel rounded-xl p-4 flex items-center justify-between hover:border-empire-500 transition-colors cursor-pointer group">
+                                        <div>
+                                            <h3 className="font-display text-white group-hover:text-empire-500 transition-colors">
+                                                {table.name}
+                                            </h3>
+                                            <div className="flex gap-4 text-sm font-mono text-gray-400">
+                                                <span>
+                                                    <i className="fa-solid fa-users mr-1"></i>
+                                                    {Object.keys(table.players || {}).length}/{MAX_PLAYERS}
+                                                </span>
+                                                <span>
+                                                    <i className="fa-solid fa-coins mr-1 text-gold-400"></i>
+                                                    Buy-in: {table.buyIn}
+                                                </span>
+                                                <span className={`${table.status === 'playing' ? 'text-green-400' : 'text-blue-400'}`}>
+                                                    {table.status === 'playing' ? '● En cours' : '○ En attente'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => onJoinTable(id)}
+                                            className="px-6 py-2 bg-empire-700 hover:bg-empire-600 text-white font-display font-bold rounded-lg transition-all"
+                                        >
+                                            REJOINDRE
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Back button */}
+                    <a 
+                        href="games.html" 
+                        className="mt-8 text-gray-500 hover:text-white font-mono text-sm transition-colors"
+                    >
+                        <i className="fa-solid fa-arrow-left mr-2"></i>
+                        Retour au Hub
+                    </a>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 🎰 COMPOSANT TABLE DE JEU
+        // ==========================================
+        const PokerTable = ({ tableId, user, onLeave }) => {
+            const [gameState, setGameState] = useState(null);
+            const [myCards, setMyCards] = useState([]);
+            const [showConfetti, setShowConfetti] = useState(false);
+            const [chatMessages, setChatMessages] = useState([]);
+            const [chatInput, setChatInput] = useState('');
+
+            // Positions des joueurs autour de la table (pour 8 max)
+            const seatPositions = [
+                'absolute bottom-4 left-1/2 -translate-x-1/2', // Moi (bas centre)
+                'absolute bottom-20 left-4', // Bas gauche
+                'absolute top-1/2 left-4 -translate-y-1/2', // Milieu gauche
+                'absolute top-20 left-4', // Haut gauche
+                'absolute top-4 left-1/2 -translate-x-1/2', // Haut centre
+                'absolute top-20 right-4', // Haut droit
+                'absolute top-1/2 right-4 -translate-y-1/2', // Milieu droit
+                'absolute bottom-20 right-4', // Bas droit
+            ];
+
+            // Écouter les changements de la table
+            useEffect(() => {
+                if (!tableId) return;
+                
+                const tableRef = window.firebaseRef(window.firebaseDB, `poker_tables/${tableId}`);
+                const unsubscribe = window.firebaseOnValue(tableRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        setGameState(data);
+                        
+                        // Récupérer mes cartes
+                        if (data.players && data.players[user.odor]) {
+                            setMyCards(data.players[user.odor].cards || []);
+                        }
+
+                        // Confetti si je gagne
+                        if (data.winner === user.odor) {
+                            setShowConfetti(true);
+                            setTimeout(() => setShowConfetti(false), 3000);
+                        }
+                    }
+                });
+
+                // Écouter le chat
+                const chatRef = window.firebaseRef(window.firebaseDB, `poker_chat/${tableId}`);
+                const chatUnsub = window.firebaseOnValue(chatRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const messages = Object.values(snapshot.val()).slice(-50);
+                        setChatMessages(messages);
+                    }
+                });
+
+                // Marquer comme présent
+                const playerRef = window.firebaseRef(window.firebaseDB, `poker_tables/${tableId}/players/${user.odor}`);
+                window.firebaseOnDisconnect(playerRef).remove();
+
+                return () => {
+                    unsubscribe();
+                    chatUnsub();
+                };
+            }, [tableId, user.odor]);
+
+            // Actions du joueur
+            const performAction = async (action, amount = 0) => {
+                const updates = {};
+                const playerPath = `poker_tables/${tableId}/players/${user.odor}`;
+                
+                switch(action) {
+                    case 'fold':
+                        updates[`${playerPath}/folded`] = true;
+                        updates[`${playerPath}/lastAction`] = 'fold';
+                        break;
+                    case 'check':
+                        updates[`${playerPath}/lastAction`] = 'check';
+                        break;
+                    case 'call':
+                        updates[`${playerPath}/currentBet`] = gameState.currentBet;
+                        updates[`${playerPath}/chips`] = gameState.players[user.odor].chips - (gameState.currentBet - (gameState.players[user.odor].currentBet || 0));
+                        updates[`${playerPath}/lastAction`] = 'call';
+                        updates[`poker_tables/${tableId}/pot`] = gameState.pot + (gameState.currentBet - (gameState.players[user.odor].currentBet || 0));
+                        break;
+                    case 'raise':
+                        updates[`${playerPath}/currentBet`] = amount;
+                        updates[`${playerPath}/chips`] = gameState.players[user.odor].chips - (amount - (gameState.players[user.odor].currentBet || 0));
+                        updates[`${playerPath}/lastAction`] = 'raise';
+                        updates[`poker_tables/${tableId}/pot`] = gameState.pot + (amount - (gameState.players[user.odor].currentBet || 0));
+                        updates[`poker_tables/${tableId}/currentBet`] = amount;
+                        break;
+                    case 'all-in':
+                        const allInAmount = gameState.players[user.odor].chips + (gameState.players[user.odor].currentBet || 0);
+                        updates[`${playerPath}/currentBet`] = allInAmount;
+                        updates[`${playerPath}/chips`] = 0;
+                        updates[`${playerPath}/lastAction`] = 'all-in';
+                        updates[`${playerPath}/isAllIn`] = true;
+                        updates[`poker_tables/${tableId}/pot`] = gameState.pot + gameState.players[user.odor].chips;
+                        if (allInAmount > gameState.currentBet) {
+                            updates[`poker_tables/${tableId}/currentBet`] = allInAmount;
+                        }
+                        break;
+                }
+
+                // Passer au joueur suivant
+                const playerIds = Object.keys(gameState.players).filter(id => !gameState.players[id].folded);
+                const currentIndex = playerIds.indexOf(gameState.currentPlayer);
+                const nextIndex = (currentIndex + 1) % playerIds.length;
+                updates[`poker_tables/${tableId}/currentPlayer`] = playerIds[nextIndex];
+
+                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+            };
+
+            // Envoyer un message
+            const sendMessage = async () => {
+                if (!chatInput.trim()) return;
+                
+                const chatRef = window.firebaseRef(window.firebaseDB, `poker_chat/${tableId}`);
+                await window.firebasePush(chatRef, {
+                    user: user.name,
+                    avatar: user.avatar,
+                    message: chatInput,
+                    timestamp: Date.now()
+                });
+                setChatInput('');
+            };
+
+            // Démarrer la partie
+            const startGame = async () => {
+                const players = gameState.players;
+                const playerIds = Object.keys(players);
+                
+                if (playerIds.length < MIN_PLAYERS) {
+                    alert('Il faut au moins 2 joueurs pour commencer !');
+                    return;
+                }
+
+                // Créer et mélanger le deck
+                const deck = createDeck();
+                let deckIndex = 0;
+
+                // Distribuer 2 cartes à chaque joueur
+                const updates = {};
+                playerIds.forEach((playerId, index) => {
+                    updates[`poker_tables/${tableId}/players/${playerId}/cards`] = [
+                        deck[deckIndex++],
+                        deck[deckIndex++]
+                    ];
+                    updates[`poker_tables/${tableId}/players/${playerId}/folded`] = false;
+                    updates[`poker_tables/${tableId}/players/${playerId}/currentBet`] = 0;
+                    updates[`poker_tables/${tableId}/players/${playerId}/lastAction`] = null;
+                    updates[`poker_tables/${tableId}/players/${playerId}/showCards`] = playerId === user.odor;
+                });
+
+                // Setup du jeu
+                updates[`poker_tables/${tableId}/deck`] = deck.slice(deckIndex);
+                updates[`poker_tables/${tableId}/communityCards`] = [];
+                updates[`poker_tables/${tableId}/pot`] = BLINDS.small + BLINDS.big;
+                updates[`poker_tables/${tableId}/currentBet`] = BLINDS.big;
+                updates[`poker_tables/${tableId}/dealer`] = playerIds[0];
+                updates[`poker_tables/${tableId}/smallBlind`] = playerIds[1 % playerIds.length];
+                updates[`poker_tables/${tableId}/bigBlind`] = playerIds[2 % playerIds.length];
+                updates[`poker_tables/${tableId}/currentPlayer`] = playerIds[3 % playerIds.length] || playerIds[0];
+                updates[`poker_tables/${tableId}/status`] = 'playing';
+                updates[`poker_tables/${tableId}/phase`] = 'preflop';
+
+                // Blinds
+                updates[`poker_tables/${tableId}/players/${playerIds[1 % playerIds.length]}/currentBet`] = BLINDS.small;
+                updates[`poker_tables/${tableId}/players/${playerIds[1 % playerIds.length]}/chips`] = players[playerIds[1 % playerIds.length]].chips - BLINDS.small;
+                updates[`poker_tables/${tableId}/players/${playerIds[2 % playerIds.length]}/currentBet`] = BLINDS.big;
+                updates[`poker_tables/${tableId}/players/${playerIds[2 % playerIds.length]}/chips`] = players[playerIds[2 % playerIds.length]].chips - BLINDS.big;
+
+                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+            };
+
+            if (!gameState) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <i className="fa-solid fa-spinner fa-spin text-4xl text-empire-500 mb-4"></i>
+                            <p className="text-gray-400 font-mono">Chargement de la table...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            const players = gameState.players || {};
+            const playerIds = Object.keys(players);
+            const isMyTurn = gameState.currentPlayer === user.odor;
+            const myPlayer = players[user.odor];
+            const canCheck = myPlayer && (myPlayer.currentBet || 0) >= (gameState.currentBet || 0);
+            const callAmount = (gameState.currentBet || 0) - (myPlayer?.currentBet || 0);
+
+            return (
+                <div className="min-h-screen p-4 relative">
+                    <Confetti active={showConfetti} />
+                    
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-4">
+                        <button
+                            onClick={onLeave}
+                            className="glass-panel px-4 py-2 rounded-lg text-gray-400 hover:text-white transition-colors font-mono text-sm"
+                        >
+                            <i className="fa-solid fa-arrow-left mr-2"></i>
+                            Quitter
+                        </button>
+                        
+                        <div className="glass-panel px-6 py-2 rounded-full">
+                            <span className="font-display text-white">{gameState.name}</span>
+                            <span className={`ml-3 text-sm font-mono ${gameState.status === 'playing' ? 'text-green-400' : 'text-blue-400'}`}>
+                                ● {gameState.status === 'playing' ? 'En cours' : 'En attente'}
+                            </span>
+                        </div>
+
+                        <div className="glass-panel px-4 py-2 rounded-lg">
+                            <span className="text-gray-400 font-mono text-sm">Phase: </span>
+                            <span className="text-empire-500 font-display uppercase">{gameState.phase || 'Lobby'}</span>
+                        </div>
+                    </div>
+
+                    {/* Table de poker */}
+                    <div className="flex gap-4">
+                        {/* Zone principale */}
+                        <div className="flex-1">
+                            <div className="poker-table rounded-[50%] w-full aspect-[2/1] max-w-4xl mx-auto relative">
+                                
+                                {/* POT */}
+                                <div className="pot-area absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
+                                    <div className="glass-panel rounded-xl px-6 py-3 mb-4">
+                                        <div className="text-gray-400 text-xs font-mono uppercase tracking-wider mb-1">Pot Total</div>
+                                        <div className="text-gold-400 font-display text-3xl font-bold flex items-center justify-center gap-2">
+                                            <i className="fa-solid fa-coins"></i>
+                                            {(gameState.pot || 0).toLocaleString()}
+                                        </div>
+                                    </div>
+
+                                    {/* Cartes communes */}
+                                    <div className="flex gap-2 justify-center">
+                                        {gameState.communityCards?.map((card, i) => (
+                                            <Card key={i} card={card} delay={i * 200} />
+                                        ))}
+                                        {/* Placeholder pour les cartes non révélées */}
+                                        {Array.from({ length: 5 - (gameState.communityCards?.length || 0) }).map((_, i) => (
+                                            <div key={`empty-${i}`} className="w-[70px] h-[100px] rounded-lg border-2 border-dashed border-white/10"></div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Sièges des joueurs */}
+                                {playerIds.map((playerId, index) => {
+                                    const player = players[playerId];
+                                    const isMe = playerId === user.odor;
+                                    const seatIndex = isMe ? 0 : (index < playerIds.indexOf(user.odor) ? index + 1 : index);
+                                    
+                                    return (
+                                        <PlayerSeat
+                                            key={playerId}
+                                            player={{
+                                                ...player,
+                                                showCards: isMe || gameState.phase === 'showdown'
+                                            }}
+                                            position={seatPositions[seatIndex % seatPositions.length]}
+                                            isCurrentTurn={gameState.currentPlayer === playerId}
+                                            isDealer={gameState.dealer === playerId}
+                                            isSmallBlind={gameState.smallBlind === playerId}
+                                            isBigBlind={gameState.bigBlind === playerId}
+                                            communityCards={gameState.communityCards}
+                                        />
+                                    );
+                                })}
+
+                                {/* Sièges vides */}
+                                {Array.from({ length: MAX_PLAYERS - playerIds.length }).map((_, i) => (
+                                    <PlayerSeat
+                                        key={`empty-${i}`}
+                                        player={null}
+                                        position={seatPositions[(playerIds.length + i) % seatPositions.length]}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Panel d'actions */}
+                            {gameState.status === 'playing' && isMyTurn && !myPlayer?.folded && (
+                                <div className="max-w-lg mx-auto mt-6 animate-slide-up">
+                                    <div className="text-center mb-2">
+                                        <span className="text-gold-400 font-display text-lg animate-pulse">
+                                            <i className="fa-solid fa-hand-pointer mr-2"></i>
+                                            C'EST VOTRE TOUR !
+                                        </span>
+                                    </div>
+                                    <ActionPanel
+                                        canCheck={canCheck}
+                                        canCall={!canCheck}
+                                        callAmount={callAmount}
+                                        minRaise={(gameState.currentBet || BLINDS.big) * 2}
+                                        maxRaise={myPlayer?.chips || 0}
+                                        playerChips={myPlayer?.chips || 0}
+                                        onFold={() => performAction('fold')}
+                                        onCheck={() => performAction('check')}
+                                        onCall={() => performAction('call')}
+                                        onRaise={(amount) => performAction('raise', amount)}
+                                        onAllIn={() => performAction('all-in')}
+                                        disabled={false}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Bouton démarrer */}
+                            {gameState.status === 'waiting' && playerIds.length >= MIN_PLAYERS && (
+                                <div className="text-center mt-6">
+                                    <button
+                                        onClick={startGame}
+                                        className="px-8 py-4 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold text-xl rounded-xl transition-all animate-pulse"
+                                    >
+                                        <i className="fa-solid fa-play mr-3"></i>
+                                        DÉMARRER LA PARTIE
+                                    </button>
+                                </div>
+                            )}
+
+                            {gameState.status === 'waiting' && playerIds.length < MIN_PLAYERS && (
+                                <div className="text-center mt-6 text-gray-400 font-mono">
+                                    <i className="fa-solid fa-hourglass-half mr-2 animate-spin"></i>
+                                    En attente de joueurs ({playerIds.length}/{MIN_PLAYERS} minimum)
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Chat */}
+                        <div className="w-80 glass-panel rounded-xl flex flex-col h-[600px]">
+                            <div className="p-4 border-b border-white/10">
+                                <h3 className="font-display text-white">
+                                    <i className="fa-solid fa-comments text-empire-500 mr-2"></i>
+                                    Chat
+                                </h3>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {chatMessages.map((msg, i) => (
+                                    <div key={i} className="chat-message flex gap-2">
+                                        <img src={msg.avatar} className="w-6 h-6 rounded-full" alt="" />
+                                        <div>
+                                            <span className="text-empire-500 font-bold text-xs">{msg.user}</span>
+                                            <p className="text-gray-300 text-sm">{msg.message}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="p-4 border-t border-white/10">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                        placeholder="Message..."
+                                        className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-empire-500"
+                                    />
+                                    <button
+                                        onClick={sendMessage}
+                                        className="px-4 bg-empire-600 hover:bg-empire-500 text-white rounded-lg transition-colors"
+                                    >
+                                        <i className="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // 🚀 APP PRINCIPALE
+        // ==========================================
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [currentTable, setCurrentTable] = useState(null);
+            const [tables, setTables] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            // Initialisation Firebase
+            useEffect(() => {
+                const initFirebase = () => {
+                    // Auth state
+                    window.firebaseOnAuthStateChanged(window.firebaseAuth, async (firebaseUser) => {
+                        if (firebaseUser) {
+                            // Charger les données utilisateur
+                            const userRef = window.firebaseRef(window.firebaseDB, `users/${firebaseUser.uid}`);
+                            const snapshot = await window.firebaseGet(userRef);
+                            
+                            const userData = snapshot.exists() ? snapshot.val() : {};
+                            setUser({
+                                odor: firebaseUser.uid,
+                                name: userData.username || firebaseUser.displayName,
+                                avatar: userData.avatar || firebaseUser.photoURL,
+                                chips: userData.pokerChips || STARTING_CHIPS
+                            });
+                        } else {
+                            setUser(null);
+                        }
+                        setLoading(false);
+                    });
+
+                    // Écouter les tables
+                    const tablesRef = window.firebaseRef(window.firebaseDB, 'poker_tables');
+                    window.firebaseOnValue(tablesRef, (snapshot) => {
+                        setTables(snapshot.val() || {});
+                    });
+                };
+
+                if (window.firebaseAuth) {
+                    initFirebase();
+                } else {
+                    window.addEventListener('firebase-ready', initFirebase);
+                }
+            }, []);
+
+            // Créer une table
+            const createTable = async (name, buyIn) => {
+                const tableRef = window.firebasePush(window.firebaseRef(window.firebaseDB, 'poker_tables'));
+                const tableId = tableRef.key;
+
+                await window.firebaseSet(tableRef, {
+                    name,
+                    buyIn,
+                    status: 'waiting',
+                    createdAt: Date.now(),
+                    createdBy: user.odor,
+                    pot: 0,
+                    currentBet: 0,
+                    phase: 'waiting',
+                    players: {
+                        [user.odor]: {
+                            name: user.name,
+                            avatar: user.avatar,
+                            chips: buyIn,
+                            seat: 0
+                        }
+                    }
+                });
+
+                setCurrentTable(tableId);
+            };
+
+            // Rejoindre une table
+            const joinTable = async (tableId) => {
+                const table = tables[tableId];
+                if (!table) return;
+
+                const playerCount = Object.keys(table.players || {}).length;
+                if (playerCount >= MAX_PLAYERS) {
+                    alert('Cette table est pleine !');
+                    return;
+                }
+
+                if (table.players && table.players[user.odor]) {
+                    // Déjà à la table
+                    setCurrentTable(tableId);
+                    return;
+                }
+
+                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), {
+                    [`poker_tables/${tableId}/players/${user.odor}`]: {
+                        name: user.name,
+                        avatar: user.avatar,
+                        chips: table.buyIn,
+                        seat: playerCount
+                    }
+                });
+
+                setCurrentTable(tableId);
+            };
+
+            // Quitter la table
+            const leaveTable = async () => {
+                if (currentTable) {
+                    await window.firebaseRemove(
+                        window.firebaseRef(window.firebaseDB, `poker_tables/${currentTable}/players/${user.odor}`)
+                    );
+                }
+                setCurrentTable(null);
+            };
+
+            // Loading
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="relative w-20 h-20 mx-auto mb-6">
+                                <div className="absolute inset-0 bg-empire-600 rounded-full blur-xl opacity-50 animate-pulse"></div>
+                                <i className="fa-solid fa-crown text-5xl text-empire-500 relative z-10 animate-float"></i>
+                            </div>
+                            <p className="text-gray-400 font-mono animate-pulse">Chargement...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Login
+            if (!user) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="glass-panel rounded-2xl p-8 text-center max-w-md">
+                            <div className="flex items-center justify-center gap-3 mb-6">
+                                <i className="fa-solid fa-crown text-empire-600 text-3xl"></i>
+                                <h1 className="font-display text-3xl font-bold text-white">RED POKER</h1>
+                            </div>
+                            <p className="text-gray-400 mb-8">Connectez-vous pour accéder aux tables</p>
+                            <button
+                                onClick={() => window.firebaseSignIn()}
+                                className="w-full py-4 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold rounded-xl transition-all flex items-center justify-center gap-3"
+                            >
+                                <i className="fa-brands fa-google"></i>
+                                Connexion avec Google
+                            </button>
+                            <a href="games.html" className="block mt-6 text-gray-500 hover:text-white text-sm font-mono transition-colors">
+                                <i className="fa-solid fa-arrow-left mr-2"></i>Retour
+                            </a>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Table de jeu
+            if (currentTable) {
+                return <PokerTable tableId={currentTable} user={user} onLeave={leaveTable} />;
+            }
+
+            // Lobby
+            return (
+                <Lobby
+                    user={user}
+                    tables={tables}
+                    onCreateTable={createTable}
+                    onJoinTable={joinTable}
+                />
+            );
+        };
+
+        // ==========================================
+        // RENDER
+        // ==========================================
+        const root = ReactDOM.createRoot(document.getElementById('poker-app'));
+        root.render(<App />);
+
+        // ==========================================
+        // PARTICULES BACKGROUND
+        // ==========================================
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.color = Math.random() > 0.8 ? '#ffd700' : '#cc0000';
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
         }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        const animateParticles = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        };
+        animateParticles();
+
     </script>
 </body>
 </html>
