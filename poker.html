@@ -6,19 +6,17 @@
     <title>Red Empire | Poker Texas Hold'em</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
-                        gold: { 400: '#ffd700', 500: '#ffb800', 600: '#e6a200' },
-                        felt: { 400: '#1a8f4a', 500: '#147a3e', 600: '#0f5c2e', 700: '#0a4422' }
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000' },
+                        gold: { 400: '#ffd700', 500: '#ffb800' }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
                         display: ['Orbitron', 'sans-serif'],
                         mono: ['Rajdhani', 'sans-serif'],
                     }
@@ -30,484 +28,385 @@
     <style>
         * { box-sizing: border-box; }
         body { 
-            background: #030303; 
+            background: #0a0a0a; 
             color: #e5e5e5; 
             overflow: hidden;
             height: 100vh;
             margin: 0;
-        }
-        
-        #particles-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-            opacity: 0.25;
+            font-family: 'Rajdhani', sans-serif;
         }
 
         /* ============================================ */
-        /* === TABLE DE POKER HAUTE QUALITÉ === */
+        /* TABLE CONTAINER */
         /* ============================================ */
-        .poker-table-container {
+        .game-container {
             position: relative;
             width: 100%;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 60px 20px 20px;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 70%, #000 100%);
         }
 
+        /* ============================================ */
+        /* TABLE DE POKER */
+        /* ============================================ */
         .poker-table {
             position: relative;
-            width: 92%;
-            max-width: 1300px;
-            aspect-ratio: 2.3 / 1;
+            width: 90%;
+            max-width: 1200px;
+            aspect-ratio: 2.2 / 1;
             border-radius: 50%;
-            
-            /* Bordure bois premium */
-            background: 
-                linear-gradient(135deg, #5c3d2e 0%, #3d261a 25%, #2a1a10 50%, #3d261a 75%, #5c3d2e 100%);
-            padding: 18px;
-            
+            background: linear-gradient(145deg, #3d2817, #1a0f08);
+            padding: 16px;
             box-shadow: 
-                0 25px 80px rgba(0,0,0,0.8),
-                0 10px 30px rgba(0,0,0,0.6),
-                inset 0 2px 4px rgba(255,255,255,0.1),
-                inset 0 -2px 4px rgba(0,0,0,0.3);
+                0 20px 60px rgba(0,0,0,0.8),
+                inset 0 2px 4px rgba(255,255,255,0.1);
         }
 
-        .poker-table::before {
-            content: '';
-            position: absolute;
-            inset: 8px;
+        .felt {
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4a3020 0%, #2d1b12 100%);
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
-        }
-
-        .table-felt {
-            position: absolute;
-            inset: 18px;
-            border-radius: 50%;
-            
-            /* Feutre vert réaliste */
-            background: 
-                radial-gradient(ellipse at 30% 30%, #1fa855 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 70%, #127a3a 0%, transparent 50%),
-                radial-gradient(ellipse at center, #169445 0%, #0f7035 40%, #0a5528 70%, #073d1c 100%);
-            
-            box-shadow: 
-                inset 0 0 100px rgba(0,0,0,0.4),
-                inset 0 0 200px rgba(0,0,0,0.2);
-            
-            overflow: hidden;
-        }
-
-        /* Texture du feutre */
-        .table-felt::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            opacity: 0.03;
-            border-radius: inherit;
-        }
-
-        /* Ligne dorée intérieure */
-        .table-felt::after {
-            content: '';
-            position: absolute;
-            inset: 20px;
-            border: 2px solid rgba(255, 215, 0, 0.12);
-            border-radius: 50%;
-            box-shadow: 
-                0 0 20px rgba(255, 215, 0, 0.05),
-                inset 0 0 20px rgba(255, 215, 0, 0.03);
-        }
-
-        /* ============================================ */
-        /* === CARTES PREMIUM STYLE CASINO === */
-        /* ============================================ */
-        .card {
+            background: radial-gradient(ellipse at center, #1a8048 0%, #116835 50%, #0d4d28 100%);
             position: relative;
-            width: 70px;
-            height: 98px;
-            border-radius: 10px;
-            background: linear-gradient(165deg, #ffffff 0%, #f8f8f8 50%, #eeeeee 100%);
-            box-shadow: 
-                0 4px 12px rgba(0,0,0,0.4),
-                0 1px 3px rgba(0,0,0,0.2),
-                inset 0 1px 0 rgba(255,255,255,1),
-                inset 0 -1px 0 rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-weight: bold;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            transform-style: preserve-3d;
-            cursor: default;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .card:hover {
-            transform: translateY(-8px) rotateX(5deg);
-            box-shadow: 
-                0 15px 30px rgba(0,0,0,0.5),
-                0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.5);
         }
 
-        /* Pattern de fond de carte */
-        .card::before {
+        .felt::after {
             content: '';
             position: absolute;
-            inset: 4px;
-            border: 1px solid rgba(0,0,0,0.05);
-            border-radius: 7px;
+            inset: 25px;
+            border: 2px solid rgba(255,215,0,0.15);
+            border-radius: 50%;
             pointer-events: none;
         }
-        
-        .card .value { 
-            font-size: 1.4rem; 
-            line-height: 1;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-        }
-        
-        .card .suit { 
-            font-size: 2.4rem; 
-            line-height: 1;
-            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
-        }
-        
-        .card.red { color: #d40000; }
-        .card.black { color: #1a1a1a; }
-        
-        .card .corner {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.75rem;
-            line-height: 1.1;
-        }
-        
-        .card .corner-tl { top: 5px; left: 6px; }
-        .card .corner-br { bottom: 5px; right: 6px; transform: rotate(180deg); }
-
-        .card .corner .corner-suit {
-            font-size: 0.9rem;
-        }
-
-        /* Dos de carte premium */
-        .card-back {
-            background: 
-                repeating-linear-gradient(
-                    45deg,
-                    #8b0000,
-                    #8b0000 8px,
-                    #a00000 8px,
-                    #a00000 16px
-                );
-            border: 3px solid #ffd700;
-            box-shadow: 
-                0 4px 15px rgba(0,0,0,0.5),
-                inset 0 0 30px rgba(0,0,0,0.3),
-                inset 0 0 60px rgba(139,0,0,0.5);
-        }
-
-        .card-back::before {
-            content: '';
-            position: absolute;
-            inset: 8px;
-            background: linear-gradient(135deg, #6b0000 0%, #8b0000 50%, #6b0000 100%);
-            border-radius: 6px;
-            border: 2px solid #ffd700;
-        }
-        
-        .card-back::after {
-            content: '♛';
-            position: absolute;
-            font-size: 2rem;
-            color: #ffd700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            z-index: 1;
-        }
-
-        /* Tailles de cartes */
-        .card-sm {
-            width: 52px;
-            height: 73px;
-            border-radius: 7px;
-        }
-        .card-sm .value { font-size: 1rem; }
-        .card-sm .suit { font-size: 1.6rem; }
-        .card-sm .corner { font-size: 0.55rem; }
-        .card-sm .corner .corner-suit { font-size: 0.65rem; }
-        .card-sm.card-back::after { font-size: 1.3rem; }
-
-        .card-lg {
-            width: 80px;
-            height: 112px;
-            border-radius: 12px;
-        }
-        .card-lg .value { font-size: 1.6rem; }
-        .card-lg .suit { font-size: 2.8rem; }
-        .card-lg .corner { font-size: 0.85rem; }
-        .card-lg .corner .corner-suit { font-size: 1rem; }
-
-        /* Animation distribution */
-        @keyframes deal-card {
-            0% { 
-                transform: translateX(400px) translateY(-200px) rotate(180deg) scale(0.3); 
-                opacity: 0; 
-            }
-            60% { 
-                transform: translateX(0) translateY(0) rotate(-10deg) scale(1.05); 
-                opacity: 1; 
-            }
-            100% { 
-                transform: translateX(0) translateY(0) rotate(0deg) scale(1); 
-                opacity: 1; 
-            }
-        }
-
-        .card-deal {
-            animation: deal-card 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        }
 
         /* ============================================ */
-        /* === POSITIONS DES JOUEURS === */
+        /* POT CENTRAL - AU DESSUS DE TOUT */
         /* ============================================ */
-        .player-slot {
-            position: absolute;
-            z-index: 20;
-        }
-
-        .player-slot[data-seat="0"] { bottom: -90px; left: 50%; transform: translateX(-50%); }
-        .player-slot[data-seat="1"] { bottom: 8%; left: 8%; }
-        .player-slot[data-seat="2"] { top: 50%; left: -70px; transform: translateY(-50%); }
-        .player-slot[data-seat="3"] { top: 8%; left: 8%; }
-        .player-slot[data-seat="4"] { top: -90px; left: 50%; transform: translateX(-50%); }
-        .player-slot[data-seat="5"] { top: 8%; right: 8%; }
-        .player-slot[data-seat="6"] { top: 50%; right: -70px; transform: translateY(-50%); }
-        .player-slot[data-seat="7"] { bottom: 8%; right: 8%; }
-
-        .player-seat {
-            width: 155px;
-            padding: 10px;
-            border-radius: 16px;
-            background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            transition: all 0.3s ease;
-        }
-        
-        .player-seat.current-turn {
-            border-color: #ffd700;
-            box-shadow: 
-                0 0 25px rgba(255, 215, 0, 0.4),
-                0 0 50px rgba(255, 215, 0, 0.2),
-                0 8px 25px rgba(0,0,0,0.6);
-            animation: pulse-turn 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-turn {
-            0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), 0 0 50px rgba(255, 215, 0, 0.2); }
-            50% { box-shadow: 0 0 35px rgba(255, 215, 0, 0.6), 0 0 70px rgba(255, 215, 0, 0.3); }
-        }
-        
-        .player-seat.folded {
-            opacity: 0.3;
-            filter: grayscale(1) brightness(0.7);
-            border-color: rgba(255, 255, 255, 0.03);
-        }
-        
-        .player-seat.winner {
-            border-color: #ffd700;
-            background: linear-gradient(180deg, rgba(50,40,0,0.95) 0%, rgba(30,25,0,0.98) 100%);
-            animation: winner-pulse 0.6s ease-in-out infinite alternate;
-        }
-
-        @keyframes winner-pulse {
-            from { box-shadow: 0 0 30px #ffd700, 0 0 60px rgba(255,215,0,0.5); }
-            to { box-shadow: 0 0 50px #ffd700, 0 0 100px rgba(255,215,0,0.7); }
-        }
-
-        .player-seat.empty {
-            opacity: 0.25;
-            border-style: dashed;
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(20,20,20,0.5);
-        }
-
-        /* Mise du joueur */
-        .player-bet-bubble {
-            position: absolute;
-            background: rgba(0,0,0,0.9);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: bold;
-            font-size: 0.95rem;
-            color: #ffd700;
-            white-space: nowrap;
-            border: 1px solid rgba(255,215,0,0.3);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-            z-index: 25;
-        }
-
-        .player-slot[data-seat="0"] .player-bet-bubble { top: -35px; left: 50%; transform: translateX(-50%); }
-        .player-slot[data-seat="1"] .player-bet-bubble { top: -25px; right: -10px; }
-        .player-slot[data-seat="2"] .player-bet-bubble { top: 50%; right: -90px; transform: translateY(-50%); }
-        .player-slot[data-seat="3"] .player-bet-bubble { bottom: -25px; right: -10px; }
-        .player-slot[data-seat="4"] .player-bet-bubble { bottom: -35px; left: 50%; transform: translateX(-50%); }
-        .player-slot[data-seat="5"] .player-bet-bubble { bottom: -25px; left: -10px; }
-        .player-slot[data-seat="6"] .player-bet-bubble { top: 50%; left: -90px; transform: translateY(-50%); }
-        .player-slot[data-seat="7"] .player-bet-bubble { top: -25px; left: -10px; }
-
-        /* ============================================ */
-        /* === POT CENTRAL === */
-        /* ============================================ */
-        .pot-area {
+        .center-area {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            z-index: 15;
+            z-index: 50;
         }
-        
-        .pot-display {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(255, 215, 0, 0.25);
-            border-radius: 14px;
-            padding: 10px 28px;
-            margin-bottom: 18px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+
+        .pot-box {
+            background: rgba(0,0,0,0.85);
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            padding: 8px 24px;
+            margin-bottom: 15px;
         }
-        
+
         .community-cards {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             justify-content: center;
         }
 
-        .card-slot-empty {
-            width: 80px;
-            height: 112px;
-            border-radius: 12px;
-            border: 2px dashed rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.15);
-        }
-
         /* ============================================ */
-        /* === PANNEAU D'ACTIONS === */
+        /* CARTES SIMPLES ET PROPRES */
         /* ============================================ */
-        .actions-panel {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            background: linear-gradient(180deg, rgba(15,15,15,0.98) 0%, rgba(5,5,5,0.99) 100%);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 51, 51, 0.25);
-            border-radius: 24px;
-            padding: 20px 35px;
-            box-shadow: 
-                0 -10px 50px rgba(0,0,0,0.7),
-                0 0 30px rgba(255,51,51,0.1);
-        }
-
-        .btn-action {
+        .card {
+            width: 60px;
+            height: 84px;
+            border-radius: 6px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-weight: bold;
             position: relative;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            flex-shrink: 0;
+        }
+        
+        .card.red { color: #d00; }
+        .card.black { color: #111; }
+        
+        .card .val { font-size: 1.1rem; line-height: 1; }
+        .card .sym { font-size: 1.8rem; line-height: 1; }
+        
+        .card .corner {
+            position: absolute;
+            font-size: 0.6rem;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card .tl { top: 3px; left: 4px; }
+        .card .br { bottom: 3px; right: 4px; transform: rotate(180deg); }
+
+        .card-back {
+            background: linear-gradient(135deg, #8b0000, #5c0000);
+            border: 2px solid #ffd700;
+        }
+        .card-back::after {
+            content: '♛';
+            color: #ffd700;
+            font-size: 1.5rem;
+        }
+
+        .card-lg {
+            width: 70px;
+            height: 98px;
+        }
+        .card-lg .val { font-size: 1.3rem; }
+        .card-lg .sym { font-size: 2.2rem; }
+
+        .card-sm {
+            width: 44px;
+            height: 62px;
+        }
+        .card-sm .val { font-size: 0.8rem; }
+        .card-sm .sym { font-size: 1.2rem; }
+        .card-sm .corner { font-size: 0.5rem; }
+
+        .card-empty {
+            width: 70px;
+            height: 98px;
+            border-radius: 6px;
+            border: 2px dashed rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* ============================================ */
+        /* POSITIONS JOUEURS */
+        /* ============================================ */
+        .player-positions {
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+        }
+
+        .player-slot {
+            position: absolute;
+        }
+
+        /* Position autour de la table */
+        .player-slot.pos-0 { bottom: -100px; left: 50%; transform: translateX(-50%); }
+        .player-slot.pos-1 { bottom: 0; left: 5%; }
+        .player-slot.pos-2 { top: 50%; left: -80px; transform: translateY(-50%); }
+        .player-slot.pos-3 { top: 0; left: 5%; }
+        .player-slot.pos-4 { top: -100px; left: 50%; transform: translateX(-50%); }
+        .player-slot.pos-5 { top: 0; right: 5%; }
+        .player-slot.pos-6 { top: 50%; right: -80px; transform: translateY(-50%); }
+        .player-slot.pos-7 { bottom: 0; right: 5%; }
+
+        .player-box {
+            width: 150px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .player-box.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+        }
+
+        .player-box.folded {
+            opacity: 0.35;
+        }
+
+        .player-box.winner {
+            border-color: #ffd700;
+            background: rgba(50,40,0,0.9);
+            animation: glow 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px #ffd700; }
+            to { box-shadow: 0 0 40px #ffd700; }
+        }
+
+        .player-box.empty {
+            opacity: 0.3;
+            border-style: dashed;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #666;
+        }
+
+        .player-avatar.me {
+            border-color: #ffd700;
+        }
+
+        .player-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #fff;
+            white-space: nowrap;
             overflow: hidden;
-            transition: all 0.2s ease;
+            text-overflow: ellipsis;
+            max-width: 80px;
+        }
+
+        .player-chips {
+            font-size: 0.75rem;
+            color: #ffd700;
+        }
+
+        .player-cards {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .player-action {
+            text-align: center;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            margin-top: 4px;
             font-weight: bold;
         }
-        
-        .btn-action::before {
-            content: '';
+
+        .player-bet {
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-            transition: left 0.4s ease;
-        }
-        
-        .btn-action:hover::before {
-            left: 100%;
+            background: rgba(0,0,0,0.9);
+            color: #ffd700;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,215,0,0.3);
+            white-space: nowrap;
         }
 
-        .btn-action:active {
-            transform: scale(0.96);
+        /* Position des mises selon le siège */
+        .pos-0 .player-bet { top: -25px; left: 50%; transform: translateX(-50%); }
+        .pos-1 .player-bet { top: 20px; right: -40px; }
+        .pos-2 .player-bet { top: 50%; right: -70px; transform: translateY(-50%); }
+        .pos-3 .player-bet { bottom: 20px; right: -40px; }
+        .pos-4 .player-bet { bottom: -25px; left: 50%; transform: translateX(-50%); }
+        .pos-5 .player-bet { bottom: 20px; left: -40px; }
+        .pos-6 .player-bet { top: 50%; left: -70px; transform: translateY(-50%); }
+        .pos-7 .player-bet { top: 20px; left: -40px; }
+
+        /* Badges D, SB, BB */
+        .badges {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            display: flex;
+            gap: 2px;
         }
-        
-        /* Slider */
-        .raise-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 12px;
-            background: linear-gradient(90deg, #4d0000 0%, #cc0000 50%, #ffd700 100%);
-            border-radius: 6px;
-            outline: none;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .raise-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 30px;
-            height: 30px;
-            background: linear-gradient(145deg, #ffd700, #b8860b);
+
+        .badge {
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(255,215,0,0.5), 0 3px 8px rgba(0,0,0,0.4);
-            border: 3px solid white;
-            transition: transform 0.15s ease;
+            font-size: 0.6rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .raise-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
+        .badge-d { background: #fff; color: #000; }
+        .badge-sb { background: #3b82f6; color: #fff; }
+        .badge-bb { background: #dc2626; color: #fff; }
 
         /* ============================================ */
-        /* === HEADER === */
+        /* HEADER */
         /* ============================================ */
-        .header-bar {
+        .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
-            background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 100%);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,51,51,0.15);
-            padding: 12px 25px;
+            background: rgba(0,0,0,0.95);
+            border-bottom: 1px solid rgba(255,51,51,0.2);
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .phase-badge {
-            background: rgba(255,215,0,0.1);
-            border: 1px solid rgba(255,215,0,0.3);
-            padding: 6px 20px;
+        /* ============================================ */
+        /* ACTIONS */
+        /* ============================================ */
+        .actions-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(10,10,10,0.98);
+            border: 2px solid rgba(255,51,51,0.3);
             border-radius: 20px;
+            padding: 16px 28px;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.7);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn:hover { transform: scale(1.03); }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .btn-fold { background: #374151; color: #9ca3af; }
+        .btn-check { background: #15803d; color: #fff; }
+        .btn-call { background: #1d4ed8; color: #fff; }
+        .btn-raise { background: #b91c1c; color: #fff; }
+        .btn-allin { background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; }
+
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 10px;
+            background: linear-gradient(90deg, #4d0000, #cc0000, #ffd700);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
 
         /* ============================================ */
-        /* === WINNER OVERLAY === */
+        /* WINNER MODAL */
         /* ============================================ */
-        .winner-overlay {
+        .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.85);
@@ -515,378 +414,294 @@
             align-items: center;
             justify-content: center;
             z-index: 200;
-            animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .winner-modal {
-            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
-            border: 4px solid #ffd700;
-            border-radius: 28px;
-            padding: 50px 70px;
+        .modal-content {
+            background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
+            border: 3px solid #ffd700;
+            border-radius: 24px;
+            padding: 40px 60px;
             text-align: center;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 
-                0 0 80px rgba(255,215,0,0.3),
-                0 0 150px rgba(255,215,0,0.15);
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            box-shadow: 0 0 80px rgba(255,215,0,0.3);
         }
 
         /* ============================================ */
-        /* === CONFETTI === */
+        /* LOBBY */
+        /* ============================================ */
+        .lobby {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .glass {
+            background: rgba(20,20,20,0.9);
+            border: 1px solid rgba(255,51,51,0.15);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .input {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input:focus {
+            border-color: #cc0000;
+        }
+
+        /* ============================================ */
+        /* CONFETTI */
         /* ============================================ */
         .confetti {
             position: fixed;
-            width: 12px;
-            height: 12px;
             top: -20px;
-            z-index: 250;
-            animation: fall 4s ease-out forwards;
+            width: 10px;
+            height: 10px;
+            z-index: 300;
+            animation: fall 3.5s linear forwards;
         }
 
         @keyframes fall {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(105vh) rotate(1440deg); opacity: 0; }
+            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
-
-        /* ============================================ */
-        /* === GLASS PANEL === */
-        /* ============================================ */
-        .glass-panel {
-            background: rgba(15, 15, 15, 0.92);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 51, 51, 0.12);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-        }
-
-        /* Animation slide */
-        @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(30px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-
-        .slide-up {
-            animation: slideUp 0.4s ease-out forwards;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #030303; }
-        ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
     </style>
 </head>
 
-<body class="antialiased selection:bg-empire-600 selection:text-white">
-
-    <canvas id="particles-canvas"></canvas>
-    <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_50%,rgba(0,0,0,0.9)_100%)] pointer-events-none z-0"></div>
-
-    <div id="poker-app"></div>
+<body>
+    <div id="app"></div>
 
     <!-- FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, push, onValue, remove, onDisconnect, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, update, push, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
+        const app = initializeApp({
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
             databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "red-empire-103d7",
-            storageBucket: "red-empire-103d7.firebasestorage.app",
-            messagingSenderId: "1002924043244",
-            appId: "1:1002924043244:web:e76002c3dc8810017faec9"
-        };
+            projectId: "red-empire-103d7"
+        });
 
-        const app = initializeApp(firebaseConfig);
-        window.firebaseAuth = getAuth(app);
-        window.firebaseDB = getDatabase(app);
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
-        window.firebaseGet = get;
-        window.firebaseUpdate = update;
-        window.firebasePush = push;
-        window.firebaseOnValue = onValue;
-        window.firebaseRemove = remove;
-        window.firebaseOnDisconnect = onDisconnect;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
-        window.firebaseSignIn = () => signInWithPopup(window.firebaseAuth, new GoogleAuthProvider());
+        window.FB = {
+            auth: getAuth(app),
+            db: getDatabase(app),
+            ref, set, get, update, push, onValue, remove, onDisconnect,
+            signIn: () => signInWithPopup(getAuth(app), new GoogleAuthProvider()),
+            onAuth: onAuthStateChanged
+        };
         
-        window.dispatchEvent(new Event('firebase-ready'));
+        window.dispatchEvent(new Event('fb-ready'));
     </script>
 
     <!-- REACT -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useCallback } = React;
 
         // ==========================================
         // CONSTANTES
         // ==========================================
         const SUITS = ['♠', '♥', '♦', '♣'];
-        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        const BLINDS = { small: 10, big: 20 };
-        const STARTING_CHIPS = 1000;
-        const MIN_PLAYERS = 2;
-        const MAX_PLAYERS = 8;
-        const PHASES = ['preflop', 'flop', 'turn', 'river', 'showdown'];
+        const VALUES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+        const BLINDS = { sb: 10, bb: 20 };
+        const START_CHIPS = 1000;
+        const MIN_P = 2;
+        const MAX_P = 8;
 
         // ==========================================
-        // LOGIQUE POKER
+        // POKER LOGIC
         // ==========================================
-        const createDeck = () => {
-            const deck = [];
-            for (let suit of SUITS) {
-                for (let value of VALUES) {
-                    deck.push({ suit, value, id: `${value}${suit}` });
-                }
-            }
-            // Fisher-Yates shuffle
-            for (let i = deck.length - 1; i > 0; i--) {
+        const shuffle = arr => {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
+                [a[i], a[j]] = [a[j], a[i]];
             }
-            return deck;
+            return a;
         };
 
-        const getCardValue = (value) => {
-            const map = { 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
-            return map[value] || parseInt(value);
-        };
+        const makeDeck = () => shuffle(SUITS.flatMap(s => VALUES.map(v => ({ s, v, id: v + s }))));
 
-        const getCombinations = (arr, size) => {
-            if (size > arr.length) return [];
-            if (size === arr.length) return [arr];
-            if (size === 1) return arr.map(el => [el]);
-            
-            const result = [];
-            for (let i = 0; i <= arr.length - size; i++) {
-                const tailCombos = getCombinations(arr.slice(i + 1), size - 1);
-                for (let combo of tailCombos) {
-                    result.push([arr[i], ...combo]);
+        const cardVal = v => ({ J: 11, Q: 12, K: 13, A: 14 }[v] || +v);
+
+        const combos = (arr, n) => {
+            if (n > arr.length) return [];
+            if (n === arr.length) return [arr];
+            if (n === 1) return arr.map(x => [x]);
+            const res = [];
+            for (let i = 0; i <= arr.length - n; i++) {
+                for (const c of combos(arr.slice(i + 1), n - 1)) {
+                    res.push([arr[i], ...c]);
                 }
             }
-            return result;
+            return res;
         };
 
-        const evaluateFiveCards = (cards) => {
-            const values = cards.map(c => getCardValue(c.value)).sort((a, b) => b - a);
-            const suits = cards.map(c => c.suit);
+        const evalHand = cards => {
+            if (!cards || cards.length < 5) return { rank: -1, name: '', high: [] };
             
-            const isFlush = suits.every(s => s === suits[0]);
-            
-            const uniqueVals = [...new Set(values)].sort((a, b) => b - a);
-            let isStraight = false;
-            if (uniqueVals.length >= 5) {
-                for (let i = 0; i <= uniqueVals.length - 5; i++) {
-                    if (uniqueVals[i] - uniqueVals[i + 4] === 4) {
-                        isStraight = true;
-                        break;
-                    }
-                }
-                // A-2-3-4-5 (wheel)
-                if (!isStraight && uniqueVals.includes(14) && uniqueVals.includes(5) && 
-                    uniqueVals.includes(4) && uniqueVals.includes(3) && uniqueVals.includes(2)) {
-                    isStraight = true;
-                }
-            }
-            
-            const counts = {};
-            values.forEach(v => counts[v] = (counts[v] || 0) + 1);
-            const countVals = Object.values(counts).sort((a, b) => b - a);
-            
-            const sortedByCount = [...values].sort((a, b) => {
-                if (counts[b] !== counts[a]) return counts[b] - counts[a];
-                return b - a;
-            });
-
-            if (isFlush && isStraight && values[0] === 14 && values[1] === 13) {
-                return { rank: 9, name: 'Quinte Flush Royale', high: sortedByCount };
-            }
-            if (isFlush && isStraight) return { rank: 8, name: 'Quinte Flush', high: sortedByCount };
-            if (countVals[0] === 4) return { rank: 7, name: 'Carré', high: sortedByCount };
-            if (countVals[0] === 3 && countVals[1] === 2) return { rank: 6, name: 'Full House', high: sortedByCount };
-            if (isFlush) return { rank: 5, name: 'Couleur', high: sortedByCount };
-            if (isStraight) return { rank: 4, name: 'Quinte', high: sortedByCount };
-            if (countVals[0] === 3) return { rank: 3, name: 'Brelan', high: sortedByCount };
-            if (countVals[0] === 2 && countVals[1] === 2) return { rank: 2, name: 'Double Paire', high: sortedByCount };
-            if (countVals[0] === 2) return { rank: 1, name: 'Paire', high: sortedByCount };
-            return { rank: 0, name: 'Carte Haute', high: sortedByCount };
-        };
-
-        const evaluateHand = (cards) => {
-            if (!cards || cards.length < 5) return { rank: -1, name: 'Aucune', high: [] };
-            
-            const combos = getCombinations(cards, 5);
             let best = { rank: -1, name: '', high: [] };
-            
-            for (let combo of combos) {
-                const hand = evaluateFiveCards(combo);
-                if (hand.rank > best.rank) {
-                    best = hand;
-                } else if (hand.rank === best.rank) {
-                    for (let i = 0; i < hand.high.length; i++) {
-                        if (hand.high[i] > best.high[i]) { best = hand; break; }
-                        if (hand.high[i] < best.high[i]) break;
-                    }
+            for (const c of combos(cards, 5)) {
+                const h = eval5(c);
+                if (h.rank > best.rank || (h.rank === best.rank && cmpHigh(h.high, best.high) > 0)) {
+                    best = h;
                 }
             }
             return best;
         };
 
-        // ==========================================
-        // COMPOSANTS
-        // ==========================================
-
-        // Carte
-        const Card = ({ card, hidden = false, delay = 0, size = 'md' }) => {
-            const sizeClass = size === 'sm' ? 'card-sm' : size === 'lg' ? 'card-lg' : '';
-            const isRed = card && (card.suit === '♥' || card.suit === '♦');
+        const eval5 = cards => {
+            const vals = cards.map(c => cardVal(c.v)).sort((a, b) => b - a);
+            const suits = cards.map(c => c.s);
+            const flush = suits.every(s => s === suits[0]);
             
-            if (hidden || !card) {
-                return (
-                    <div 
-                        className={`card card-back ${sizeClass} card-deal`}
-                        style={{ animationDelay: `${delay}ms` }}
-                    />
-                );
+            const uniq = [...new Set(vals)].sort((a, b) => b - a);
+            let straight = false;
+            if (uniq.length >= 5) {
+                for (let i = 0; i <= uniq.length - 5; i++) {
+                    if (uniq[i] - uniq[i + 4] === 4) { straight = true; break; }
+                }
+                if (!straight && uniq[0] === 14 && uniq.slice(-4).join() === '5,4,3,2') straight = true;
             }
             
+            const cnt = {};
+            vals.forEach(v => cnt[v] = (cnt[v] || 0) + 1);
+            const cnts = Object.values(cnt).sort((a, b) => b - a);
+            const sorted = [...vals].sort((a, b) => (cnt[b] - cnt[a]) || (b - a));
+
+            if (flush && straight && vals[0] === 14 && vals[1] === 13) return { rank: 9, name: 'Quinte Flush Royale', high: sorted };
+            if (flush && straight) return { rank: 8, name: 'Quinte Flush', high: sorted };
+            if (cnts[0] === 4) return { rank: 7, name: 'Carré', high: sorted };
+            if (cnts[0] === 3 && cnts[1] === 2) return { rank: 6, name: 'Full House', high: sorted };
+            if (flush) return { rank: 5, name: 'Couleur', high: sorted };
+            if (straight) return { rank: 4, name: 'Quinte', high: sorted };
+            if (cnts[0] === 3) return { rank: 3, name: 'Brelan', high: sorted };
+            if (cnts[0] === 2 && cnts[1] === 2) return { rank: 2, name: 'Double Paire', high: sorted };
+            if (cnts[0] === 2) return { rank: 1, name: 'Paire', high: sorted };
+            return { rank: 0, name: 'Carte Haute', high: sorted };
+        };
+
+        const cmpHigh = (a, b) => {
+            for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                if (a[i] !== b[i]) return a[i] - b[i];
+            }
+            return 0;
+        };
+
+        // ==========================================
+        // COMPONENTS
+        // ==========================================
+        const Card = ({ card, hidden, size = 'md' }) => {
+            const cls = size === 'sm' ? 'card-sm' : size === 'lg' ? 'card-lg' : '';
+            
+            if (hidden || !card) {
+                return <div className={`card card-back ${cls}`} />;
+            }
+            
+            const red = card.s === '♥' || card.s === '♦';
             return (
-                <div 
-                    className={`card ${isRed ? 'red' : 'black'} ${sizeClass} card-deal`}
-                    style={{ animationDelay: `${delay}ms` }}
-                >
-                    <div className="corner corner-tl">
-                        <span>{card.value}</span>
-                        <span className="corner-suit">{card.suit}</span>
-                    </div>
-                    <span className="value">{card.value}</span>
-                    <span className="suit">{card.suit}</span>
-                    <div className="corner corner-br">
-                        <span>{card.value}</span>
-                        <span className="corner-suit">{card.suit}</span>
-                    </div>
+                <div className={`card ${red ? 'red' : 'black'} ${cls}`}>
+                    <div className="corner tl"><span>{card.v}</span><span>{card.s}</span></div>
+                    <span className="val">{card.v}</span>
+                    <span className="sym">{card.s}</span>
+                    <div className="corner br"><span>{card.v}</span><span>{card.s}</span></div>
                 </div>
             );
         };
 
-        // Siège joueur
-        const PlayerSeat = ({ player, isCurrentTurn, isDealer, isSB, isBB, isMe, showCards, isWinner }) => {
-            if (!player) {
+        const Player = ({ p, isTurn, isD, isSB, isBB, isMe, show, isWinner }) => {
+            if (!p) {
                 return (
-                    <div className="player-seat empty">
-                        <div className="text-center text-gray-600 py-3">
-                            <i className="fa-solid fa-user-plus text-lg mb-1 block opacity-50"></i>
-                            <span className="text-[10px] font-mono">Libre</span>
+                    <div className="player-box empty">
+                        <div className="text-center text-gray-600 py-4">
+                            <i className="fa-solid fa-user-plus opacity-50"></i>
+                            <div className="text-xs mt-1">Libre</div>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className={`player-seat relative
-                    ${isCurrentTurn && !player.folded ? 'current-turn' : ''}
-                    ${player.folded ? 'folded' : ''}
-                    ${isWinner ? 'winner' : ''}
-                `}>
-                    {/* Badges */}
-                    <div className="absolute -top-2 -right-2 flex gap-1 z-30">
-                        {isDealer && (
-                            <div className="w-6 h-6 rounded-full bg-white text-black font-bold text-[10px] flex items-center justify-center shadow-lg">D</div>
-                        )}
-                        {isSB && (
-                            <div className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-[10px] flex items-center justify-center shadow-lg">SB</div>
-                        )}
-                        {isBB && (
-                            <div className="w-6 h-6 rounded-full bg-empire-600 text-white font-bold text-[10px] flex items-center justify-center shadow-lg">BB</div>
-                        )}
+                <div className={`player-box ${isTurn && !p.folded ? 'active' : ''} ${p.folded ? 'folded' : ''} ${isWinner ? 'winner' : ''}`}>
+                    <div className="badges">
+                        {isD && <div className="badge badge-d">D</div>}
+                        {isSB && <div className="badge badge-sb">SB</div>}
+                        {isBB && <div className="badge badge-bb">BB</div>}
                     </div>
-
-                    {/* Info joueur */}
-                    <div className="flex items-center gap-2 mb-2">
+                    
+                    <div className="player-info">
                         <img 
-                            src={player.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=990000&color=fff&size=64`} 
-                            className={`w-9 h-9 rounded-full border-2 ${isMe ? 'border-gold-400' : 'border-gray-700'}`}
+                            src={p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=990000&color=fff&size=64`}
+                            className={`player-avatar ${isMe ? 'me' : ''}`}
                             alt=""
                         />
-                        <div className="flex-1 min-w-0">
-                            <div className={`font-display text-xs truncate ${isMe ? 'text-gold-400' : 'text-white'}`}>
-                                {player.name}
-                            </div>
-                            <div className="flex items-center gap-1 text-gold-400 font-mono text-[11px]">
-                                <i className="fa-solid fa-coins text-[9px]"></i>
-                                {(player.chips || 0).toLocaleString()}
+                        <div>
+                            <div className="player-name">{p.name}</div>
+                            <div className="player-chips">
+                                <i className="fa-solid fa-coins text-xs mr-1"></i>
+                                {(p.chips || 0).toLocaleString()}
                             </div>
                         </div>
                     </div>
 
-                    {/* Cartes */}
-                    <div className="flex gap-1 justify-center">
-                        {player.cards?.length === 2 ? (
+                    <div className="player-cards">
+                        {p.cards?.length === 2 ? (
                             <>
-                                <Card card={showCards ? player.cards[0] : null} hidden={!showCards} size="sm" delay={0} />
-                                <Card card={showCards ? player.cards[1] : null} hidden={!showCards} size="sm" delay={80} />
+                                <Card card={show ? p.cards[0] : null} hidden={!show} size="sm" />
+                                <Card card={show ? p.cards[1] : null} hidden={!show} size="sm" />
                             </>
                         ) : (
-                            <div className="text-gray-600 text-[10px] font-mono py-3">En attente</div>
+                            <div className="text-gray-600 text-xs py-2">—</div>
                         )}
                     </div>
 
-                    {/* Action */}
-                    {player.lastAction && (
-                        <div className={`text-center text-[10px] font-mono mt-1 uppercase tracking-wider font-bold
-                            ${player.lastAction === 'fold' ? 'text-gray-500' : ''}
-                            ${player.lastAction === 'raise' ? 'text-empire-500' : ''}
-                            ${player.lastAction === 'call' ? 'text-blue-400' : ''}
-                            ${player.lastAction === 'check' ? 'text-green-400' : ''}
-                            ${player.lastAction === 'all-in' ? 'text-gold-400' : ''}
+                    {p.lastAction && (
+                        <div className={`player-action
+                            ${p.lastAction === 'fold' ? 'text-gray-500' : ''}
+                            ${p.lastAction === 'check' ? 'text-green-400' : ''}
+                            ${p.lastAction === 'call' ? 'text-blue-400' : ''}
+                            ${p.lastAction === 'raise' ? 'text-red-400' : ''}
+                            ${p.lastAction === 'all-in' ? 'text-yellow-400' : ''}
                         `}>
-                            {player.lastAction}
+                            {p.lastAction}
                         </div>
                     )}
                 </div>
             );
         };
 
-        // Confetti
-        const Confetti = ({ active }) => {
-            if (!active) return null;
-            const colors = ['#ff3333', '#ffd700', '#33ff33', '#3366ff', '#ff33ff', '#00ffff', '#ff9900'];
-            const pieces = Array.from({ length: 120 }, (_, i) => ({
-                id: i,
-                left: Math.random() * 100,
-                delay: Math.random() * 2.5,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                size: Math.random() * 10 + 6,
-                type: Math.random() > 0.5 ? 'circle' : 'square'
-            }));
-
+        const Confetti = ({ on }) => {
+            if (!on) return null;
+            const colors = ['#ff3333', '#ffd700', '#33ff33', '#3366ff', '#ff33ff'];
             return (
                 <div className="fixed inset-0 pointer-events-none z-[300] overflow-hidden">
-                    {pieces.map(p => (
+                    {Array.from({ length: 80 }, (_, i) => (
                         <div
-                            key={p.id}
+                            key={i}
                             className="confetti"
                             style={{
-                                left: `${p.left}%`,
-                                animationDelay: `${p.delay}s`,
-                                backgroundColor: p.color,
-                                width: p.size,
-                                height: p.size,
-                                borderRadius: p.type === 'circle' ? '50%' : '2px'
+                                left: `${Math.random() * 100}%`,
+                                animationDelay: `${Math.random() * 2}s`,
+                                backgroundColor: colors[i % colors.length],
+                                width: Math.random() * 8 + 6,
+                                height: Math.random() * 8 + 6,
+                                borderRadius: Math.random() > 0.5 ? '50%' : '0'
                             }}
                         />
                     ))}
@@ -894,31 +709,26 @@
             );
         };
 
-        // Winner Modal
         const WinnerModal = ({ winner, hand, pot, onClose }) => (
-            <div className="winner-overlay" onClick={onClose}>
-                <div className="winner-modal" onClick={e => e.stopPropagation()}>
-                    <div className="text-7xl mb-6">🏆</div>
+            <div className="modal-overlay" onClick={onClose}>
+                <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div className="text-6xl mb-4">🏆</div>
                     <img 
-                        src={winner.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.name)}&background=ffd700&color=000&size=128`}
-                        className="w-20 h-20 rounded-full border-4 border-gold-400 mx-auto mb-4 shadow-lg"
+                        src={winner.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.name)}&size=100`}
+                        className="w-16 h-16 rounded-full border-4 border-yellow-400 mx-auto mb-3"
                         alt=""
                     />
-                    <h2 className="font-display text-3xl text-gold-400 mb-2">{winner.name}</h2>
-                    <p className="text-xl text-gray-300 mb-6">remporte le pot !</p>
-                    <div className="text-5xl font-display text-gold-400 mb-4 flex items-center justify-center gap-3">
-                        <i className="fa-solid fa-coins"></i>
-                        <span>+{pot.toLocaleString()}</span>
+                    <h2 className="font-display text-2xl text-yellow-400 mb-1">{winner.name}</h2>
+                    <p className="text-gray-400 mb-4">remporte le pot !</p>
+                    <div className="text-4xl font-display text-yellow-400 mb-3">
+                        <i className="fa-solid fa-coins mr-2"></i>+{pot.toLocaleString()}
                     </div>
-                    {hand && hand.name && (
-                        <div className="text-empire-500 font-mono text-xl mb-8 bg-empire-900/30 py-2 px-6 rounded-lg inline-block">
+                    {hand?.name && (
+                        <div className="text-red-400 font-mono mb-6 bg-red-900/30 py-1 px-4 rounded inline-block">
                             {hand.name}
                         </div>
                     )}
-                    <button
-                        onClick={onClose}
-                        className="px-10 py-4 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display text-lg rounded-xl transition-all"
-                    >
+                    <button onClick={onClose} className="btn btn-raise px-8 py-3">
                         CONTINUER
                     </button>
                 </div>
@@ -928,127 +738,89 @@
         // ==========================================
         // LOBBY
         // ==========================================
-        const Lobby = ({ user, onJoinTable, onCreateTable, tables }) => {
-            const [tableName, setTableName] = useState('');
+        const Lobby = ({ user, tables, onCreate, onJoin }) => {
+            const [name, setName] = useState('');
             const [buyIn, setBuyIn] = useState(1000);
 
-            // Filtrer les tables vides (0 joueurs réels)
-            const activeTables = Object.entries(tables).filter(([id, table]) => {
-                const playerCount = Object.keys(table.players || {}).length;
-                return playerCount > 0;
-            });
+            const active = Object.entries(tables).filter(([_, t]) => Object.keys(t.players || {}).length > 0);
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-6 overflow-auto">
-                    {/* Header */}
+                <div className="lobby">
                     <div className="text-center mb-10">
-                        <div className="flex items-center justify-center gap-5 mb-4">
-                            <i className="fa-solid fa-crown text-empire-600 text-5xl"></i>
-                            <h1 className="font-display text-5xl md:text-6xl font-black text-white">
-                                RED <span className="text-empire-500">POKER</span>
-                            </h1>
+                        <div className="flex items-center justify-center gap-4 mb-3">
+                            <i className="fa-solid fa-crown text-red-500 text-4xl"></i>
+                            <h1 className="font-display text-4xl font-bold text-white">RED POKER</h1>
                         </div>
-                        <p className="text-gray-400 font-mono text-lg tracking-wider">Texas Hold'em Multiplayer</p>
+                        <p className="text-gray-400 font-mono">Texas Hold'em</p>
                         
-                        <div className="mt-6 inline-flex items-center gap-4 glass-panel rounded-full px-8 py-4">
-                            <img src={user.avatar} className="w-12 h-12 rounded-full border-2 border-empire-600" alt="" />
+                        <div className="mt-5 inline-flex items-center gap-3 glass px-6 py-3 rounded-full">
+                            <img src={user.avatar} className="w-10 h-10 rounded-full border-2 border-red-600" alt="" />
                             <div className="text-left">
-                                <div className="font-display text-white text-lg">{user.name}</div>
-                                <div className="text-gold-400 font-mono flex items-center gap-1">
-                                    <i className="fa-solid fa-coins"></i>
-                                    {user.chips?.toLocaleString()}
-                                </div>
+                                <div className="font-bold text-white">{user.name}</div>
+                                <div className="text-yellow-400 text-sm"><i className="fa-solid fa-coins mr-1"></i>{user.chips?.toLocaleString()}</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Create table */}
-                    <div className="glass-panel rounded-2xl p-8 w-full max-w-lg mb-10">
-                        <h2 className="font-display text-2xl text-white mb-6 flex items-center gap-3">
-                            <i className="fa-solid fa-plus-circle text-empire-500"></i>
-                            Créer une Table
+                    <div className="glass p-6 w-full max-w-md mb-8">
+                        <h2 className="font-display text-xl text-white mb-4">
+                            <i className="fa-solid fa-plus-circle text-red-500 mr-2"></i>Créer
                         </h2>
-                        <div className="space-y-5">
-                            <input
-                                type="text"
-                                value={tableName}
-                                onChange={(e) => setTableName(e.target.value)}
-                                placeholder="Nom de la table..."
-                                className="w-full bg-black/60 border-2 border-gray-800 focus:border-empire-600 rounded-xl px-5 py-4 text-white font-mono text-lg outline-none transition-colors"
-                            />
-                            <div>
-                                <label className="text-gray-400 font-mono mb-3 block text-sm">Buy-in</label>
-                                <div className="grid grid-cols-4 gap-3">
-                                    {[500, 1000, 2500, 5000].map(amount => (
-                                        <button
-                                            key={amount}
-                                            onClick={() => setBuyIn(amount)}
-                                            className={`py-3 rounded-xl font-mono font-bold text-lg transition-all ${
-                                                buyIn === amount 
-                                                    ? 'bg-empire-600 text-white shadow-lg shadow-empire-600/30 scale-105' 
-                                                    : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700'
-                                            }`}
-                                        >
-                                            {amount}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => tableName.trim() && onCreateTable(tableName.trim(), buyIn)}
-                                disabled={!tableName.trim()}
-                                className="w-full py-4 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold text-xl rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-empire-600/20"
-                            >
-                                <i className="fa-solid fa-play mr-3"></i>
-                                CRÉER
-                            </button>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            placeholder="Nom de la table..."
+                            className="input mb-4"
+                        />
+                        <div className="grid grid-cols-4 gap-2 mb-4">
+                            {[500, 1000, 2500, 5000].map(v => (
+                                <button
+                                    key={v}
+                                    onClick={() => setBuyIn(v)}
+                                    className={`py-2 rounded-lg font-bold transition ${buyIn === v ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+                                >
+                                    {v}
+                                </button>
+                            ))}
                         </div>
+                        <button
+                            onClick={() => name.trim() && onCreate(name.trim(), buyIn)}
+                            disabled={!name.trim()}
+                            className="w-full btn btn-raise py-3"
+                        >
+                            CRÉER
+                        </button>
                     </div>
 
-                    {/* Tables list */}
-                    <div className="w-full max-w-2xl">
-                        <h2 className="font-display text-2xl text-white mb-5 flex items-center gap-3">
-                            <i className="fa-solid fa-table-list text-gold-400"></i>
-                            Tables Disponibles
-                            <span className="text-sm text-gray-500 font-mono">({activeTables.length})</span>
+                    <div className="w-full max-w-lg">
+                        <h2 className="font-display text-xl text-white mb-4">
+                            <i className="fa-solid fa-list text-yellow-400 mr-2"></i>Tables ({active.length})
                         </h2>
                         
-                        {activeTables.length === 0 ? (
-                            <div className="glass-panel rounded-2xl p-14 text-center">
-                                <i className="fa-solid fa-ghost text-6xl text-gray-700 mb-5 block"></i>
-                                <p className="text-gray-500 font-mono text-lg">Aucune table active</p>
-                                <p className="text-gray-600 text-sm mt-2">Créez la première !</p>
+                        {active.length === 0 ? (
+                            <div className="glass p-10 text-center rounded-xl">
+                                <i className="fa-solid fa-ghost text-4xl text-gray-700 mb-3"></i>
+                                <p className="text-gray-500">Aucune table</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {activeTables.map(([id, table]) => {
-                                    const playerCount = Object.keys(table.players || {}).length;
+                            <div className="space-y-3">
+                                {active.map(([id, t]) => {
+                                    const cnt = Object.keys(t.players || {}).length;
                                     return (
-                                        <div key={id} className="glass-panel rounded-2xl p-5 flex items-center justify-between hover:border-empire-500/50 transition-all group">
+                                        <div key={id} className="glass p-4 rounded-xl flex justify-between items-center">
                                             <div>
-                                                <h3 className="font-display text-xl text-white group-hover:text-empire-400 transition-colors">
-                                                    {table.name}
-                                                </h3>
-                                                <div className="flex gap-5 text-sm font-mono text-gray-400 mt-2">
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa-solid fa-users text-gray-500"></i>
-                                                        {playerCount}/{MAX_PLAYERS}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa-solid fa-coins text-gold-500"></i>
-                                                        {table.buyIn}
-                                                    </span>
-                                                    <span className={table.status === 'playing' ? 'text-green-400' : 'text-blue-400'}>
-                                                        ● {table.status === 'playing' ? 'En jeu' : 'Attente'}
+                                                <div className="font-bold text-white">{t.name}</div>
+                                                <div className="text-sm text-gray-400">
+                                                    <span className="mr-3"><i className="fa-solid fa-users mr-1"></i>{cnt}/{MAX_P}</span>
+                                                    <span className="mr-3"><i className="fa-solid fa-coins text-yellow-500 mr-1"></i>{t.buyIn}</span>
+                                                    <span className={t.status === 'playing' ? 'text-green-400' : 'text-blue-400'}>
+                                                        ● {t.status === 'playing' ? 'En jeu' : 'Attente'}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => onJoinTable(id)}
-                                                disabled={playerCount >= MAX_PLAYERS}
-                                                className="px-8 py-3 bg-empire-700 hover:bg-empire-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-display font-bold rounded-xl transition-all"
-                                            >
-                                                {playerCount >= MAX_PLAYERS ? 'COMPLET' : 'REJOINDRE'}
+                                            <button onClick={() => onJoin(id)} className="btn btn-raise px-5 py-2">
+                                                {cnt >= MAX_P ? 'COMPLET' : 'REJOINDRE'}
                                             </button>
                                         </div>
                                     );
@@ -1057,334 +829,266 @@
                         )}
                     </div>
 
-                    <a href="games.html" className="mt-10 text-gray-500 hover:text-white font-mono transition-colors flex items-center gap-2">
-                        <i className="fa-solid fa-arrow-left"></i>
-                        Retour au Hub
+                    <a href="games.html" className="mt-8 text-gray-500 hover:text-white transition">
+                        <i className="fa-solid fa-arrow-left mr-2"></i>Retour
                     </a>
                 </div>
             );
         };
 
         // ==========================================
-        // TABLE DE JEU
+        // TABLE
         // ==========================================
-        const PokerTable = ({ tableId, user, onLeave }) => {
-            const [gameState, setGameState] = useState(null);
-            const [showConfetti, setShowConfetti] = useState(false);
-            const [winnerInfo, setWinnerInfo] = useState(null);
-            const [raiseAmount, setRaiseAmount] = useState(40);
+        const Table = ({ tableId, user, onLeave }) => {
+            const [game, setGame] = useState(null);
+            const [confetti, setConfetti] = useState(false);
+            const [winner, setWinner] = useState(null);
+            const [raise, setRaise] = useState(40);
 
-            // Écouter la table
             useEffect(() => {
                 if (!tableId) return;
                 
-                const tableRef = window.firebaseRef(window.firebaseDB, `poker_tables/${tableId}`);
-                const unsubscribe = window.firebaseOnValue(tableRef, (snapshot) => {
-                    if (!snapshot.exists()) {
-                        onLeave();
-                        return;
-                    }
+                const ref = window.FB.ref(window.FB.db, `poker_tables/${tableId}`);
+                const unsub = window.FB.onValue(ref, snap => {
+                    if (!snap.exists()) { onLeave(); return; }
                     
-                    const data = snapshot.val();
+                    const d = snap.val();
+                    const cnt = Object.keys(d.players || {}).length;
                     
-                    // Vérifier si la table est vide et la supprimer
-                    const playerCount = Object.keys(data.players || {}).length;
-                    if (playerCount === 0) {
-                        window.firebaseRemove(tableRef);
+                    if (cnt === 0) {
+                        window.FB.remove(ref);
                         onLeave();
                         return;
                     }
 
-                    setGameState(data);
+                    setGame(d);
 
-                    // Winner
-                    if (data.winnerId && data.showWinner && !winnerInfo) {
-                        const winner = data.players[data.winnerId];
-                        if (winner) {
-                            setWinnerInfo({
-                                player: winner,
-                                pot: data.lastPot || data.pot || 0,
-                                hand: data.winnerHand
-                            });
-                            if (data.winnerId === user.odor) {
-                                setShowConfetti(true);
-                                setTimeout(() => setShowConfetti(false), 5000);
+                    if (d.winnerId && d.showWinner && !winner) {
+                        const w = d.players[d.winnerId];
+                        if (w) {
+                            setWinner({ player: w, pot: d.lastPot || d.pot || 0, hand: d.winnerHand });
+                            if (d.winnerId === user.id) {
+                                setConfetti(true);
+                                setTimeout(() => setConfetti(false), 4000);
                             }
                         }
                     }
                 });
 
-                // Cleanup on disconnect
-                const playerRef = window.firebaseRef(window.firebaseDB, `poker_tables/${tableId}/players/${user.odor}`);
-                window.firebaseOnDisconnect(playerRef).remove();
+                window.FB.onDisconnect(window.FB.ref(window.FB.db, `poker_tables/${tableId}/players/${user.id}`)).remove();
+                return () => unsub();
+            }, [tableId, user.id]);
 
-                return () => unsubscribe();
-            }, [tableId, user.odor]);
+            // Actions
+            const act = async (action, amt = 0) => {
+                if (!game || game.currentPlayer !== user.id) return;
+                const p = game.players;
+                const me = p[user.id];
+                if (!me || me.folded) return;
 
-            // ============ ACTIONS ============
-            const performAction = async (action, amount = 0) => {
-                if (!gameState || gameState.currentPlayer !== user.odor) return;
-
-                const players = gameState.players;
-                const myPlayer = players[user.odor];
-                if (!myPlayer || myPlayer.folded) return;
-
-                const activePlayers = Object.keys(players).filter(id => !players[id].folded);
-                const updates = {};
-                const path = `poker_tables/${tableId}/players/${user.odor}`;
+                const active = Object.keys(p).filter(id => !p[id].folded);
+                const upd = {};
+                const path = `poker_tables/${tableId}/players/${user.id}`;
                 
-                let newPot = gameState.pot || 0;
-                let newCurrentBet = gameState.currentBet || 0;
+                let pot = game.pot || 0;
+                let currBet = game.currentBet || 0;
 
-                switch(action) {
-                    case 'fold':
-                        updates[`${path}/folded`] = true;
-                        updates[`${path}/lastAction`] = 'fold';
-                        break;
-                        
-                    case 'check':
-                        updates[`${path}/lastAction`] = 'check';
-                        updates[`${path}/hasActed`] = true;
-                        break;
-                        
-                    case 'call':
-                        const callDiff = Math.min((gameState.currentBet || 0) - (myPlayer.currentBet || 0), myPlayer.chips);
-                        updates[`${path}/currentBet`] = (myPlayer.currentBet || 0) + callDiff;
-                        updates[`${path}/chips`] = myPlayer.chips - callDiff;
-                        updates[`${path}/lastAction`] = 'call';
-                        updates[`${path}/hasActed`] = true;
-                        newPot += callDiff;
-                        updates[`poker_tables/${tableId}/pot`] = newPot;
-                        break;
-                        
-                    case 'raise':
-                        const raiseDiff = amount - (myPlayer.currentBet || 0);
-                        updates[`${path}/currentBet`] = amount;
-                        updates[`${path}/chips`] = myPlayer.chips - raiseDiff;
-                        updates[`${path}/lastAction`] = 'raise';
-                        updates[`${path}/hasActed`] = true;
-                        newPot += raiseDiff;
-                        newCurrentBet = amount;
-                        updates[`poker_tables/${tableId}/pot`] = newPot;
-                        updates[`poker_tables/${tableId}/currentBet`] = newCurrentBet;
-                        // Reset others' hasActed
-                        activePlayers.forEach(id => {
-                            if (id !== user.odor && !players[id].folded) {
-                                updates[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
-                            }
-                        });
-                        break;
-                        
-                    case 'all-in':
-                        const allIn = myPlayer.chips + (myPlayer.currentBet || 0);
-                        updates[`${path}/currentBet`] = allIn;
-                        updates[`${path}/chips`] = 0;
-                        updates[`${path}/lastAction`] = 'all-in';
-                        updates[`${path}/isAllIn`] = true;
-                        updates[`${path}/hasActed`] = true;
-                        newPot += myPlayer.chips;
-                        updates[`poker_tables/${tableId}/pot`] = newPot;
-                        if (allIn > (gameState.currentBet || 0)) {
-                            updates[`poker_tables/${tableId}/currentBet`] = allIn;
-                            activePlayers.forEach(id => {
-                                if (id !== user.odor && !players[id].folded) {
-                                    updates[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
-                                }
-                            });
-                        }
-                        break;
+                if (action === 'fold') {
+                    upd[`${path}/folded`] = true;
+                    upd[`${path}/lastAction`] = 'fold';
+                } else if (action === 'check') {
+                    upd[`${path}/lastAction`] = 'check';
+                    upd[`${path}/hasActed`] = true;
+                } else if (action === 'call') {
+                    const diff = Math.min(currBet - (me.currentBet || 0), me.chips);
+                    upd[`${path}/currentBet`] = (me.currentBet || 0) + diff;
+                    upd[`${path}/chips`] = me.chips - diff;
+                    upd[`${path}/lastAction`] = 'call';
+                    upd[`${path}/hasActed`] = true;
+                    pot += diff;
+                    upd[`poker_tables/${tableId}/pot`] = pot;
+                } else if (action === 'raise') {
+                    const diff = amt - (me.currentBet || 0);
+                    upd[`${path}/currentBet`] = amt;
+                    upd[`${path}/chips`] = me.chips - diff;
+                    upd[`${path}/lastAction`] = 'raise';
+                    upd[`${path}/hasActed`] = true;
+                    pot += diff;
+                    currBet = amt;
+                    upd[`poker_tables/${tableId}/pot`] = pot;
+                    upd[`poker_tables/${tableId}/currentBet`] = currBet;
+                    active.forEach(id => { if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false; });
+                } else if (action === 'all-in') {
+                    const total = me.chips + (me.currentBet || 0);
+                    upd[`${path}/currentBet`] = total;
+                    upd[`${path}/chips`] = 0;
+                    upd[`${path}/lastAction`] = 'all-in';
+                    upd[`${path}/isAllIn`] = true;
+                    upd[`${path}/hasActed`] = true;
+                    pot += me.chips;
+                    upd[`poker_tables/${tableId}/pot`] = pot;
+                    if (total > currBet) {
+                        upd[`poker_tables/${tableId}/currentBet`] = total;
+                        active.forEach(id => { if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false; });
+                    }
                 }
 
-                // Check remaining active players
-                const remaining = activePlayers.filter(id => action !== 'fold' || id !== user.odor);
+                const remaining = active.filter(id => action !== 'fold' || id !== user.id);
                 
                 if (remaining.length === 1) {
-                    // Win by fold
-                    await endHand(remaining[0], updates);
+                    await endHand(remaining[0], upd);
                     return;
                 }
 
-                // Find next player
-                const currentIdx = activePlayers.indexOf(user.odor);
-                let nextIdx = (currentIdx + 1) % activePlayers.length;
-                let nextPlayer = activePlayers[nextIdx];
+                // Next player
+                const myIdx = active.indexOf(user.id);
+                let nextIdx = (myIdx + 1) % active.length;
+                let nextP = active[nextIdx];
                 let tries = 0;
-                
-                while (tries < activePlayers.length) {
-                    const p = players[nextPlayer];
-                    if (!p.folded && !p.isAllIn && nextPlayer !== user.odor) break;
-                    nextIdx = (nextIdx + 1) % activePlayers.length;
-                    nextPlayer = activePlayers[nextIdx];
+                while (tries < active.length && (p[nextP]?.folded || p[nextP]?.isAllIn)) {
+                    nextIdx = (nextIdx + 1) % active.length;
+                    nextP = active[nextIdx];
                     tries++;
                 }
 
-                // Check if round is complete
-                const updatedBet = action === 'raise' ? amount : (action === 'all-in' ? (myPlayer.chips + (myPlayer.currentBet || 0)) : newCurrentBet);
-                
+                // Check round complete
+                const newBet = action === 'raise' ? amt : (action === 'all-in' ? (me.chips + (me.currentBet || 0)) : currBet);
                 const allActed = remaining.every(id => {
-                    const p = id === user.odor ? { ...players[id], hasActed: true, currentBet: updates[`${path}/currentBet`] || players[id].currentBet } : players[id];
-                    return p.hasActed || p.isAllIn || p.folded;
+                    const pl = id === user.id ? { ...p[id], hasActed: true } : p[id];
+                    return pl.hasActed || pl.isAllIn || pl.folded;
                 });
-
                 const allMatched = remaining.every(id => {
-                    const p = id === user.odor ? { ...players[id], currentBet: updates[`${path}/currentBet`] || players[id].currentBet } : players[id];
-                    return (p.currentBet || 0) >= updatedBet || p.isAllIn || p.chips === 0;
+                    const pl = id === user.id ? { ...p[id], currentBet: upd[`${path}/currentBet`] || p[id].currentBet } : p[id];
+                    return (pl.currentBet || 0) >= newBet || pl.isAllIn || pl.chips === 0;
                 });
 
                 if (allActed && allMatched && action !== 'raise' && action !== 'all-in') {
-                    await advancePhase(updates, remaining);
+                    await nextPhase(upd, remaining);
                 } else {
-                    updates[`poker_tables/${tableId}/currentPlayer`] = nextPlayer;
-                    await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+                    upd[`poker_tables/${tableId}/currentPlayer`] = nextP;
+                    await window.FB.update(window.FB.ref(window.FB.db), upd);
                 }
             };
 
-            const advancePhase = async (pending, activePlayers) => {
-                const updates = { ...pending };
-                const phase = gameState.phase;
-                const deck = gameState.deck || [];
+            const nextPhase = async (pending, active) => {
+                const upd = { ...pending };
+                const phase = game.phase;
+                const deck = game.deck || [];
+                const cc = game.communityCards || [];
 
-                // Reset bets
-                Object.keys(gameState.players).forEach(id => {
-                    updates[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
-                    updates[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
+                Object.keys(game.players).forEach(id => {
+                    upd[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
+                    upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
                 });
-                updates[`poker_tables/${tableId}/currentBet`] = 0;
-
-                const cc = gameState.communityCards || [];
+                upd[`poker_tables/${tableId}/currentBet`] = 0;
 
                 if (phase === 'preflop') {
-                    updates[`poker_tables/${tableId}/communityCards`] = deck.slice(0, 3);
-                    updates[`poker_tables/${tableId}/deck`] = deck.slice(3);
-                    updates[`poker_tables/${tableId}/phase`] = 'flop';
+                    upd[`poker_tables/${tableId}/communityCards`] = deck.slice(0, 3);
+                    upd[`poker_tables/${tableId}/deck`] = deck.slice(3);
+                    upd[`poker_tables/${tableId}/phase`] = 'flop';
                 } else if (phase === 'flop') {
-                    updates[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
-                    updates[`poker_tables/${tableId}/deck`] = deck.slice(1);
-                    updates[`poker_tables/${tableId}/phase`] = 'turn';
+                    upd[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
+                    upd[`poker_tables/${tableId}/deck`] = deck.slice(1);
+                    upd[`poker_tables/${tableId}/phase`] = 'turn';
                 } else if (phase === 'turn') {
-                    updates[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
-                    updates[`poker_tables/${tableId}/deck`] = deck.slice(1);
-                    updates[`poker_tables/${tableId}/phase`] = 'river';
+                    upd[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
+                    upd[`poker_tables/${tableId}/deck`] = deck.slice(1);
+                    upd[`poker_tables/${tableId}/phase`] = 'river';
                 } else if (phase === 'river') {
-                    await showdown(updates, activePlayers);
+                    await showdown(upd, active);
                     return;
                 }
 
-                // First to act
-                const canAct = activePlayers.filter(id => !gameState.players[id].isAllIn);
+                const canAct = active.filter(id => !game.players[id].isAllIn);
                 if (canAct.length > 0) {
-                    const dealerIdx = canAct.indexOf(gameState.dealer);
-                    const first = canAct[(dealerIdx + 1) % canAct.length] || canAct[0];
-                    updates[`poker_tables/${tableId}/currentPlayer`] = first;
+                    const dIdx = canAct.indexOf(game.dealer);
+                    upd[`poker_tables/${tableId}/currentPlayer`] = canAct[(dIdx + 1) % canAct.length] || canAct[0];
                 }
 
-                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+                await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
 
-            const showdown = async (pending, activePlayers) => {
-                const updates = { ...pending };
-                const cc = gameState.communityCards || [];
+            const showdown = async (pending, active) => {
+                const upd = { ...pending };
+                const cc = game.communityCards || [];
                 
-                // Reveal cards
-                activePlayers.forEach(id => {
-                    updates[`poker_tables/${tableId}/players/${id}/showCards`] = true;
-                });
-                updates[`poker_tables/${tableId}/phase`] = 'showdown';
+                active.forEach(id => upd[`poker_tables/${tableId}/players/${id}/showCards`] = true);
+                upd[`poker_tables/${tableId}/phase`] = 'showdown';
 
-                // Find winner
-                let bestHand = null;
-                let winnerId = null;
-
-                activePlayers.forEach(id => {
-                    const p = gameState.players[id];
-                    if (p.cards?.length === 2) {
-                        const hand = evaluateHand([...p.cards, ...cc]);
-                        if (!bestHand || hand.rank > bestHand.rank) {
-                            bestHand = hand;
+                let best = null, winnerId = null;
+                active.forEach(id => {
+                    const pl = game.players[id];
+                    if (pl.cards?.length === 2) {
+                        const h = evalHand([...pl.cards, ...cc]);
+                        if (!best || h.rank > best.rank || (h.rank === best.rank && cmpHigh(h.high, best.high) > 0)) {
+                            best = h;
                             winnerId = id;
-                        } else if (hand.rank === bestHand.rank) {
-                            for (let i = 0; i < hand.high.length; i++) {
-                                if (hand.high[i] > bestHand.high[i]) {
-                                    bestHand = hand;
-                                    winnerId = id;
-                                    break;
-                                }
-                                if (hand.high[i] < bestHand.high[i]) break;
-                            }
                         }
                     }
                 });
 
-                if (winnerId) {
-                    await endHand(winnerId, updates, bestHand);
-                }
+                if (winnerId) await endHand(winnerId, upd, best);
             };
 
             const endHand = async (winnerId, pending = {}, hand = null) => {
-                const updates = { ...pending };
-                const pot = gameState.pot || 0;
-                const winner = gameState.players[winnerId];
+                const upd = { ...pending };
+                const pot = game.pot || 0;
+                const w = game.players[winnerId];
 
-                updates[`poker_tables/${tableId}/players/${winnerId}/chips`] = (winner?.chips || 0) + pot;
-                updates[`poker_tables/${tableId}/players/${winnerId}/showCards`] = true;
-                updates[`poker_tables/${tableId}/winnerId`] = winnerId;
-                updates[`poker_tables/${tableId}/winnerHand`] = hand;
-                updates[`poker_tables/${tableId}/showWinner`] = true;
-                updates[`poker_tables/${tableId}/lastPot`] = pot;
-                updates[`poker_tables/${tableId}/status`] = 'ended';
+                upd[`poker_tables/${tableId}/players/${winnerId}/chips`] = (w?.chips || 0) + pot;
+                upd[`poker_tables/${tableId}/players/${winnerId}/showCards`] = true;
+                upd[`poker_tables/${tableId}/winnerId`] = winnerId;
+                upd[`poker_tables/${tableId}/winnerHand`] = hand;
+                upd[`poker_tables/${tableId}/showWinner`] = true;
+                upd[`poker_tables/${tableId}/lastPot`] = pot;
+                upd[`poker_tables/${tableId}/status`] = 'ended';
 
-                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+                await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
 
             const closeWinner = async () => {
-                setWinnerInfo(null);
+                setWinner(null);
+                const upd = {};
+                upd[`poker_tables/${tableId}/showWinner`] = false;
+                upd[`poker_tables/${tableId}/winnerId`] = null;
+                upd[`poker_tables/${tableId}/winnerHand`] = null;
+                upd[`poker_tables/${tableId}/status`] = 'waiting';
+                upd[`poker_tables/${tableId}/phase`] = 'waiting';
+                upd[`poker_tables/${tableId}/pot`] = 0;
+                upd[`poker_tables/${tableId}/currentBet`] = 0;
+                upd[`poker_tables/${tableId}/communityCards`] = [];
+                upd[`poker_tables/${tableId}/currentPlayer`] = null;
                 
-                const updates = {};
-                updates[`poker_tables/${tableId}/showWinner`] = false;
-                updates[`poker_tables/${tableId}/winnerId`] = null;
-                updates[`poker_tables/${tableId}/winnerHand`] = null;
-                updates[`poker_tables/${tableId}/status`] = 'waiting';
-                updates[`poker_tables/${tableId}/phase`] = 'waiting';
-                updates[`poker_tables/${tableId}/pot`] = 0;
-                updates[`poker_tables/${tableId}/currentBet`] = 0;
-                updates[`poker_tables/${tableId}/communityCards`] = [];
-                updates[`poker_tables/${tableId}/currentPlayer`] = null;
-                
-                Object.keys(gameState.players || {}).forEach(id => {
-                    updates[`poker_tables/${tableId}/players/${id}/cards`] = null;
-                    updates[`poker_tables/${tableId}/players/${id}/folded`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
-                    updates[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
-                    updates[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/showCards`] = false;
+                Object.keys(game.players || {}).forEach(id => {
+                    upd[`poker_tables/${tableId}/players/${id}/cards`] = null;
+                    upd[`poker_tables/${tableId}/players/${id}/folded`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
+                    upd[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
+                    upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/showCards`] = false;
                 });
 
-                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+                await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
 
             const startGame = async () => {
-                const players = gameState.players;
-                const ids = Object.keys(players);
-                
-                if (ids.length < MIN_PLAYERS) {
-                    alert('Il faut au moins 2 joueurs !');
-                    return;
-                }
+                const ids = Object.keys(game.players);
+                if (ids.length < MIN_P) return;
 
-                const deck = createDeck();
+                const deck = makeDeck();
                 let idx = 0;
-                const updates = {};
+                const upd = {};
                 
                 ids.forEach(id => {
-                    updates[`poker_tables/${tableId}/players/${id}/cards`] = [deck[idx++], deck[idx++]];
-                    updates[`poker_tables/${tableId}/players/${id}/folded`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
-                    updates[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
-                    updates[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
-                    updates[`poker_tables/${tableId}/players/${id}/showCards`] = id === user.odor;
+                    upd[`poker_tables/${tableId}/players/${id}/cards`] = [deck[idx++], deck[idx++]];
+                    upd[`poker_tables/${tableId}/players/${id}/folded`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
+                    upd[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
+                    upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
+                    upd[`poker_tables/${tableId}/players/${id}/showCards`] = id === user.id;
                 });
 
                 const sbIdx = ids.length > 2 ? 1 : 0;
@@ -1393,146 +1097,120 @@
 
                 const sb = ids[sbIdx % ids.length];
                 const bb = ids[bbIdx % ids.length];
+                const p = game.players;
                 
-                updates[`poker_tables/${tableId}/players/${sb}/currentBet`] = BLINDS.small;
-                updates[`poker_tables/${tableId}/players/${sb}/chips`] = players[sb].chips - BLINDS.small;
-                updates[`poker_tables/${tableId}/players/${bb}/currentBet`] = BLINDS.big;
-                updates[`poker_tables/${tableId}/players/${bb}/chips`] = players[bb].chips - BLINDS.big;
+                upd[`poker_tables/${tableId}/players/${sb}/currentBet`] = BLINDS.sb;
+                upd[`poker_tables/${tableId}/players/${sb}/chips`] = p[sb].chips - BLINDS.sb;
+                upd[`poker_tables/${tableId}/players/${bb}/currentBet`] = BLINDS.bb;
+                upd[`poker_tables/${tableId}/players/${bb}/chips`] = p[bb].chips - BLINDS.bb;
 
-                updates[`poker_tables/${tableId}/deck`] = deck.slice(idx);
-                updates[`poker_tables/${tableId}/communityCards`] = [];
-                updates[`poker_tables/${tableId}/pot`] = BLINDS.small + BLINDS.big;
-                updates[`poker_tables/${tableId}/currentBet`] = BLINDS.big;
-                updates[`poker_tables/${tableId}/dealer`] = ids[0];
-                updates[`poker_tables/${tableId}/smallBlind`] = sb;
-                updates[`poker_tables/${tableId}/bigBlind`] = bb;
-                updates[`poker_tables/${tableId}/currentPlayer`] = ids[firstIdx % ids.length];
-                updates[`poker_tables/${tableId}/status`] = 'playing';
-                updates[`poker_tables/${tableId}/phase`] = 'preflop';
-                updates[`poker_tables/${tableId}/showWinner`] = false;
-                updates[`poker_tables/${tableId}/winnerId`] = null;
+                upd[`poker_tables/${tableId}/deck`] = deck.slice(idx);
+                upd[`poker_tables/${tableId}/communityCards`] = [];
+                upd[`poker_tables/${tableId}/pot`] = BLINDS.sb + BLINDS.bb;
+                upd[`poker_tables/${tableId}/currentBet`] = BLINDS.bb;
+                upd[`poker_tables/${tableId}/dealer`] = ids[0];
+                upd[`poker_tables/${tableId}/smallBlind`] = sb;
+                upd[`poker_tables/${tableId}/bigBlind`] = bb;
+                upd[`poker_tables/${tableId}/currentPlayer`] = ids[firstIdx % ids.length];
+                upd[`poker_tables/${tableId}/status`] = 'playing';
+                upd[`poker_tables/${tableId}/phase`] = 'preflop';
+                upd[`poker_tables/${tableId}/showWinner`] = false;
+                upd[`poker_tables/${tableId}/winnerId`] = null;
 
-                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), updates);
+                await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
 
-            // ============ RENDER ============
-            if (!gameState) {
+            if (!game) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <i className="fa-solid fa-circle-notch fa-spin text-5xl text-empire-500"></i>
+                    <div className="h-screen flex items-center justify-center bg-black">
+                        <i className="fa-solid fa-spinner fa-spin text-4xl text-red-500"></i>
                     </div>
                 );
             }
 
-            const players = gameState.players || {};
-            const playerIds = Object.keys(players);
-            const isMyTurn = gameState.currentPlayer === user.odor && gameState.status === 'playing';
-            const myPlayer = players[user.odor];
-            const canCheck = myPlayer && (myPlayer.currentBet || 0) >= (gameState.currentBet || 0);
-            const callAmount = Math.max(0, (gameState.currentBet || 0) - (myPlayer?.currentBet || 0));
-            const minRaise = Math.max(BLINDS.big * 2, (gameState.currentBet || 0) * 2);
-            const maxRaise = myPlayer?.chips || 0;
+            const players = game.players || {};
+            const ids = Object.keys(players);
+            const myTurn = game.currentPlayer === user.id && game.status === 'playing';
+            const me = players[user.id];
+            const canCheck = me && (me.currentBet || 0) >= (game.currentBet || 0);
+            const callAmt = Math.max(0, (game.currentBet || 0) - (me?.currentBet || 0));
+            const minR = Math.max(BLINDS.bb * 2, (game.currentBet || 0) * 2);
+            const maxR = me?.chips || 0;
 
-            // Order players with me at bottom
-            const myIdx = playerIds.indexOf(user.odor);
-            const ordered = myIdx >= 0 
-                ? [...playerIds.slice(myIdx), ...playerIds.slice(0, myIdx)]
-                : playerIds;
+            // Order: me first
+            const myIdx = ids.indexOf(user.id);
+            const ordered = myIdx >= 0 ? [...ids.slice(myIdx), ...ids.slice(0, myIdx)] : ids;
 
             return (
-                <div className="h-screen overflow-hidden relative">
-                    <Confetti active={showConfetti} />
-                    
-                    {winnerInfo && (
-                        <WinnerModal 
-                            winner={winnerInfo.player}
-                            hand={winnerInfo.hand}
-                            pot={winnerInfo.pot}
-                            onClose={closeWinner}
-                        />
-                    )}
+                <div className="game-container">
+                    <Confetti on={confetti} />
+                    {winner && <WinnerModal winner={winner.player} hand={winner.hand} pot={winner.pot} onClose={closeWinner} />}
 
                     {/* Header */}
-                    <div className="header-bar">
-                        <button onClick={onLeave} className="text-gray-400 hover:text-white transition-colors font-mono flex items-center gap-2 text-sm">
-                            <i className="fa-solid fa-arrow-left"></i>
-                            Quitter
+                    <div className="header">
+                        <button onClick={onLeave} className="text-gray-400 hover:text-white text-sm">
+                            <i className="fa-solid fa-arrow-left mr-2"></i>Quitter
                         </button>
-                        
-                        <div className="font-display text-white text-lg tracking-wider">
-                            {gameState.name}
-                        </div>
-
-                        {gameState.status === 'playing' && (
-                            <div className="phase-badge">
-                                <span className="text-gold-400 font-display uppercase tracking-widest">
-                                    {gameState.phase}
-                                </span>
+                        <div className="font-display text-white">{game.name}</div>
+                        {game.status === 'playing' && (
+                            <div className="bg-yellow-500/20 text-yellow-400 px-4 py-1 rounded-full text-sm font-display uppercase">
+                                {game.phase}
                             </div>
                         )}
-                        
-                        {gameState.status !== 'playing' && (
-                            <div className="text-gray-500 font-mono text-sm">
-                                Blinds {BLINDS.small}/{BLINDS.big}
-                            </div>
-                        )}
+                        {game.status !== 'playing' && <div className="text-gray-500 text-sm">Blinds {BLINDS.sb}/{BLINDS.bb}</div>}
                     </div>
 
                     {/* Table */}
-                    <div className="poker-table-container">
-                        <div className="poker-table">
-                            <div className="table-felt">
-                                
-                                {/* Pot & Cards */}
-                                <div className="pot-area">
-                                    <div className="pot-display">
-                                        <div className="text-gray-400 text-[10px] font-mono uppercase tracking-widest mb-1">Pot</div>
-                                        <div className="text-gold-400 font-display text-3xl font-bold flex items-center justify-center gap-2">
-                                            <i className="fa-solid fa-coins text-2xl"></i>
-                                            {(gameState.pot || 0).toLocaleString()}
-                                        </div>
-                                    </div>
-
-                                    <div className="community-cards">
-                                        {(gameState.communityCards || []).map((card, i) => (
-                                            <Card key={card.id} card={card} delay={i * 120} size="lg" />
-                                        ))}
-                                        {Array.from({ length: 5 - (gameState.communityCards?.length || 0) }).map((_, i) => (
-                                            <div key={`e-${i}`} className="card-slot-empty"></div>
-                                        ))}
+                    <div className="poker-table">
+                        <div className="felt">
+                            
+                            {/* Center: Pot + Cards */}
+                            <div className="center-area">
+                                <div className="pot-box">
+                                    <div className="text-gray-400 text-xs mb-1">POT</div>
+                                    <div className="text-yellow-400 font-display text-2xl">
+                                        <i className="fa-solid fa-coins mr-2"></i>
+                                        {(game.pot || 0).toLocaleString()}
                                     </div>
                                 </div>
+                                <div className="community-cards">
+                                    {(game.communityCards || []).map((c, i) => (
+                                        <Card key={c.id} card={c} size="lg" />
+                                    ))}
+                                    {Array.from({ length: 5 - (game.communityCards?.length || 0) }).map((_, i) => (
+                                        <div key={i} className="card-empty"></div>
+                                    ))}
+                                </div>
+                            </div>
 
-                                {/* Players */}
+                            {/* Players */}
+                            <div className="player-positions">
                                 {ordered.map((id, i) => {
-                                    const p = players[id];
-                                    const isMe = id === user.odor;
+                                    const pl = players[id];
+                                    const isMe = id === user.id;
                                     return (
-                                        <div key={id} className="player-slot" data-seat={i}>
-                                            <PlayerSeat
-                                                player={p}
-                                                isCurrentTurn={gameState.currentPlayer === id}
-                                                isDealer={gameState.dealer === id}
-                                                isSB={gameState.smallBlind === id}
-                                                isBB={gameState.bigBlind === id}
+                                        <div key={id} className={`player-slot pos-${i}`}>
+                                            <Player
+                                                p={pl}
+                                                isTurn={game.currentPlayer === id}
+                                                isD={game.dealer === id}
+                                                isSB={game.smallBlind === id}
+                                                isBB={game.bigBlind === id}
                                                 isMe={isMe}
-                                                showCards={isMe || gameState.phase === 'showdown' || p?.showCards}
-                                                isWinner={gameState.winnerId === id}
+                                                show={isMe || game.phase === 'showdown' || pl?.showCards}
+                                                isWinner={game.winnerId === id}
                                             />
-                                            {p && (p.currentBet || 0) > 0 && (
-                                                <div className="player-bet-bubble">
-                                                    <i className="fa-solid fa-coins text-xs mr-1"></i>
-                                                    {p.currentBet}
+                                            {pl && (pl.currentBet || 0) > 0 && (
+                                                <div className="player-bet">
+                                                    <i className="fa-solid fa-coins text-xs mr-1"></i>{pl.currentBet}
                                                 </div>
                                             )}
                                         </div>
                                     );
                                 })}
-
-                                {/* Empty seats */}
-                                {Array.from({ length: MAX_PLAYERS - playerIds.length }).map((_, i) => (
-                                    <div key={`seat-${i}`} className="player-slot" data-seat={playerIds.length + i}>
-                                        <PlayerSeat player={null} />
+                                {Array.from({ length: MAX_P - ids.length }).map((_, i) => (
+                                    <div key={`e${i}`} className={`player-slot pos-${ids.length + i}`}>
+                                        <Player p={null} />
                                     </div>
                                 ))}
                             </div>
@@ -1540,104 +1218,48 @@
                     </div>
 
                     {/* Actions */}
-                    {isMyTurn && myPlayer && !myPlayer.folded && (
-                        <div className="actions-panel slide-up">
-                            <div className="text-center mb-4">
-                                <span className="text-gold-400 font-display text-lg tracking-wider">
-                                    <i className="fa-solid fa-hand-pointer mr-2 animate-pulse"></i>
-                                    VOTRE TOUR
-                                </span>
+                    {myTurn && me && !me.folded && (
+                        <div className="actions-bar">
+                            <div className="text-center mb-3">
+                                <span className="text-yellow-400 font-display"><i className="fa-solid fa-hand-pointer mr-2"></i>VOTRE TOUR</span>
                             </div>
-
-                            <div className="mb-5">
-                                <div className="flex justify-between text-sm font-mono text-gray-400 mb-2">
+                            <div className="mb-4">
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
                                     <span>Relance</span>
-                                    <span className="text-gold-400 font-bold text-lg">{raiseAmount}</span>
+                                    <span className="text-yellow-400 font-bold">{raise}</span>
                                 </div>
-                                <input 
+                                <input
                                     type="range"
-                                    min={minRaise}
-                                    max={maxRaise}
-                                    value={Math.min(raiseAmount, maxRaise)}
-                                    onChange={(e) => setRaiseAmount(parseInt(e.target.value))}
-                                    className="raise-slider w-full"
+                                    min={minR}
+                                    max={maxR}
+                                    value={Math.min(raise, maxR)}
+                                    onChange={e => setRaise(+e.target.value)}
+                                    className="slider w-full"
                                 />
-                                <div className="flex gap-2 mt-3">
-                                    {[
-                                        { l: 'Min', v: minRaise },
-                                        { l: '2×', v: minRaise * 2 },
-                                        { l: '½ Pot', v: Math.floor((gameState.pot || 0) / 2 + (gameState.currentBet || 0)) },
-                                        { l: 'Pot', v: (gameState.pot || 0) + (gameState.currentBet || 0) },
-                                    ].filter(x => x.v >= minRaise && x.v <= maxRaise).map((x, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setRaiseAmount(Math.min(x.v, maxRaise))}
-                                            className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs font-mono text-gray-300 transition-colors"
-                                        >
-                                            {x.l}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
-
-                            <div className="grid grid-cols-4 gap-3">
-                                <button
-                                    onClick={() => performAction('fold')}
-                                    className="btn-action py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-display rounded-xl"
-                                >
-                                    FOLD
-                                </button>
-                                
+                            <div className="grid grid-cols-4 gap-2">
+                                <button onClick={() => act('fold')} className="btn btn-fold">FOLD</button>
                                 {canCheck ? (
-                                    <button
-                                        onClick={() => performAction('check')}
-                                        className="btn-action py-4 bg-green-700 hover:bg-green-600 text-white font-display rounded-xl"
-                                    >
-                                        CHECK
-                                    </button>
+                                    <button onClick={() => act('check')} className="btn btn-check">CHECK</button>
                                 ) : (
-                                    <button
-                                        onClick={() => performAction('call')}
-                                        disabled={callAmount > (myPlayer?.chips || 0)}
-                                        className="btn-action py-4 bg-blue-700 hover:bg-blue-600 text-white font-display rounded-xl disabled:opacity-50"
-                                    >
-                                        CALL {callAmount}
-                                    </button>
+                                    <button onClick={() => act('call')} disabled={callAmt > me.chips} className="btn btn-call">CALL {callAmt}</button>
                                 )}
-                                
-                                <button
-                                    onClick={() => performAction('raise', raiseAmount)}
-                                    disabled={raiseAmount > (myPlayer?.chips || 0)}
-                                    className="btn-action py-4 bg-empire-700 hover:bg-empire-600 text-white font-display rounded-xl disabled:opacity-50"
-                                >
-                                    RAISE
-                                </button>
-                                
-                                <button
-                                    onClick={() => performAction('all-in')}
-                                    className="btn-action py-4 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black font-display rounded-xl font-bold"
-                                >
-                                    ALL-IN
-                                </button>
+                                <button onClick={() => act('raise', raise)} disabled={raise > me.chips} className="btn btn-raise">RAISE</button>
+                                <button onClick={() => act('all-in')} className="btn btn-allin">ALL-IN</button>
                             </div>
                         </div>
                     )}
 
                     {/* Start / Wait */}
-                    {gameState.status !== 'playing' && !winnerInfo && (
-                        <div className="actions-panel">
-                            {playerIds.length >= MIN_PLAYERS ? (
-                                <button
-                                    onClick={startGame}
-                                    className="px-14 py-5 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold text-xl rounded-2xl shadow-lg shadow-empire-600/30"
-                                >
-                                    <i className="fa-solid fa-play mr-3"></i>
-                                    DÉMARRER
+                    {game.status !== 'playing' && !winner && (
+                        <div className="actions-bar">
+                            {ids.length >= MIN_P ? (
+                                <button onClick={startGame} className="btn btn-raise px-10 py-4 text-lg">
+                                    <i className="fa-solid fa-play mr-2"></i>DÉMARRER
                                 </button>
                             ) : (
-                                <div className="text-gray-400 font-mono text-lg flex items-center gap-3">
-                                    <i className="fa-solid fa-hourglass-half animate-pulse"></i>
-                                    En attente ({playerIds.length}/{MIN_PLAYERS})
+                                <div className="text-gray-400">
+                                    <i className="fa-solid fa-hourglass-half mr-2"></i>Attente ({ids.length}/{MIN_P})
                                 </div>
                             )}
                         </div>
@@ -1651,23 +1273,21 @@
         // ==========================================
         const App = () => {
             const [user, setUser] = useState(null);
-            const [currentTable, setCurrentTable] = useState(null);
+            const [table, setTable] = useState(null);
             const [tables, setTables] = useState({});
             const [loading, setLoading] = useState(true);
 
             useEffect(() => {
                 const init = () => {
-                    window.firebaseOnAuthStateChanged(window.firebaseAuth, async (fbUser) => {
-                        if (fbUser) {
-                            const ref = window.firebaseRef(window.firebaseDB, `users/${fbUser.uid}`);
-                            const snap = await window.firebaseGet(ref);
-                            const data = snap.exists() ? snap.val() : {};
-                            
+                    window.FB.onAuth(window.FB.auth, async u => {
+                        if (u) {
+                            const snap = await window.FB.get(window.FB.ref(window.FB.db, `users/${u.uid}`));
+                            const d = snap.exists() ? snap.val() : {};
                             setUser({
-                                odor: fbUser.uid,
-                                name: data.username || fbUser.displayName || 'Joueur',
-                                avatar: data.avatar || fbUser.photoURL,
-                                chips: data.pokerChips || STARTING_CHIPS
+                                id: u.uid,
+                                name: d.username || u.displayName || 'Joueur',
+                                avatar: d.avatar || u.photoURL,
+                                chips: d.pokerChips || START_CHIPS
                             });
                         } else {
                             setUser(null);
@@ -1675,156 +1295,83 @@
                         setLoading(false);
                     });
 
-                    // Listen to tables & clean empty ones
-                    const tablesRef = window.firebaseRef(window.firebaseDB, 'poker_tables');
-                    window.firebaseOnValue(tablesRef, (snapshot) => {
-                        const data = snapshot.val() || {};
-                        
-                        // Clean empty tables
-                        Object.entries(data).forEach(([id, table]) => {
-                            const count = Object.keys(table.players || {}).length;
-                            if (count === 0) {
-                                window.firebaseRemove(window.firebaseRef(window.firebaseDB, `poker_tables/${id}`));
+                    window.FB.onValue(window.FB.ref(window.FB.db, 'poker_tables'), snap => {
+                        const d = snap.val() || {};
+                        // Clean empty
+                        Object.entries(d).forEach(([id, t]) => {
+                            if (Object.keys(t.players || {}).length === 0) {
+                                window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${id}`));
                             }
                         });
-                        
-                        setTables(data);
+                        setTables(d);
                     });
                 };
 
-                if (window.firebaseAuth) init();
-                else window.addEventListener('firebase-ready', init);
+                if (window.FB) init();
+                else window.addEventListener('fb-ready', init);
             }, []);
 
-            const createTable = async (name, buyIn) => {
-                const ref = window.firebasePush(window.firebaseRef(window.firebaseDB, 'poker_tables'));
-                await window.firebaseSet(ref, {
+            const create = async (name, buyIn) => {
+                const r = window.FB.push(window.FB.ref(window.FB.db, 'poker_tables'));
+                await window.FB.set(r, {
                     name,
                     buyIn,
                     status: 'waiting',
-                    createdAt: Date.now(),
                     pot: 0,
                     currentBet: 0,
                     phase: 'waiting',
                     players: {
-                        [user.odor]: {
-                            name: user.name,
-                            avatar: user.avatar,
-                            chips: buyIn,
-                            seat: 0
-                        }
+                        [user.id]: { name: user.name, avatar: user.avatar, chips: buyIn, seat: 0 }
                     }
                 });
-                setCurrentTable(ref.key);
+                setTable(r.key);
             };
 
-            const joinTable = async (tableId) => {
-                const table = tables[tableId];
-                if (!table) return;
+            const join = async id => {
+                const t = tables[id];
+                if (!t) return;
+                const cnt = Object.keys(t.players || {}).length;
+                if (cnt >= MAX_P) return;
+                if (t.players?.[user.id]) { setTable(id); return; }
 
-                const count = Object.keys(table.players || {}).length;
-                if (count >= MAX_PLAYERS) {
-                    alert('Table complète !');
-                    return;
-                }
-
-                if (table.players?.[user.odor]) {
-                    setCurrentTable(tableId);
-                    return;
-                }
-
-                await window.firebaseUpdate(window.firebaseRef(window.firebaseDB), {
-                    [`poker_tables/${tableId}/players/${user.odor}`]: {
-                        name: user.name,
-                        avatar: user.avatar,
-                        chips: table.buyIn,
-                        seat: count
-                    }
+                await window.FB.update(window.FB.ref(window.FB.db), {
+                    [`poker_tables/${id}/players/${user.id}`]: { name: user.name, avatar: user.avatar, chips: t.buyIn, seat: cnt }
                 });
-                setCurrentTable(tableId);
+                setTable(id);
             };
 
-            const leaveTable = async () => {
-                if (currentTable) {
-                    await window.firebaseRemove(
-                        window.firebaseRef(window.firebaseDB, `poker_tables/${currentTable}/players/${user.odor}`)
-                    );
-                }
-                setCurrentTable(null);
+            const leave = async () => {
+                if (table) await window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`));
+                setTable(null);
             };
 
             if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <i className="fa-solid fa-crown text-6xl text-empire-500 animate-pulse"></i>
-                    </div>
-                );
+                return <div className="h-screen flex items-center justify-center bg-black"><i className="fa-solid fa-crown text-5xl text-red-500 animate-pulse"></i></div>;
             }
 
             if (!user) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="glass-panel rounded-3xl p-12 text-center max-w-md">
-                            <i className="fa-solid fa-crown text-empire-500 text-6xl mb-6 block"></i>
-                            <h1 className="font-display text-4xl font-bold text-white mb-2">RED POKER</h1>
-                            <p className="text-gray-400 mb-10 font-mono">Texas Hold'em Multiplayer</p>
-                            <button
-                                onClick={() => window.firebaseSignIn()}
-                                className="w-full py-5 bg-gradient-to-r from-empire-700 to-empire-600 hover:from-empire-600 hover:to-empire-500 text-white font-display font-bold text-lg rounded-2xl flex items-center justify-center gap-3 shadow-lg"
-                            >
-                                <i className="fa-brands fa-google text-xl"></i>
-                                Connexion Google
+                    <div className="h-screen flex items-center justify-center bg-black p-4">
+                        <div className="glass rounded-2xl p-10 text-center max-w-sm">
+                            <i className="fa-solid fa-crown text-red-500 text-5xl mb-4"></i>
+                            <h1 className="font-display text-3xl text-white mb-1">RED POKER</h1>
+                            <p className="text-gray-400 mb-8">Texas Hold'em</p>
+                            <button onClick={() => window.FB.signIn()} className="w-full btn btn-raise py-4 text-lg">
+                                <i className="fa-brands fa-google mr-2"></i>Connexion
                             </button>
-                            <a href="games.html" className="block mt-8 text-gray-500 hover:text-white font-mono transition-colors">
-                                <i className="fa-solid fa-arrow-left mr-2"></i>Retour
+                            <a href="games.html" className="block mt-6 text-gray-500 hover:text-white text-sm">
+                                <i className="fa-solid fa-arrow-left mr-1"></i>Retour
                             </a>
                         </div>
                     </div>
                 );
             }
 
-            if (currentTable) {
-                return <PokerTable tableId={currentTable} user={user} onLeave={leaveTable} />;
-            }
-
-            return <Lobby user={user} tables={tables} onCreateTable={createTable} onJoinTable={joinTable} />;
+            if (table) return <Table tableId={table} user={user} onLeave={leave} />;
+            return <Lobby user={user} tables={tables} onCreate={create} onJoin={join} />;
         };
 
-        ReactDOM.createRoot(document.getElementById('poker-app')).render(<App />);
-
-        // Particles
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        window.addEventListener('resize', () => { 
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight; 
-        });
-
-        const particles = Array.from({ length: 50 }, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            r: Math.random() * 1.5 + 0.5,
-            dx: (Math.random() - 0.5) * 0.3,
-            dy: (Math.random() - 0.5) * 0.3,
-            c: Math.random() > 0.9 ? '#ffd700' : '#990000'
-        }));
-
-        (function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.dx;
-                p.y += p.dy;
-                if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = p.c;
-                ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        })();
+        ReactDOM.createRoot(document.getElementById('app')).render(<App />);
     </script>
 </body>
 </html>
