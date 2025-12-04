@@ -37,7 +37,7 @@
         }
 
         /* ============================================ */
-        /* TABLE CONTAINER */
+        /* GAME CONTAINER */
         /* ============================================ */
         .game-container {
             position: relative;
@@ -60,9 +60,7 @@
             border-radius: 50%;
             background: linear-gradient(145deg, #3d2817, #1a0f08);
             padding: 16px;
-            box-shadow: 
-                0 20px 60px rgba(0,0,0,0.8),
-                inset 0 2px 4px rgba(255,255,255,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
         }
 
         .felt {
@@ -84,7 +82,7 @@
         }
 
         /* ============================================ */
-        /* POT CENTRAL - AU DESSUS DE TOUT */
+        /* POT CENTRAL */
         /* ============================================ */
         .center-area {
             position: absolute;
@@ -110,7 +108,7 @@
         }
 
         /* ============================================ */
-        /* CARTES SIMPLES ET PROPRES */
+        /* CARTES AVEC ANIMATIONS */
         /* ============================================ */
         .card {
             width: 60px;
@@ -169,6 +167,7 @@
         .card-sm .val { font-size: 0.8rem; }
         .card-sm .sym { font-size: 1.2rem; }
         .card-sm .corner { font-size: 0.5rem; }
+        .card-sm.card-back::after { font-size: 1rem; }
 
         .card-empty {
             width: 70px;
@@ -177,6 +176,28 @@
             border: 2px dashed rgba(255,255,255,0.15);
             background: rgba(0,0,0,0.2);
         }
+
+        /* Animation de distribution */
+        @keyframes dealCard {
+            0% {
+                transform: translateX(300px) translateY(-150px) rotate(180deg) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .card-deal {
+            animation: dealCard 0.4s ease-out forwards;
+        }
+
+        .card-deal-1 { animation-delay: 0s; }
+        .card-deal-2 { animation-delay: 0.15s; }
+        .card-deal-3 { animation-delay: 0.3s; }
+        .card-deal-4 { animation-delay: 0.45s; }
+        .card-deal-5 { animation-delay: 0.6s; }
 
         /* ============================================ */
         /* POSITIONS JOUEURS */
@@ -191,7 +212,6 @@
             position: absolute;
         }
 
-        /* Position autour de la table */
         .player-slot.pos-0 { bottom: -100px; left: 50%; transform: translateX(-50%); }
         .player-slot.pos-1 { bottom: 0; left: 5%; }
         .player-slot.pos-2 { top: 50%; left: -80px; transform: translateY(-50%); }
@@ -214,14 +234,17 @@
             box-shadow: 0 0 20px rgba(255,215,0,0.4);
         }
 
-        .player-box.folded {
-            opacity: 0.35;
-        }
+        .player-box.folded { opacity: 0.35; }
 
         .player-box.winner {
             border-color: #ffd700;
             background: rgba(50,40,0,0.9);
             animation: glow 0.5s ease-in-out infinite alternate;
+        }
+
+        .player-box.busted {
+            opacity: 0.2;
+            filter: grayscale(1);
         }
 
         @keyframes glow {
@@ -248,9 +271,7 @@
             border: 2px solid #666;
         }
 
-        .player-avatar.me {
-            border-color: #ffd700;
-        }
+        .player-avatar.me { border-color: #ffd700; }
 
         .player-name {
             font-size: 0.8rem;
@@ -265,6 +286,10 @@
         .player-chips {
             font-size: 0.75rem;
             color: #ffd700;
+        }
+
+        .player-chips.zero {
+            color: #888;
         }
 
         .player-cards {
@@ -293,7 +318,6 @@
             white-space: nowrap;
         }
 
-        /* Position des mises selon le siège */
         .pos-0 .player-bet { top: -25px; left: 50%; transform: translateX(-50%); }
         .pos-1 .player-bet { top: 20px; right: -40px; }
         .pos-2 .player-bet { top: 50%; right: -70px; transform: translateY(-50%); }
@@ -303,7 +327,6 @@
         .pos-6 .player-bet { top: 50%; left: -70px; transform: translateY(-50%); }
         .pos-7 .player-bet { top: 20px; left: -40px; }
 
-        /* Badges D, SB, BB */
         .badges {
             position: absolute;
             top: -8px;
@@ -373,8 +396,8 @@
             border: none;
         }
 
-        .btn:hover { transform: scale(1.03); }
-        .btn:active { transform: scale(0.97); }
+        .btn:hover:not(:disabled) { transform: scale(1.03); }
+        .btn:active:not(:disabled) { transform: scale(0.97); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
         .btn-fold { background: #374151; color: #9ca3af; }
@@ -404,7 +427,7 @@
         }
 
         /* ============================================ */
-        /* WINNER MODAL */
+        /* MODAL */
         /* ============================================ */
         .modal-overlay {
             position: fixed;
@@ -457,9 +480,7 @@
             transition: border-color 0.2s;
         }
 
-        .input:focus {
-            border-color: #cc0000;
-        }
+        .input:focus { border-color: #cc0000; }
 
         /* ============================================ */
         /* CONFETTI */
@@ -512,7 +533,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect } = React;
 
         // ==========================================
         // CONSTANTES
@@ -555,7 +576,6 @@
 
         const evalHand = cards => {
             if (!cards || cards.length < 5) return { rank: -1, name: '', high: [] };
-            
             let best = { rank: -1, name: '', high: [] };
             for (const c of combos(cards, 5)) {
                 const h = eval5(c);
@@ -607,16 +627,19 @@
         // ==========================================
         // COMPONENTS
         // ==========================================
-        const Card = ({ card, hidden, size = 'md' }) => {
+        
+        // Carte avec animation
+        const Card = ({ card, hidden, size = 'md', dealIndex = 0 }) => {
             const cls = size === 'sm' ? 'card-sm' : size === 'lg' ? 'card-lg' : '';
+            const dealClass = dealIndex > 0 ? `card-deal card-deal-${Math.min(dealIndex, 5)}` : '';
             
             if (hidden || !card) {
-                return <div className={`card card-back ${cls}`} />;
+                return <div className={`card card-back ${cls} ${dealClass}`} />;
             }
             
             const red = card.s === '♥' || card.s === '♦';
             return (
-                <div className={`card ${red ? 'red' : 'black'} ${cls}`}>
+                <div className={`card ${red ? 'red' : 'black'} ${cls} ${dealClass}`}>
                     <div className="corner tl"><span>{card.v}</span><span>{card.s}</span></div>
                     <span className="val">{card.v}</span>
                     <span className="sym">{card.s}</span>
@@ -625,7 +648,8 @@
             );
         };
 
-        const Player = ({ p, isTurn, isD, isSB, isBB, isMe, show, isWinner }) => {
+        // Joueur
+        const Player = ({ p, isTurn, isD, isSB, isBB, isMe, showCards, isWinner }) => {
             if (!p) {
                 return (
                     <div className="player-box empty">
@@ -637,8 +661,15 @@
                 );
             }
 
+            const isBusted = (p.chips || 0) <= 0 && !p.isAllIn;
+
             return (
-                <div className={`player-box ${isTurn && !p.folded ? 'active' : ''} ${p.folded ? 'folded' : ''} ${isWinner ? 'winner' : ''}`}>
+                <div className={`player-box 
+                    ${isTurn && !p.folded && !isBusted ? 'active' : ''} 
+                    ${p.folded ? 'folded' : ''} 
+                    ${isWinner ? 'winner' : ''}
+                    ${isBusted && !isWinner ? 'busted' : ''}
+                `}>
                     <div className="badges">
                         {isD && <div className="badge badge-d">D</div>}
                         {isSB && <div className="badge badge-sb">SB</div>}
@@ -653,7 +684,7 @@
                         />
                         <div>
                             <div className="player-name">{p.name}</div>
-                            <div className="player-chips">
+                            <div className={`player-chips ${(p.chips || 0) <= 0 ? 'zero' : ''}`}>
                                 <i className="fa-solid fa-coins text-xs mr-1"></i>
                                 {(p.chips || 0).toLocaleString()}
                             </div>
@@ -663,8 +694,18 @@
                     <div className="player-cards">
                         {p.cards?.length === 2 ? (
                             <>
-                                <Card card={show ? p.cards[0] : null} hidden={!show} size="sm" />
-                                <Card card={show ? p.cards[1] : null} hidden={!show} size="sm" />
+                                <Card 
+                                    card={showCards ? p.cards[0] : null} 
+                                    hidden={!showCards} 
+                                    size="sm" 
+                                    dealIndex={1}
+                                />
+                                <Card 
+                                    card={showCards ? p.cards[1] : null} 
+                                    hidden={!showCards} 
+                                    size="sm" 
+                                    dealIndex={2}
+                                />
                             </>
                         ) : (
                             <div className="text-gray-600 text-xs py-2">—</div>
@@ -686,6 +727,7 @@
             );
         };
 
+        // Confetti
         const Confetti = ({ on }) => {
             if (!on) return null;
             const colors = ['#ff3333', '#ffd700', '#33ff33', '#3366ff', '#ff33ff'];
@@ -709,6 +751,7 @@
             );
         };
 
+        // Modal gagnant
         const WinnerModal = ({ winner, hand, pot, onClose }) => (
             <div className="modal-overlay" onClick={onClose}>
                 <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -819,7 +862,11 @@
                                                     </span>
                                                 </div>
                                             </div>
-                                            <button onClick={() => onJoin(id)} className="btn btn-raise px-5 py-2">
+                                            <button 
+                                                onClick={() => onJoin(id)} 
+                                                disabled={cnt >= MAX_P}
+                                                className="btn btn-raise px-5 py-2"
+                                            >
                                                 {cnt >= MAX_P ? 'COMPLET' : 'REJOINDRE'}
                                             </button>
                                         </div>
@@ -837,7 +884,7 @@
         };
 
         // ==========================================
-        // TABLE
+        // TABLE DE JEU
         // ==========================================
         const Table = ({ tableId, user, onLeave }) => {
             const [game, setGame] = useState(null);
@@ -879,12 +926,25 @@
                 return () => unsub();
             }, [tableId, user.id]);
 
-            // Actions
+            // ==========================================
+            // ACTIONS
+            // ==========================================
             const act = async (action, amt = 0) => {
                 if (!game || game.currentPlayer !== user.id) return;
+                
                 const p = game.players;
                 const me = p[user.id];
                 if (!me || me.folded) return;
+                
+                // IMPORTANT: Vérifier si le joueur a des chips avant de jouer
+                if ((me.chips || 0) <= 0 && action !== 'fold' && !me.isAllIn) {
+                    // Joueur n'a plus de chips - peut seulement fold ou check si possible
+                    if (action === 'check' && (me.currentBet || 0) >= (game.currentBet || 0)) {
+                        // OK, peut check
+                    } else if (action !== 'fold') {
+                        return; // Ne peut pas jouer
+                    }
+                }
 
                 const active = Object.keys(p).filter(id => !p[id].folded);
                 const upd = {};
@@ -900,17 +960,20 @@
                     upd[`${path}/lastAction`] = 'check';
                     upd[`${path}/hasActed`] = true;
                 } else if (action === 'call') {
-                    const diff = Math.min(currBet - (me.currentBet || 0), me.chips);
+                    const diff = Math.min(currBet - (me.currentBet || 0), me.chips || 0);
+                    if (diff <= 0) return; // Rien à call
                     upd[`${path}/currentBet`] = (me.currentBet || 0) + diff;
-                    upd[`${path}/chips`] = me.chips - diff;
+                    upd[`${path}/chips`] = (me.chips || 0) - diff;
                     upd[`${path}/lastAction`] = 'call';
                     upd[`${path}/hasActed`] = true;
                     pot += diff;
                     upd[`poker_tables/${tableId}/pot`] = pot;
                 } else if (action === 'raise') {
+                    if ((me.chips || 0) <= 0) return; // Pas de chips pour raise
                     const diff = amt - (me.currentBet || 0);
+                    if (diff <= 0 || diff > (me.chips || 0)) return;
                     upd[`${path}/currentBet`] = amt;
-                    upd[`${path}/chips`] = me.chips - diff;
+                    upd[`${path}/chips`] = (me.chips || 0) - diff;
                     upd[`${path}/lastAction`] = 'raise';
                     upd[`${path}/hasActed`] = true;
                     pot += diff;
@@ -919,13 +982,17 @@
                     upd[`poker_tables/${tableId}/currentBet`] = currBet;
                     active.forEach(id => { if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false; });
                 } else if (action === 'all-in') {
-                    const total = me.chips + (me.currentBet || 0);
+                    // IMPORTANT: Vérifier qu'on a des chips
+                    if ((me.chips || 0) <= 0) return;
+                    
+                    const myChips = me.chips || 0;
+                    const total = myChips + (me.currentBet || 0);
                     upd[`${path}/currentBet`] = total;
                     upd[`${path}/chips`] = 0;
                     upd[`${path}/lastAction`] = 'all-in';
                     upd[`${path}/isAllIn`] = true;
                     upd[`${path}/hasActed`] = true;
-                    pot += me.chips;
+                    pot += myChips;
                     upd[`poker_tables/${tableId}/pot`] = pot;
                     if (total > currBet) {
                         upd[`poker_tables/${tableId}/currentBet`] = total;
@@ -940,7 +1007,7 @@
                     return;
                 }
 
-                // Next player
+                // Prochain joueur
                 const myIdx = active.indexOf(user.id);
                 let nextIdx = (myIdx + 1) % active.length;
                 let nextP = active[nextIdx];
@@ -951,15 +1018,15 @@
                     tries++;
                 }
 
-                // Check round complete
-                const newBet = action === 'raise' ? amt : (action === 'all-in' ? (me.chips + (me.currentBet || 0)) : currBet);
+                // Vérifier si le tour est fini
+                const newBet = action === 'raise' ? amt : (action === 'all-in' ? ((me.chips || 0) + (me.currentBet || 0)) : currBet);
                 const allActed = remaining.every(id => {
                     const pl = id === user.id ? { ...p[id], hasActed: true } : p[id];
                     return pl.hasActed || pl.isAllIn || pl.folded;
                 });
                 const allMatched = remaining.every(id => {
                     const pl = id === user.id ? { ...p[id], currentBet: upd[`${path}/currentBet`] || p[id].currentBet } : p[id];
-                    return (pl.currentBet || 0) >= newBet || pl.isAllIn || pl.chips === 0;
+                    return (pl.currentBet || 0) >= newBet || pl.isAllIn || (pl.chips || 0) === 0;
                 });
 
                 if (allActed && allMatched && action !== 'raise' && action !== 'all-in') {
@@ -1000,10 +1067,14 @@
                     return;
                 }
 
-                const canAct = active.filter(id => !game.players[id].isAllIn);
+                const canAct = active.filter(id => !game.players[id].isAllIn && (game.players[id].chips || 0) > 0);
                 if (canAct.length > 0) {
                     const dIdx = canAct.indexOf(game.dealer);
                     upd[`poker_tables/${tableId}/currentPlayer`] = canAct[(dIdx + 1) % canAct.length] || canAct[0];
+                } else if (active.length > 0) {
+                    // Tous all-in, aller directement au showdown
+                    await showdown(upd, active);
+                    return;
                 }
 
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
@@ -1013,6 +1084,7 @@
                 const upd = { ...pending };
                 const cc = game.communityCards || [];
                 
+                // Révéler les cartes de tous les joueurs actifs
                 active.forEach(id => upd[`poker_tables/${tableId}/players/${id}/showCards`] = true);
                 upd[`poker_tables/${tableId}/phase`] = 'showdown';
 
@@ -1074,7 +1146,7 @@
             };
 
             const startGame = async () => {
-                const ids = Object.keys(game.players);
+                const ids = Object.keys(game.players).filter(id => (game.players[id].chips || 0) > 0);
                 if (ids.length < MIN_P) return;
 
                 const deck = makeDeck();
@@ -1088,7 +1160,8 @@
                     upd[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
                     upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
                     upd[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
-                    upd[`poker_tables/${tableId}/players/${id}/showCards`] = id === user.id;
+                    // IMPORTANT: Ne montrer les cartes qu'au joueur lui-même
+                    upd[`poker_tables/${tableId}/players/${id}/showCards`] = false;
                 });
 
                 const sbIdx = ids.length > 2 ? 1 : 0;
@@ -1097,17 +1170,20 @@
 
                 const sb = ids[sbIdx % ids.length];
                 const bb = ids[bbIdx % ids.length];
-                const p = game.players;
+                const pl = game.players;
                 
-                upd[`poker_tables/${tableId}/players/${sb}/currentBet`] = BLINDS.sb;
-                upd[`poker_tables/${tableId}/players/${sb}/chips`] = p[sb].chips - BLINDS.sb;
-                upd[`poker_tables/${tableId}/players/${bb}/currentBet`] = BLINDS.bb;
-                upd[`poker_tables/${tableId}/players/${bb}/chips`] = p[bb].chips - BLINDS.bb;
+                const sbAmt = Math.min(BLINDS.sb, pl[sb].chips || 0);
+                const bbAmt = Math.min(BLINDS.bb, pl[bb].chips || 0);
+                
+                upd[`poker_tables/${tableId}/players/${sb}/currentBet`] = sbAmt;
+                upd[`poker_tables/${tableId}/players/${sb}/chips`] = (pl[sb].chips || 0) - sbAmt;
+                upd[`poker_tables/${tableId}/players/${bb}/currentBet`] = bbAmt;
+                upd[`poker_tables/${tableId}/players/${bb}/chips`] = (pl[bb].chips || 0) - bbAmt;
 
                 upd[`poker_tables/${tableId}/deck`] = deck.slice(idx);
                 upd[`poker_tables/${tableId}/communityCards`] = [];
-                upd[`poker_tables/${tableId}/pot`] = BLINDS.sb + BLINDS.bb;
-                upd[`poker_tables/${tableId}/currentBet`] = BLINDS.bb;
+                upd[`poker_tables/${tableId}/pot`] = sbAmt + bbAmt;
+                upd[`poker_tables/${tableId}/currentBet`] = bbAmt;
                 upd[`poker_tables/${tableId}/dealer`] = ids[0];
                 upd[`poker_tables/${tableId}/smallBlind`] = sb;
                 upd[`poker_tables/${tableId}/bigBlind`] = bb;
@@ -1120,6 +1196,9 @@
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
 
+            // ==========================================
+            // RENDER
+            // ==========================================
             if (!game) {
                 return (
                     <div className="h-screen flex items-center justify-center bg-black">
@@ -1132,12 +1211,13 @@
             const ids = Object.keys(players);
             const myTurn = game.currentPlayer === user.id && game.status === 'playing';
             const me = players[user.id];
+            const myChips = me?.chips || 0;
             const canCheck = me && (me.currentBet || 0) >= (game.currentBet || 0);
             const callAmt = Math.max(0, (game.currentBet || 0) - (me?.currentBet || 0));
             const minR = Math.max(BLINDS.bb * 2, (game.currentBet || 0) * 2);
-            const maxR = me?.chips || 0;
+            const maxR = myChips;
 
-            // Order: me first
+            // Ordonner: moi en premier
             const myIdx = ids.indexOf(user.id);
             const ordered = myIdx >= 0 ? [...ids.slice(myIdx), ...ids.slice(0, myIdx)] : ids;
 
@@ -1164,7 +1244,7 @@
                     <div className="poker-table">
                         <div className="felt">
                             
-                            {/* Center: Pot + Cards */}
+                            {/* Centre: Pot + Cartes */}
                             <div className="center-area">
                                 <div className="pot-box">
                                     <div className="text-gray-400 text-xs mb-1">POT</div>
@@ -1175,7 +1255,7 @@
                                 </div>
                                 <div className="community-cards">
                                     {(game.communityCards || []).map((c, i) => (
-                                        <Card key={c.id} card={c} size="lg" />
+                                        <Card key={c.id} card={c} size="lg" dealIndex={i + 1} />
                                     ))}
                                     {Array.from({ length: 5 - (game.communityCards?.length || 0) }).map((_, i) => (
                                         <div key={i} className="card-empty"></div>
@@ -1183,11 +1263,17 @@
                                 </div>
                             </div>
 
-                            {/* Players */}
+                            {/* Joueurs */}
                             <div className="player-positions">
                                 {ordered.map((id, i) => {
                                     const pl = players[id];
                                     const isMe = id === user.id;
+                                    
+                                    // IMPORTANT: Logique de visibilité des cartes
+                                    // - Je vois MES cartes si j'en ai
+                                    // - Je vois les cartes des autres SEULEMENT si showCards est true (showdown)
+                                    const canSeeCards = isMe || pl?.showCards === true || game.phase === 'showdown';
+                                    
                                     return (
                                         <div key={id} className={`player-slot pos-${i}`}>
                                             <Player
@@ -1197,7 +1283,7 @@
                                                 isSB={game.smallBlind === id}
                                                 isBB={game.bigBlind === id}
                                                 isMe={isMe}
-                                                show={isMe || game.phase === 'showdown' || pl?.showCards}
+                                                showCards={canSeeCards}
                                                 isWinner={game.winnerId === id}
                                             />
                                             {pl && (pl.currentBet || 0) > 0 && (
@@ -1221,31 +1307,60 @@
                     {myTurn && me && !me.folded && (
                         <div className="actions-bar">
                             <div className="text-center mb-3">
-                                <span className="text-yellow-400 font-display"><i className="fa-solid fa-hand-pointer mr-2"></i>VOTRE TOUR</span>
+                                <span className="text-yellow-400 font-display">
+                                    <i className="fa-solid fa-hand-pointer mr-2"></i>VOTRE TOUR
+                                </span>
                             </div>
-                            <div className="mb-4">
-                                <div className="flex justify-between text-sm text-gray-400 mb-1">
-                                    <span>Relance</span>
-                                    <span className="text-yellow-400 font-bold">{raise}</span>
+                            
+                            {/* Slider seulement si on a des chips */}
+                            {myChips > 0 && (
+                                <div className="mb-4">
+                                    <div className="flex justify-between text-sm text-gray-400 mb-1">
+                                        <span>Relance</span>
+                                        <span className="text-yellow-400 font-bold">{Math.min(raise, maxR)}</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min={minR}
+                                        max={maxR}
+                                        value={Math.min(raise, maxR)}
+                                        onChange={e => setRaise(+e.target.value)}
+                                        className="slider w-full"
+                                        disabled={maxR < minR}
+                                    />
                                 </div>
-                                <input
-                                    type="range"
-                                    min={minR}
-                                    max={maxR}
-                                    value={Math.min(raise, maxR)}
-                                    onChange={e => setRaise(+e.target.value)}
-                                    className="slider w-full"
-                                />
-                            </div>
+                            )}
+                            
                             <div className="grid grid-cols-4 gap-2">
                                 <button onClick={() => act('fold')} className="btn btn-fold">FOLD</button>
+                                
                                 {canCheck ? (
                                     <button onClick={() => act('check')} className="btn btn-check">CHECK</button>
                                 ) : (
-                                    <button onClick={() => act('call')} disabled={callAmt > me.chips} className="btn btn-call">CALL {callAmt}</button>
+                                    <button 
+                                        onClick={() => act('call')} 
+                                        disabled={callAmt > myChips || myChips <= 0} 
+                                        className="btn btn-call"
+                                    >
+                                        CALL {Math.min(callAmt, myChips)}
+                                    </button>
                                 )}
-                                <button onClick={() => act('raise', raise)} disabled={raise > me.chips} className="btn btn-raise">RAISE</button>
-                                <button onClick={() => act('all-in')} className="btn btn-allin">ALL-IN</button>
+                                
+                                <button 
+                                    onClick={() => act('raise', Math.min(raise, maxR))} 
+                                    disabled={maxR < minR || myChips <= 0} 
+                                    className="btn btn-raise"
+                                >
+                                    RAISE
+                                </button>
+                                
+                                <button 
+                                    onClick={() => act('all-in')} 
+                                    disabled={myChips <= 0}
+                                    className="btn btn-allin"
+                                >
+                                    ALL-IN
+                                </button>
                             </div>
                         </div>
                     )}
@@ -1253,13 +1368,14 @@
                     {/* Start / Wait */}
                     {game.status !== 'playing' && !winner && (
                         <div className="actions-bar">
-                            {ids.length >= MIN_P ? (
+                            {ids.filter(id => (players[id]?.chips || 0) > 0).length >= MIN_P ? (
                                 <button onClick={startGame} className="btn btn-raise px-10 py-4 text-lg">
                                     <i className="fa-solid fa-play mr-2"></i>DÉMARRER
                                 </button>
                             ) : (
                                 <div className="text-gray-400">
-                                    <i className="fa-solid fa-hourglass-half mr-2"></i>Attente ({ids.length}/{MIN_P})
+                                    <i className="fa-solid fa-hourglass-half mr-2"></i>
+                                    Attente ({ids.filter(id => (players[id]?.chips || 0) > 0).length}/{MIN_P})
                                 </div>
                             )}
                         </div>
@@ -1297,7 +1413,6 @@
 
                     window.FB.onValue(window.FB.ref(window.FB.db, 'poker_tables'), snap => {
                         const d = snap.val() || {};
-                        // Clean empty
                         Object.entries(d).forEach(([id, t]) => {
                             if (Object.keys(t.players || {}).length === 0) {
                                 window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${id}`));
