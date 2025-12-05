@@ -333,27 +333,6 @@
             font-size: 0.45rem;
         }
 
-        /* Face Card SVG */
-        .face-svg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70%;
-            height: 70%;
-            opacity: 0.95;
-        }
-
-        .card-sm .face-svg {
-            width: 80%;
-            height: 75%;
-        }
-
-        .card-xl .face-svg {
-            width: 65%;
-            height: 68%;
-        }
-
         .card .corner {
             position: absolute;
             line-height: 1;
@@ -1552,103 +1531,24 @@
         // COMPONENTS
         // ==========================================
 
-        // Face Card SVG Component - Stylized K/Q/J figures
-        const FaceCardSVG = ({ value, suit, design }) => {
-            const isRed = suit === '♥' || suit === '♦';
-            const baseColor = isRed ? '#dc2626' : '#1e293b';
+        // Sprite sheet positions for classic cards
+        // The sprite has 13 columns (A,2,3,4,5,6,7,8,9,10,J,Q,K) and 4 rows (clubs, diamonds, hearts, spades)
+        const SPRITE_CARD_WIDTH = 79;  // Width of each card in sprite
+        const SPRITE_CARD_HEIGHT = 123; // Height of each card in sprite
 
-            // Design-specific colors
-            const designColors = {
-                classic: { primary: baseColor, secondary: '#fbbf24', accent: '#f59e0b' },
-                empire: { primary: '#991b1b', secondary: '#fbbf24', accent: '#dc2626' },
-                gold: { primary: '#92400e', secondary: '#fbbf24', accent: '#f59e0b' },
-                neon: { primary: '#06b6d4', secondary: '#d946ef', accent: '#22d3ee' },
-                vintage: { primary: '#78716c', secondary: '#d6d3d1', accent: '#a8a29e' }
+        const getCardSpritePosition = (value, suit) => {
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const suits = ['♣', '♦', '♥', '♠']; // Order in sprite: clubs, diamonds, hearts, spades
+
+            const col = values.indexOf(value);
+            const row = suits.indexOf(suit);
+
+            if (col === -1 || row === -1) return null;
+
+            return {
+                x: col * SPRITE_CARD_WIDTH,
+                y: row * SPRITE_CARD_HEIGHT
             };
-
-            const colors = designColors[design] || designColors.classic;
-
-            // King SVG
-            if (value === 'K') {
-                return (
-                    <svg viewBox="0 0 60 80" className="face-svg">
-                        {/* Crown */}
-                        <path d="M15 25 L20 15 L25 22 L30 10 L35 22 L40 15 L45 25 L45 32 L15 32 Z"
-                            fill={colors.secondary} stroke={colors.accent} strokeWidth="1" />
-                        {/* Head */}
-                        <circle cx="30" cy="42" r="10" fill={colors.primary} opacity="0.9" />
-                        {/* Face features */}
-                        <ellipse cx="27" cy="40" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <ellipse cx="33" cy="40" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <path d="M26 46 Q30 49 34 46" fill="none" stroke="white" strokeWidth="1" opacity="0.6" />
-                        {/* Beard */}
-                        <path d="M22 47 Q30 60 38 47" fill={colors.primary} opacity="0.7" />
-                        {/* Body/Robe */}
-                        <path d="M18 55 L42 55 L45 80 L15 80 Z" fill={colors.primary} opacity="0.8" />
-                        {/* Collar */}
-                        <path d="M22 55 L30 62 L38 55" fill={colors.secondary} opacity="0.8" />
-                        {/* Scepter */}
-                        <line x1="48" y1="35" x2="48" y2="75" stroke={colors.secondary} strokeWidth="2" />
-                        <circle cx="48" cy="32" r="4" fill={colors.accent} />
-                    </svg>
-                );
-            }
-
-            // Queen SVG
-            if (value === 'Q') {
-                return (
-                    <svg viewBox="0 0 60 80" className="face-svg">
-                        {/* Tiara */}
-                        <path d="M20 22 L25 15 L30 20 L35 15 L40 22 L42 28 L18 28 Z"
-                            fill={colors.secondary} stroke={colors.accent} strokeWidth="1" />
-                        <circle cx="30" cy="14" r="3" fill={colors.accent} />
-                        {/* Head */}
-                        <ellipse cx="30" cy="38" rx="9" ry="10" fill={colors.primary} opacity="0.9" />
-                        {/* Hair */}
-                        <path d="M21 32 Q18 45 22 55" fill="none" stroke={colors.primary} strokeWidth="4" opacity="0.7" />
-                        <path d="M39 32 Q42 45 38 55" fill="none" stroke={colors.primary} strokeWidth="4" opacity="0.7" />
-                        {/* Face features */}
-                        <ellipse cx="27" cy="36" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <ellipse cx="33" cy="36" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <ellipse cx="30" cy="40" rx="1" ry="0.5" fill="white" opacity="0.4" />
-                        <path d="M27 44 Q30 46 33 44" fill="#f87171" opacity="0.6" />
-                        {/* Body/Dress */}
-                        <path d="M20 52 L40 52 L48 80 L12 80 Z" fill={colors.primary} opacity="0.8" />
-                        {/* Necklace */}
-                        <path d="M24 52 Q30 56 36 52" fill="none" stroke={colors.secondary} strokeWidth="2" />
-                        <circle cx="30" cy="55" r="2" fill={colors.accent} />
-                    </svg>
-                );
-            }
-
-            // Jack SVG
-            if (value === 'J') {
-                return (
-                    <svg viewBox="0 0 60 80" className="face-svg">
-                        {/* Hat/Beret */}
-                        <ellipse cx="30" cy="18" rx="14" ry="8" fill={colors.primary} opacity="0.9" />
-                        <ellipse cx="30" cy="20" rx="10" ry="5" fill={colors.secondary} opacity="0.5" />
-                        <circle cx="38" cy="14" r="3" fill={colors.accent} />
-                        {/* Head */}
-                        <ellipse cx="30" cy="35" rx="9" ry="10" fill={colors.primary} opacity="0.85" />
-                        {/* Face features - younger look */}
-                        <ellipse cx="27" cy="33" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <ellipse cx="33" cy="33" rx="1.5" ry="2" fill="white" opacity="0.8" />
-                        <path d="M28 40 Q30 42 32 40" fill="none" stroke="white" strokeWidth="1" opacity="0.6" />
-                        {/* Hair */}
-                        <path d="M21 28 Q19 35 22 42" fill="none" stroke={colors.primary} strokeWidth="3" opacity="0.6" />
-                        {/* Body/Tunic */}
-                        <path d="M18 48 L42 48 L44 80 L16 80 Z" fill={colors.primary} opacity="0.8" />
-                        {/* Collar decoration */}
-                        <path d="M22 48 L30 55 L38 48" fill={colors.secondary} opacity="0.7" />
-                        {/* Sword handle */}
-                        <rect x="10" y="55" width="3" height="20" fill={colors.secondary} />
-                        <rect x="8" y="53" width="7" height="4" fill={colors.accent} />
-                    </svg>
-                );
-            }
-
-            return null;
         };
 
         // Card Component
@@ -1679,22 +1579,39 @@
             }
 
             const isRed = card.s === '♥' || card.s === '♦';
-            const isFaceCard = ['K', 'Q', 'J'].includes(card.v);
 
+            // Use sprite sheet for classic design
+            if (design === 'classic') {
+                const pos = getCardSpritePosition(card.v, card.s);
+                if (pos) {
+                    const cardWidth = size === 'sm' ? 48 : size === 'xl' ? 90 : 75;
+                    const cardHeight = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
+                    const scaleX = cardWidth / SPRITE_CARD_WIDTH;
+                    const scaleY = cardHeight / SPRITE_CARD_HEIGHT;
+
+                    return (
+                        <div
+                            className={`card design-classic ${sizeClass} ${animClass}`}
+                            style={{
+                                backgroundImage: 'url(assets/cards_classic.png)',
+                                backgroundPosition: `-${pos.x * scaleX}px -${pos.y * scaleY}px`,
+                                backgroundSize: `${13 * cardWidth}px ${4 * cardHeight}px`,
+                                backgroundColor: 'white'
+                            }}
+                        />
+                    );
+                }
+            }
+
+            // Default rendering for other designs
             return (
                 <div className={`card design-${design} ${isRed ? 'red' : 'black'} ${sizeClass} ${animClass}`}>
                     <div className="corner tl">
                         <span>{card.v}</span>
                         <span>{card.s}</span>
                     </div>
-                    {isFaceCard ? (
-                        <FaceCardSVG value={card.v} suit={card.s} design={design} />
-                    ) : (
-                        <>
-                            <span className="val">{card.v}</span>
-                            <span className="sym">{card.s}</span>
-                        </>
-                    )}
+                    <span className="val">{card.v}</span>
+                    <span className="sym">{card.s}</span>
                     <div className="corner br">
                         <span>{card.v}</span>
                         <span>{card.s}</span>
