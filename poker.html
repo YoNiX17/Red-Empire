@@ -1924,3 +1924,105 @@
     </script>
 </body>
 </html>
+ 0).length}/{MIN_P})
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ==========================================
+        // APP
+        // ==========================================
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [table, setTable] = useState(null);
+            const [tables, setTables] = useState({});
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                const init = () => {
+                    window.FB.onAuth(window.FB.auth, async u => {
+                        if (u) {
+                            const snap = await window.FB.get(window.FB.ref(window.FB.db, `users/${u.uid}`));
+                            const d = snap.exists() ? snap.val() : {};
+                            setUser({
+                                id: u.uid,
+                                name: d.username || u.displayName || 'Joueur',
+                                avatar: d.avatar || u.photoURL,
+                                chips: d.pokerChips || START_CHIPS
+                            });
+                        } else setUser(null);
+                        setLoading(false);
+                    });
+
+                    window.FB.onValue(window.FB.ref(window.FB.db, 'poker_tables'), snap => {
+                        const d = snap.val() || {};
+                        Object.entries(d).forEach(([id, t]) => {
+                            if (Object.keys(t.players || {}).length === 0) {
+                                window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${id}`));
+                            }
+                        });
+                        setTables(d);
+                    });
+                };
+
+                if (window.FB) init();
+                else window.addEventListener('fb-ready', init);
+            }, []);
+
+            const create = async (name, buyIn, cardDesign) => {
+                const r = window.FB.push(window.FB.ref(window.FB.db, 'poker_tables'));
+                await window.FB.set(r, {
+                    name, buyIn, cardDesign,
+                    status: 'waiting', pot: 0, currentBet: 0, phase: 'waiting',
+                    players: { [user.id]: { name: user.name, avatar: user.avatar, chips: buyIn, seat: 0 } }
+                });
+                setTable(r.key);
+            };
+
+            const join = async id => {
+                const t = tables[id];
+                if (!t) return;
+                const cnt = Object.keys(t.players || {}).length;
+                if (cnt >= MAX_P) return;
+                if (t.players?.[user.id]) { setTable(id); return; }
+                await window.FB.update(window.FB.ref(window.FB.db), {
+                    [`poker_tables/${id}/players/${user.id}`]: { name: user.name, avatar: user.avatar, chips: t.buyIn, seat: cnt }
+                });
+                setTable(id);
+            };
+
+            const leave = async () => {
+                if (table) await window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`));
+                setTable(null);
+            };
+
+            if (loading) return <div className="h-screen flex items-center justify-center bg-black"><i className="fa-solid fa-crown text-6xl text-red-500 animate-pulse"></i></div>;
+
+            if (!user) return (
+                <div className="h-screen flex items-center justify-center bg-black p-4">
+                    <div className="glass rounded-3xl p-12 text-center max-w-md">
+                        <i className="fa-solid fa-crown text-red-500 text-6xl mb-5"></i>
+                        <h1 className="font-display text-4xl text-white mb-2">RED POKER</h1>
+                        <p className="text-gray-400 mb-10 text-lg">Texas Hold'em</p>
+                        <button onClick={() => { soundManager.init(); window.FB.signIn(); }} className="w-full btn btn-raise py-5 text-xl">
+                            <i className="fa-brands fa-google mr-3"></i>Connexion
+                        </button>
+                        <a href="games.html" className="block mt-8 text-gray-500 hover:text-white text-lg">
+                            <i className="fa-solid fa-arrow-left mr-2"></i>Retour
+                        </a>
+                    </div>
+                </div>
+            );
+
+            if (table) return <Table tableId={table} user={user} onLeave={leave} />;
+            return <Lobby user={user} tables={tables} onCreate={create} onJoin={join} />;
+        };
+
+        ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+    </script>
+</body>
+</html>
