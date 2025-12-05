@@ -7,38 +7,40 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000' },
-                        gold: { 400: '#ffd700', 500: '#ffb800' }
-                    },
-                    fontFamily: {
-                        display: ['Orbitron', 'sans-serif'],
-                        mono: ['Rajdhani', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        * { box-sizing: border-box; }
-        body { 
-            background: #0a0a0a; 
-            color: #e5e5e5; 
-            overflow: hidden;
-            height: 100vh;
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            min-height: 100vh;
             margin: 0;
             font-family: 'Rajdhani', sans-serif;
         }
-
-        /* ============================================ */
-        /* GAME CONTAINER */
-        /* ============================================ */
+        
+        /* Cache le code source pendant le chargement */
+        script[type="text/babel"] { display: none !important; }
+        #app:empty::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 60px;
+            margin: 45vh auto;
+            border: 4px solid #333;
+            border-top-color: #cc0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .font-display {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* ==================== GAME CONTAINER ==================== */
         .game-container {
             position: relative;
             width: 100%;
@@ -48,42 +50,38 @@
             justify-content: center;
             background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 70%, #000 100%);
         }
-
-        /* ============================================ */
-        /* TABLE DE POKER */
-        /* ============================================ */
+        
+        /* ==================== POKER TABLE ==================== */
         .poker-table {
             position: relative;
-            width: 90%;
-            max-width: 1200px;
-            aspect-ratio: 2.2 / 1;
+            width: 92%;
+            max-width: 1300px;
+            aspect-ratio: 2.3 / 1;
             border-radius: 50%;
             background: linear-gradient(145deg, #3d2817, #1a0f08);
-            padding: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+            padding: 18px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.9);
         }
-
+        
         .felt {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             background: radial-gradient(ellipse at center, #1a8048 0%, #116835 50%, #0d4d28 100%);
             position: relative;
-            box-shadow: inset 0 0 80px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
         }
-
+        
         .felt::after {
             content: '';
             position: absolute;
-            inset: 25px;
+            inset: 30px;
             border: 2px solid rgba(255,215,0,0.15);
             border-radius: 50%;
             pointer-events: none;
         }
-
-        /* ============================================ */
-        /* POT CENTRAL */
-        /* ============================================ */
+        
+        /* ==================== CENTER AREA ==================== */
         .center-area {
             position: absolute;
             top: 50%;
@@ -92,468 +90,448 @@
             text-align: center;
             z-index: 50;
         }
-
+        
         .pot-box {
             background: rgba(0,0,0,0.85);
             border: 2px solid rgba(255,215,0,0.3);
-            border-radius: 12px;
-            padding: 8px 24px;
-            margin-bottom: 15px;
+            border-radius: 14px;
+            padding: 10px 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px);
         }
-
+        
         .community-cards {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
-            perspective: 1000px;
+            perspective: 1500px;
         }
-
-        /* ============================================ */
-        /* DECK VISUEL (source des cartes) */
-        /* ============================================ */
+        
+        /* ==================== DECK STACK ==================== */
         .deck-position {
             position: absolute;
             top: 50%;
-            right: 15%;
+            right: 12%;
             transform: translateY(-50%);
             z-index: 30;
         }
-
+        
         .deck-stack {
             position: relative;
-            width: 70px;
-            height: 98px;
+            width: 80px;
+            height: 112px;
         }
-
+        
         .deck-card {
             position: absolute;
-            width: 70px;
-            height: 98px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #8b0000, #5c0000);
-            border: 2px solid #ffd700;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            width: 80px;
+            height: 112px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
+        
         .deck-card:nth-child(1) { top: 0; left: 0; }
         .deck-card:nth-child(2) { top: -2px; left: -1px; }
         .deck-card:nth-child(3) { top: -4px; left: -2px; }
         .deck-card:nth-child(4) { top: -6px; left: -3px; }
         .deck-card:nth-child(5) { top: -8px; left: -4px; }
-
-        /* ============================================ */
-        /* CARTES - DESIGN SYSTEM */
-        /* ============================================ */
+        
+        /* Deck styles by design */
+        .deck-card.design-classic {
+            background: repeating-linear-gradient(45deg, #1a237e, #1a237e 10px, #283593 10px, #283593 20px);
+            border: 3px solid #fff;
+        }
+        .deck-card.design-empire {
+            background: linear-gradient(135deg, #4d0000, #1a0000, #4d0000);
+            border: 3px solid #ffd700;
+        }
+        .deck-card.design-empire::after { content: '👑'; font-size: 1.5rem; }
+        .deck-card.design-gold {
+            background: linear-gradient(135deg, #4a3f00, #1a1500, #4a3f00);
+            border: 3px solid #ffd700;
+        }
+        .deck-card.design-gold::after { content: '♠'; font-size: 1.8rem; color: #ffd700; }
+        .deck-card.design-neon {
+            background: linear-gradient(135deg, #000030, #000010);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0,255,255,0.3);
+        }
+        .deck-card.design-neon::after { content: '◇'; font-size: 1.8rem; color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+        .deck-card.design-vintage {
+            background: repeating-linear-gradient(45deg, #654321, #654321 8px, #8b6914 8px, #8b6914 16px);
+            border: 3px solid #d4af37;
+        }
+        .deck-card.design-vintage::after { content: '⚜'; font-size: 1.3rem; color: #d4af37; }
+        
+        /* ==================== CARDS ==================== */
         .card {
             position: relative;
-            width: 60px;
-            height: 84px;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-family: Georgia, serif;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             flex-shrink: 0;
             transform-style: preserve-3d;
-            transition: transform 0.1s ease;
+            transition: transform 0.15s ease;
         }
-
-        .card:hover {
-            transform: translateY(-5px);
+        
+        .card:hover:not(.no-hover) {
+            transform: translateY(-8px) scale(1.02);
         }
-
-        /* DESIGN 1: Classic */
+        
+        /* Card sizes */
+        .card-xl {
+            width: 90px;
+            height: 126px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .card-xl .val { font-size: 1.8rem; }
+        .card-xl .sym { font-size: 3rem; }
+        .card-xl .corner { font-size: 0.85rem; }
+        
+        .card-lg {
+            width: 75px;
+            height: 105px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+        }
+        .card-lg .val { font-size: 1.5rem; }
+        .card-lg .sym { font-size: 2.5rem; }
+        .card-lg .corner { font-size: 0.75rem; }
+        
+        .card-sm {
+            width: 48px;
+            height: 67px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+        }
+        .card-sm .val { font-size: 0.85rem; }
+        .card-sm .sym { font-size: 1.3rem; }
+        .card-sm .corner { font-size: 0.5rem; }
+        
+        .card .corner {
+            position: absolute;
+            line-height: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card .tl { top: 5px; left: 6px; }
+        .card .br { bottom: 5px; right: 6px; transform: rotate(180deg); }
+        
+        /* Card design: Classic */
         .card.design-classic {
-            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
-            border: 1px solid #ccc;
+            background: linear-gradient(145deg, #fff, #f5f5f5, #e8e8e8);
+            border: 1px solid #bbb;
         }
         .card.design-classic.red { color: #cc0000; }
         .card.design-classic.black { color: #1a1a1a; }
         .card.design-classic .card-back-design {
-            background: 
-                repeating-linear-gradient(45deg, #1a237e, #1a237e 10px, #283593 10px, #283593 20px);
-            border: 3px solid #fff;
+            background: repeating-linear-gradient(45deg, #1a237e, #1a237e 10px, #283593 10px, #283593 20px);
+            border: 4px solid #fff;
         }
-
-        /* DESIGN 2: Red Empire */
+        
+        /* Card design: Empire */
         .card.design-empire {
-            background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d, #000);
             border: 2px solid #cc0000;
         }
         .card.design-empire.red { color: #ff3333; }
-        .card.design-empire.black { color: #888; }
+        .card.design-empire.black { color: #999; }
         .card.design-empire .card-back-design {
-            background: 
-                linear-gradient(135deg, #4d0000 0%, #1a0000 50%, #4d0000 100%);
-            border: 3px solid #ffd700;
+            background: linear-gradient(135deg, #4d0000, #1a0000, #4d0000);
+            border: 4px solid #ffd700;
         }
-        .card.design-empire .card-back-design::after {
-            content: '👑';
-            font-size: 1.8rem;
-        }
-
-        /* DESIGN 3: Gold Luxury */
+        .card.design-empire .card-back-design::after { content: '👑'; font-size: 2rem; }
+        
+        /* Card design: Gold */
         .card.design-gold {
-            background: linear-gradient(145deg, #1a1a0a 0%, #0a0a00 100%);
+            background: linear-gradient(145deg, #1a1a0a, #0f0f05, #050500);
             border: 2px solid #ffd700;
         }
         .card.design-gold.red { color: #ff6b6b; }
         .card.design-gold.black { color: #ffd700; }
         .card.design-gold .card-back-design {
-            background: 
-                linear-gradient(135deg, #4a3f00 0%, #1a1500 50%, #4a3f00 100%);
-            border: 3px solid #ffd700;
+            background: linear-gradient(135deg, #4a3f00, #1a1500, #4a3f00);
+            border: 4px solid #ffd700;
         }
-        .card.design-gold .card-back-design::after {
-            content: '♠';
-            font-size: 2rem;
-            color: #ffd700;
-        }
-
-        /* DESIGN 4: Neon */
+        .card.design-gold .card-back-design::after { content: '♠'; font-size: 2.5rem; color: #ffd700; }
+        
+        /* Card design: Neon */
         .card.design-neon {
-            background: linear-gradient(145deg, #0a0a1a 0%, #000010 100%);
+            background: linear-gradient(145deg, #0a0a1a, #050510, #000008);
             border: 2px solid #00ffff;
-            box-shadow: 0 0 10px rgba(0,255,255,0.3), 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 0 15px rgba(0,255,255,0.2), 0 6px 20px rgba(0,0,0,0.4);
         }
         .card.design-neon.red { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; }
         .card.design-neon.black { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
         .card.design-neon .card-back-design {
-            background: linear-gradient(135deg, #000030 0%, #000010 100%);
-            border: 3px solid #00ffff;
-            box-shadow: inset 0 0 20px rgba(0,255,255,0.2);
+            background: linear-gradient(135deg, #000030, #000010);
+            border: 4px solid #00ffff;
+            box-shadow: inset 0 0 30px rgba(0,255,255,0.15);
         }
-        .card.design-neon .card-back-design::after {
-            content: '◇';
-            font-size: 2rem;
-            color: #00ffff;
-            text-shadow: 0 0 15px #00ffff;
-        }
-
-        /* DESIGN 5: Vintage */
+        .card.design-neon .card-back-design::after { content: '◇'; font-size: 2.5rem; color: #00ffff; text-shadow: 0 0 20px #00ffff; }
+        
+        /* Card design: Vintage */
         .card.design-vintage {
-            background: linear-gradient(145deg, #f5e6c8 0%, #e8d4a8 100%);
-            border: 1px solid #8b7355;
+            background: linear-gradient(145deg, #f5e6c8, #e8d4a8, #d4c090);
+            border: 2px solid #8b7355;
         }
         .card.design-vintage.red { color: #8b2500; }
         .card.design-vintage.black { color: #2f2f2f; }
         .card.design-vintage .card-back-design {
-            background: 
-                repeating-linear-gradient(45deg, #654321, #654321 8px, #8b6914 8px, #8b6914 16px);
-            border: 3px solid #d4af37;
+            background: repeating-linear-gradient(45deg, #654321, #654321 8px, #8b6914 8px, #8b6914 16px);
+            border: 4px solid #d4af37;
         }
-        .card.design-vintage .card-back-design::after {
-            content: '⚜';
-            font-size: 1.5rem;
-            color: #d4af37;
-        }
-
-        .card .val { font-size: 1.1rem; line-height: 1; }
-        .card .sym { font-size: 1.8rem; line-height: 1; }
+        .card.design-vintage .card-back-design::after { content: '⚜'; font-size: 2rem; color: #d4af37; }
         
-        .card .corner {
-            position: absolute;
-            font-size: 0.6rem;
-            line-height: 1.1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .card .tl { top: 3px; left: 4px; }
-        .card .br { bottom: 3px; right: 4px; transform: rotate(180deg); }
-
-        /* Card back */
         .card-back-design {
             position: absolute;
             inset: 0;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
-        .card-lg {
-            width: 70px;
-            height: 98px;
-        }
-        .card-lg .val { font-size: 1.3rem; }
-        .card-lg .sym { font-size: 2.2rem; }
-
-        .card-sm {
-            width: 44px;
-            height: 62px;
-        }
-        .card-sm .val { font-size: 0.75rem; }
-        .card-sm .sym { font-size: 1.1rem; }
-        .card-sm .corner { font-size: 0.45rem; }
-        .card-sm .card-back-design::after { font-size: 0.9rem; }
-
-        .card-empty {
-            width: 70px;
-            height: 98px;
-            border-radius: 8px;
-            border: 2px dashed rgba(255,255,255,0.15);
-            background: rgba(0,0,0,0.2);
-        }
-
-        /* ============================================ */
-        /* ANIMATIONS RÉALISTES */
-        /* ============================================ */
         
-        /* Animation de distribution depuis le deck */
-        @keyframes dealFromDeck {
-            0% {
-                transform: translate(400px, 0) rotateY(180deg) scale(0.8);
-                opacity: 0.5;
-            }
-            30% {
-                transform: translate(200px, -50px) rotateY(120deg) scale(0.9);
-                opacity: 0.8;
-            }
-            70% {
-                transform: translate(50px, -20px) rotateY(60deg) scale(0.95);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(0, 0) rotateY(0deg) scale(1);
-                opacity: 1;
-            }
+        .card-empty {
+            width: 90px;
+            height: 126px;
+            border-radius: 10px;
+            border: 2px dashed rgba(255,255,255,0.12);
+            background: rgba(0,0,0,0.15);
         }
-
-        /* Animation flip de carte */
-        @keyframes flipCard {
-            0% {
-                transform: rotateY(180deg) scale(1);
-            }
-            50% {
-                transform: rotateY(90deg) scale(1.1);
-            }
-            100% {
-                transform: rotateY(0deg) scale(1);
-            }
-        }
-
-        /* Animation cartes communautaires */
-        @keyframes dealCommunity {
-            0% {
-                transform: translateX(300px) translateY(-100px) rotateY(180deg) rotateZ(30deg) scale(0.5);
-                opacity: 0;
-            }
-            40% {
-                transform: translateX(100px) translateY(-30px) rotateY(90deg) rotateZ(10deg) scale(0.9);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(0) translateY(0) rotateY(0deg) rotateZ(0deg) scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Animation slide des cartes joueur */
-        @keyframes dealPlayer {
-            0% {
-                transform: translateX(250px) translateY(-150px) rotateY(180deg) rotateZ(-20deg) scale(0.6);
-                opacity: 0;
-                filter: blur(2px);
-            }
-            20% {
-                opacity: 0.7;
-                filter: blur(1px);
-            }
-            60% {
-                transform: translateX(30px) translateY(-10px) rotateY(90deg) rotateZ(-5deg) scale(0.95);
-                filter: blur(0);
-            }
-            100% {
-                transform: translateX(0) translateY(0) rotateY(0deg) rotateZ(0deg) scale(1);
-                opacity: 1;
-            }
-        }
-
-        .card-deal-player {
-            animation: dealPlayer 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        .card-deal-community {
-            animation: dealCommunity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        .card-flip {
-            animation: flipCard 0.4s ease-out forwards;
-        }
-
-        /* Délais pour distribution séquentielle */
-        .deal-delay-1 { animation-delay: 0s; }
-        .deal-delay-2 { animation-delay: 0.15s; }
-        .deal-delay-3 { animation-delay: 0.3s; }
-        .deal-delay-4 { animation-delay: 0.45s; }
-        .deal-delay-5 { animation-delay: 0.6s; }
-        .deal-delay-6 { animation-delay: 0.75s; }
-        .deal-delay-7 { animation-delay: 0.9s; }
-        .deal-delay-8 { animation-delay: 1.05s; }
-
-        /* Cartes en attente d'animation */
+        
+        /* ==================== CARD ANIMATIONS ==================== */
         .card-hidden {
             opacity: 0;
-            transform: translateX(250px) translateY(-150px);
+            transform: translateX(350px) translateY(-50px) rotateY(180deg) scale(0.6);
         }
-
-        /* ============================================ */
-        /* POSITIONS JOUEURS */
-        /* ============================================ */
+        
+        @keyframes dealPlayerCard {
+            0% {
+                opacity: 0;
+                transform: translateX(350px) translateY(-50px) rotateY(180deg) rotateZ(-15deg) scale(0.6);
+                filter: blur(3px);
+            }
+            15% {
+                opacity: 0.6;
+                filter: blur(2px);
+            }
+            40% {
+                transform: translateX(120px) translateY(-20px) rotateY(120deg) rotateZ(-8deg) scale(0.85);
+                filter: blur(1px);
+            }
+            70% {
+                transform: translateX(30px) translateY(-5px) rotateY(45deg) rotateZ(-2deg) scale(0.95);
+                filter: blur(0);
+            }
+            85% {
+                transform: translateX(5px) rotateY(10deg) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) translateY(0) rotateY(0deg) rotateZ(0deg) scale(1);
+                filter: blur(0);
+            }
+        }
+        
+        @keyframes dealCommunityCard {
+            0% {
+                opacity: 0;
+                transform: translateX(300px) translateY(-80px) rotateY(180deg) rotateX(20deg) scale(0.5);
+            }
+            20% {
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateX(80px) translateY(-20px) rotateY(90deg) rotateX(10deg) scale(0.9);
+            }
+            75% {
+                transform: translateX(15px) translateY(-5px) rotateY(25deg) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) translateY(0) rotateY(0deg) rotateX(0deg) scale(1);
+            }
+        }
+        
+        .card-deal-player {
+            animation: dealPlayerCard 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        
+        .card-deal-community {
+            animation: dealCommunityCard 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        
+        /* ==================== PLAYER POSITIONS ==================== */
         .player-positions {
             position: absolute;
             inset: 0;
             z-index: 40;
         }
-
+        
         .player-slot {
             position: absolute;
         }
-
-        .player-slot.pos-0 { bottom: -100px; left: 50%; transform: translateX(-50%); }
-        .player-slot.pos-1 { bottom: 0; left: 5%; }
-        .player-slot.pos-2 { top: 50%; left: -80px; transform: translateY(-50%); }
-        .player-slot.pos-3 { top: 0; left: 5%; }
-        .player-slot.pos-4 { top: -100px; left: 50%; transform: translateX(-50%); }
-        .player-slot.pos-5 { top: 0; right: 5%; }
-        .player-slot.pos-6 { top: 50%; right: -80px; transform: translateY(-50%); }
-        .player-slot.pos-7 { bottom: 0; right: 5%; }
-
+        
+        .player-slot.pos-0 { bottom: -110px; left: 50%; transform: translateX(-50%); }
+        .player-slot.pos-1 { bottom: 5%; left: 8%; }
+        .player-slot.pos-2 { top: 50%; left: -90px; transform: translateY(-50%); }
+        .player-slot.pos-3 { top: 5%; left: 8%; }
+        .player-slot.pos-4 { top: -110px; left: 50%; transform: translateX(-50%); }
+        .player-slot.pos-5 { top: 5%; right: 8%; }
+        .player-slot.pos-6 { top: 50%; right: -90px; transform: translateY(-50%); }
+        .player-slot.pos-7 { bottom: 5%; right: 8%; }
+        
+        /* ==================== PLAYER BOX ==================== */
         .player-box {
-            width: 150px;
-            background: rgba(0,0,0,0.9);
+            width: 160px;
+            background: rgba(0,0,0,0.92);
             border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 10px;
+            border-radius: 14px;
+            padding: 12px;
+            backdrop-filter: blur(5px);
         }
-
+        
+        .player-box.is-me .player-cards {
+            gap: 6px;
+        }
+        
         .player-box.active {
             border-color: #ffd700;
-            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+            box-shadow: 0 0 25px rgba(255,215,0,0.5);
         }
-
-        .player-box.folded { opacity: 0.35; }
-
+        
+        .player-box.folded {
+            opacity: 0.3;
+        }
+        
         .player-box.winner {
             border-color: #ffd700;
-            background: rgba(50,40,0,0.9);
-            animation: glow 0.5s ease-in-out infinite alternate;
+            background: rgba(50,40,0,0.95);
+            animation: winnerGlow 0.5s ease-in-out infinite alternate;
         }
-
+        
         .player-box.busted {
             opacity: 0.2;
             filter: grayscale(1);
         }
-
-        @keyframes glow {
-            from { box-shadow: 0 0 20px #ffd700; }
-            to { box-shadow: 0 0 40px #ffd700; }
-        }
-
+        
         .player-box.empty {
             opacity: 0.3;
             border-style: dashed;
         }
-
+        
+        @keyframes winnerGlow {
+            from { box-shadow: 0 0 25px #ffd700; }
+            to { box-shadow: 0 0 50px #ffd700; }
+        }
+        
         .player-info {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-
+        
         .player-avatar {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             border: 2px solid #666;
         }
-
-        .player-avatar.me { border-color: #ffd700; }
-
+        
+        .player-avatar.me {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.3);
+        }
+        
         .player-name {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: bold;
             color: #fff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 80px;
+            max-width: 85px;
         }
-
+        
         .player-chips {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #ffd700;
         }
-
-        .player-chips.zero { color: #888; }
-
+        
+        .player-chips.zero {
+            color: #666;
+        }
+        
         .player-cards {
             display: flex;
             gap: 4px;
             justify-content: center;
-            perspective: 500px;
+            perspective: 800px;
         }
-
+        
         .player-action {
             text-align: center;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            margin-top: 4px;
+            margin-top: 6px;
             font-weight: bold;
         }
-
+        
+        /* ==================== PLAYER BET ==================== */
         .player-bet {
             position: absolute;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             color: #ffd700;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: bold;
-            padding: 3px 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,215,0,0.3);
+            padding: 4px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,215,0,0.4);
             white-space: nowrap;
         }
-
-        .pos-0 .player-bet { top: -25px; left: 50%; transform: translateX(-50%); }
-        .pos-1 .player-bet { top: 20px; right: -40px; }
-        .pos-2 .player-bet { top: 50%; right: -70px; transform: translateY(-50%); }
-        .pos-3 .player-bet { bottom: 20px; right: -40px; }
-        .pos-4 .player-bet { bottom: -25px; left: 50%; transform: translateX(-50%); }
-        .pos-5 .player-bet { bottom: 20px; left: -40px; }
-        .pos-6 .player-bet { top: 50%; left: -70px; transform: translateY(-50%); }
-        .pos-7 .player-bet { top: 20px; left: -40px; }
-
+        
+        .pos-0 .player-bet { top: -30px; left: 50%; transform: translateX(-50%); }
+        .pos-1 .player-bet { top: 25px; right: -50px; }
+        .pos-2 .player-bet { top: 50%; right: -80px; transform: translateY(-50%); }
+        .pos-3 .player-bet { bottom: 25px; right: -50px; }
+        .pos-4 .player-bet { bottom: -30px; left: 50%; transform: translateX(-50%); }
+        .pos-5 .player-bet { bottom: 25px; left: -50px; }
+        .pos-6 .player-bet { top: 50%; left: -80px; transform: translateY(-50%); }
+        .pos-7 .player-bet { top: 25px; left: -50px; }
+        
+        /* ==================== BADGES ==================== */
         .badges {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: -10px;
+            right: -10px;
             display: flex;
-            gap: 2px;
+            gap: 3px;
         }
-
+        
         .badge {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
+        
         .badge-d { background: #fff; color: #000; }
         .badge-sb { background: #3b82f6; color: #fff; }
         .badge-bb { background: #dc2626; color: #fff; }
-
-        /* ============================================ */
-        /* HEADER */
-        /* ============================================ */
+        
+        /* ==================== HEADER ==================== */
         .header {
             position: fixed;
             top: 0;
@@ -562,134 +540,144 @@
             z-index: 100;
             background: rgba(0,0,0,0.95);
             border-bottom: 1px solid rgba(255,51,51,0.2);
-            padding: 10px 20px;
+            padding: 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        /* ============================================ */
-        /* ACTIONS */
-        /* ============================================ */
+        
+        /* ==================== ACTIONS BAR ==================== */
         .actions-bar {
             position: fixed;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
             background: rgba(10,10,10,0.98);
             border: 2px solid rgba(255,51,51,0.3);
-            border-radius: 20px;
-            padding: 16px 28px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.7);
+            border-radius: 22px;
+            padding: 18px 32px;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
         }
-
+        
+        /* ==================== BUTTONS ==================== */
         .btn {
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 14px 24px;
+            border-radius: 12px;
             font-family: 'Orbitron', sans-serif;
             font-weight: bold;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.15s ease;
             border: none;
         }
-
-        .btn:hover:not(:disabled) { transform: scale(1.03); }
-        .btn:active:not(:disabled) { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
+        
+        .btn:hover:not(:disabled) {
+            transform: scale(1.04);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+        
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
         .btn-fold { background: #374151; color: #9ca3af; }
         .btn-check { background: #15803d; color: #fff; }
         .btn-call { background: #1d4ed8; color: #fff; }
         .btn-raise { background: #b91c1c; color: #fff; }
         .btn-allin { background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; }
-
+        
+        /* ==================== SLIDER ==================== */
         .slider {
             -webkit-appearance: none;
-            height: 10px;
+            height: 12px;
             background: linear-gradient(90deg, #4d0000, #cc0000, #ffd700);
-            border-radius: 5px;
+            border-radius: 6px;
             outline: none;
         }
-
+        
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             background: #ffd700;
             border-radius: 50%;
             cursor: pointer;
             border: 3px solid #fff;
         }
-
-        /* ============================================ */
-        /* MODAL & LOBBY */
-        /* ============================================ */
+        
+        /* ==================== MODAL ==================== */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.88);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 200;
         }
-
+        
         .modal-content {
             background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
             border: 3px solid #ffd700;
-            border-radius: 24px;
-            padding: 40px 60px;
+            border-radius: 28px;
+            padding: 45px 70px;
             text-align: center;
-            box-shadow: 0 0 80px rgba(255,215,0,0.3);
+            box-shadow: 0 0 100px rgba(255,215,0,0.3);
         }
-
+        
+        /* ==================== LOBBY ==================== */
         .lobby {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: flex-start;
+            padding: 30px 20px;
             background: radial-gradient(ellipse at center, #1a1a1a 0%, #0a0a0a 100%);
             overflow-y: auto;
         }
-
+        
         .glass {
             background: rgba(20,20,20,0.9);
             border: 1px solid rgba(255,51,51,0.15);
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border-radius: 18px;
+            box-shadow: 0 12px 50px rgba(0,0,0,0.5);
         }
-
+        
         .input {
             width: 100%;
             background: rgba(0,0,0,0.6);
             border: 2px solid #333;
-            border-radius: 10px;
-            padding: 14px 18px;
+            border-radius: 12px;
+            padding: 16px 20px;
             color: #fff;
             font-size: 1rem;
             outline: none;
         }
-
-        .input:focus { border-color: #cc0000; }
-
-        /* ============================================ */
-        /* CARD DESIGN SELECTOR */
-        /* ============================================ */
+        
+        .input:focus {
+            border-color: #cc0000;
+        }
+        
+        /* ==================== DESIGN SELECTOR ==================== */
         .design-selector {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
             margin: 15px 0;
         }
-
+        
         .design-option {
-            padding: 10px;
+            padding: 10px 8px;
             border-radius: 12px;
             border: 2px solid transparent;
             background: rgba(0,0,0,0.4);
@@ -698,95 +686,114 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            min-width: 70px;
+            flex: 0 0 auto;
         }
-
+        
         .design-option:hover {
             background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
         }
-
+        
         .design-option.selected {
             border-color: #ffd700;
             background: rgba(255,215,0,0.1);
         }
-
+        
         .design-option .design-name {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #888;
             text-transform: uppercase;
         }
-
+        
         .design-option.selected .design-name {
             color: #ffd700;
         }
-
+        
         .design-preview {
-            transform: scale(0.7);
-            pointer-events: none;
+            display: flex;
+            gap: 3px;
         }
-
-        /* ============================================ */
-        /* SOUND TOGGLE */
-        /* ============================================ */
+        
+        .mini-card {
+            width: 28px;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+        
+        .mini-card.design-classic { background: #fff; border: 1px solid #ccc; color: #cc0000; }
+        .mini-card.design-classic.back { background: repeating-linear-gradient(45deg, #1a237e, #1a237e 4px, #283593 4px, #283593 8px); color: transparent; }
+        .mini-card.design-empire { background: #1a1a1a; border: 1px solid #cc0000; color: #ff3333; }
+        .mini-card.design-empire.back { background: linear-gradient(135deg, #4d0000, #1a0000); border-color: #ffd700; color: transparent; }
+        .mini-card.design-gold { background: #1a1a0a; border: 1px solid #ffd700; color: #ffd700; }
+        .mini-card.design-gold.back { background: linear-gradient(135deg, #4a3f00, #1a1500); color: transparent; }
+        .mini-card.design-neon { background: #0a0a1a; border: 1px solid #00ffff; color: #00ffff; text-shadow: 0 0 5px #00ffff; }
+        .mini-card.design-neon.back { background: #000020; box-shadow: 0 0 5px rgba(0,255,255,0.3); color: transparent; }
+        .mini-card.design-vintage { background: #f5e6c8; border: 1px solid #8b7355; color: #8b2500; }
+        .mini-card.design-vintage.back { background: repeating-linear-gradient(45deg, #654321, #654321 4px, #8b6914 4px, #8b6914 16px); color: transparent; }
+        
+        /* ==================== SOUND TOGGLE ==================== */
         .sound-toggle {
             position: fixed;
-            top: 60px;
-            right: 20px;
+            top: 65px;
+            right: 24px;
             z-index: 100;
-            background: rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            color: #fff;
         }
-
+        
         .sound-toggle:hover {
             background: rgba(255,255,255,0.1);
         }
-
+        
         .sound-toggle.muted {
-            color: #666;
+            color: #555;
         }
-
-        /* ============================================ */
-        /* CONFETTI */
-        /* ============================================ */
+        
+        /* ==================== CONFETTI ==================== */
         .confetti {
             position: fixed;
             top: -20px;
-            width: 10px;
-            height: 10px;
             z-index: 300;
-            animation: fall 3.5s linear forwards;
+            animation: confettiFall 3.5s linear forwards;
         }
-
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
     </style>
 </head>
-
 <body>
     <div id="app"></div>
-
-    <!-- FIREBASE -->
+    
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, update, push, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+        
         const app = initializeApp({
             apiKey: "AIzaSyC4wbkceT_vAWdBpYs7KhBQxjgkiDvyG9c",
             authDomain: "red-empire-103d7.firebaseapp.com",
             databaseURL: "https://red-empire-103d7-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "red-empire-103d7"
         });
-
+        
         window.FB = {
             auth: getAuth(app),
             db: getDatabase(app),
@@ -797,33 +804,32 @@
         
         window.dispatchEvent(new Event('fb-ready'));
     </script>
-
-    <!-- REACT -->
+    
+    <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
-
+    <script type="text/babel" data-presets="react">
+        const { useState, useEffect, useRef } = React;
+        
         // ==========================================
-        // CONSTANTES
+        // CONSTANTS
         // ==========================================
         const SUITS = ['♠', '♥', '♦', '♣'];
-        const VALUES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+        const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         const BLINDS = { sb: 10, bb: 20 };
         const START_CHIPS = 1000;
         const MIN_P = 2;
         const MAX_P = 8;
-
         const CARD_DESIGNS = [
             { id: 'classic', name: 'Classic' },
-            { id: 'empire', name: 'Red Empire' },
-            { id: 'gold', name: 'Gold Luxury' },
+            { id: 'empire', name: 'Empire' },
+            { id: 'gold', name: 'Gold' },
             { id: 'neon', name: 'Neon' },
             { id: 'vintage', name: 'Vintage' }
         ];
-
+        
         // ==========================================
         // SOUND MANAGER
         // ==========================================
@@ -832,24 +838,46 @@
                 this.ctx = null;
                 this.muted = false;
                 this.initialized = false;
+                this.cardSound = null;
             }
-
-            init() {
+            
+            async init() {
                 if (this.initialized) return;
                 try {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                     this.initialized = true;
+                    // Charger le son de carte depuis l'URL
+                    const response = await fetch('https://storage.googleapis.com/blind-test-red-empire/Sounds/Card%20Deal%202.wav');
+                    const arrayBuffer = await response.arrayBuffer();
+                    this.cardSound = await this.ctx.decodeAudioData(arrayBuffer);
                 } catch (e) {
-                    console.log('Audio not available');
+                    console.log('Audio init error:', e);
                 }
             }
-
+            
             toggle() {
                 this.muted = !this.muted;
                 return this.muted;
             }
-
+            
+            playCard() {
+                if (this.muted || !this.ctx || !this.cardSound) return;
+                try {
+                    const source = this.ctx.createBufferSource();
+                    const gainNode = this.ctx.createGain();
+                    source.buffer = this.cardSound;
+                    source.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    gainNode.gain.value = 0.6;
+                    source.start(0);
+                } catch(e) {}
+            }
+            
             play(type) {
+                if (type === 'deal' || type === 'flip') {
+                    this.playCard();
+                    return;
+                }
                 if (this.muted || !this.ctx) return;
                 
                 try {
@@ -857,120 +885,78 @@
                     const gain = this.ctx.createGain();
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-
-                    switch(type) {
-                        case 'deal':
-                            // Son de carte qui glisse
-                            osc.type = 'triangle';
-                            osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.08);
-                            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.1);
-                            break;
-
-                        case 'flip':
-                            // Son de carte retournée
-                            osc.type = 'sine';
-                            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.05);
-                            osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
-                            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.15);
-                            break;
-
-                        case 'chip':
-                            // Son de jeton
-                            osc.type = 'square';
-                            osc.frequency.setValueAtTime(1500, this.ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
-                            gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.08);
-                            break;
-
-                        case 'win':
-                            // Son de victoire
-                            const notes = [523, 659, 784, 1047];
-                            notes.forEach((freq, i) => {
-                                const o = this.ctx.createOscillator();
-                                const g = this.ctx.createGain();
-                                o.connect(g);
-                                g.connect(this.ctx.destination);
-                                o.type = 'sine';
-                                o.frequency.value = freq;
-                                g.gain.setValueAtTime(0.15, this.ctx.currentTime + i * 0.1);
-                                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.1 + 0.3);
-                                o.start(this.ctx.currentTime + i * 0.1);
-                                o.stop(this.ctx.currentTime + i * 0.1 + 0.3);
-                            });
-                            break;
-
-                        case 'fold':
-                            // Son de fold
-                            osc.type = 'sawtooth';
-                            osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
-                            gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.2);
-                            break;
-
-                        case 'check':
-                            // Son de check (tap)
-                            osc.type = 'sine';
-                            osc.frequency.value = 500;
-                            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.05);
-                            break;
-
-                        case 'allin':
-                            // Son all-in dramatique
-                            osc.type = 'sawtooth';
-                            osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-                            osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.2);
-                            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.4);
-                            break;
-
-                        case 'turn':
-                            // Son de votre tour
-                            osc.type = 'sine';
-                            osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-                            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                            osc.start(this.ctx.currentTime);
-                            osc.stop(this.ctx.currentTime + 0.15);
-                            
-                            setTimeout(() => {
-                                const o2 = this.ctx.createOscillator();
-                                const g2 = this.ctx.createGain();
-                                o2.connect(g2);
-                                g2.connect(this.ctx.destination);
-                                o2.type = 'sine';
-                                o2.frequency.value = 1100;
-                                g2.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                                g2.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                                o2.start(this.ctx.currentTime);
-                                o2.stop(this.ctx.currentTime + 0.15);
-                            }, 150);
-                            break;
+                    
+                    if (type === 'chip') {
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(1500, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+                        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.08);
+                    } else if (type === 'win') {
+                        [523, 659, 784, 1047].forEach((freq, i) => {
+                            const o = this.ctx.createOscillator();
+                            const g = this.ctx.createGain();
+                            o.connect(g);
+                            g.connect(this.ctx.destination);
+                            o.type = 'sine';
+                            o.frequency.value = freq;
+                            g.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.12);
+                            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.12 + 0.35);
+                            o.start(this.ctx.currentTime + i * 0.12);
+                            o.stop(this.ctx.currentTime + i * 0.12 + 0.35);
+                        });
+                    } else if (type === 'fold') {
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
+                        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.2);
+                    } else if (type === 'check') {
+                        osc.type = 'sine';
+                        osc.frequency.value = 600;
+                        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.06);
+                    } else if (type === 'allin') {
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(500, this.ctx.currentTime + 0.25);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.4);
+                    } else if (type === 'turn') {
+                        osc.type = 'sine';
+                        osc.frequency.value = 880;
+                        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.12);
+                        setTimeout(() => {
+                            if (this.muted || !this.ctx) return;
+                            const o2 = this.ctx.createOscillator();
+                            const g2 = this.ctx.createGain();
+                            o2.connect(g2);
+                            g2.connect(this.ctx.destination);
+                            o2.type = 'sine';
+                            o2.frequency.value = 1100;
+                            g2.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                            g2.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                            o2.start();
+                            o2.stop(this.ctx.currentTime + 0.12);
+                        }, 120);
                     }
                 } catch(e) {}
             }
         }
-
+        
         const soundManager = new SoundManager();
-
+        
         // ==========================================
         // POKER LOGIC
         // ==========================================
@@ -982,46 +968,48 @@
             }
             return a;
         };
-
+        
         const makeDeck = () => shuffle(SUITS.flatMap(s => VALUES.map(v => ({ s, v, id: v + s }))));
+        
         const cardVal = v => ({ J: 11, Q: 12, K: 13, A: 14 }[v] || +v);
-
+        
         const combos = (arr, n) => {
             if (n > arr.length) return [];
             if (n === arr.length) return [arr];
             if (n === 1) return arr.map(x => [x]);
             const res = [];
             for (let i = 0; i <= arr.length - n; i++) {
-                for (const c of combos(arr.slice(i + 1), n - 1)) res.push([arr[i], ...c]);
+                for (const c of combos(arr.slice(i + 1), n - 1)) {
+                    res.push([arr[i], ...c]);
+                }
             }
             return res;
         };
-
-        const evalHand = cards => {
-            if (!cards || cards.length < 5) return { rank: -1, name: '', high: [] };
-            let best = { rank: -1, name: '', high: [] };
-            for (const c of combos(cards, 5)) {
-                const h = eval5(c);
-                if (h.rank > best.rank || (h.rank === best.rank && cmpHigh(h.high, best.high) > 0)) best = h;
-            }
-            return best;
-        };
-
+        
         const eval5 = cards => {
             const vals = cards.map(c => cardVal(c.v)).sort((a, b) => b - a);
             const suits = cards.map(c => c.s);
             const flush = suits.every(s => s === suits[0]);
             const uniq = [...new Set(vals)].sort((a, b) => b - a);
+            
             let straight = false;
             if (uniq.length >= 5) {
-                for (let i = 0; i <= uniq.length - 5; i++) if (uniq[i] - uniq[i + 4] === 4) { straight = true; break; }
-                if (!straight && uniq[0] === 14 && uniq.slice(-4).join() === '5,4,3,2') straight = true;
+                for (let i = 0; i <= uniq.length - 5; i++) {
+                    if (uniq[i] - uniq[i + 4] === 4) {
+                        straight = true;
+                        break;
+                    }
+                }
+                if (!straight && uniq[0] === 14 && uniq.slice(-4).join() === '5,4,3,2') {
+                    straight = true;
+                }
             }
+            
             const cnt = {};
             vals.forEach(v => cnt[v] = (cnt[v] || 0) + 1);
             const cnts = Object.values(cnt).sort((a, b) => b - a);
             const sorted = [...vals].sort((a, b) => (cnt[b] - cnt[a]) || (b - a));
-
+            
             if (flush && straight && vals[0] === 14 && vals[1] === 13) return { rank: 9, name: 'Quinte Flush Royale', high: sorted };
             if (flush && straight) return { rank: 8, name: 'Quinte Flush', high: sorted };
             if (cnts[0] === 4) return { rank: 7, name: 'Carré', high: sorted };
@@ -1033,124 +1021,136 @@
             if (cnts[0] === 2) return { rank: 1, name: 'Paire', high: sorted };
             return { rank: 0, name: 'Carte Haute', high: sorted };
         };
-
+        
         const cmpHigh = (a, b) => {
-            for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] - b[i];
+            for (let i = 0; i < Math.min(a.length, b.length); i++) {
+                if (a[i] !== b[i]) return a[i] - b[i];
+            }
             return 0;
         };
-
+        
+        const evalHand = cards => {
+            if (!cards || cards.length < 5) return { rank: -1, name: '', high: [] };
+            let best = { rank: -1, name: '', high: [] };
+            for (const c of combos(cards, 5)) {
+                const h = eval5(c);
+                if (h.rank > best.rank || (h.rank === best.rank && cmpHigh(h.high, best.high) > 0)) {
+                    best = h;
+                }
+            }
+            return best;
+        };
+        
         // ==========================================
         // COMPONENTS
         // ==========================================
         
-        // Carte avec design sélectionnable
-        const Card = ({ card, hidden, size = 'md', design = 'classic', dealType = 'none', dealDelay = 0, onDeal }) => {
-            const sizeClass = size === 'sm' ? 'card-sm' : size === 'lg' ? 'card-lg' : '';
-            const [animated, setAnimated] = useState(false);
-
+        // Card Component
+        const Card = ({ card, hidden, size = 'lg', design = 'classic', dealType = 'none', dealDelay = 0 }) => {
+            const [animated, setAnimated] = useState(dealType === 'none');
+            
             useEffect(() => {
                 if (dealType !== 'none' && !animated) {
                     const timer = setTimeout(() => {
                         setAnimated(true);
-                        if (onDeal) onDeal();
                         soundManager.play('deal');
                     }, dealDelay);
                     return () => clearTimeout(timer);
                 }
             }, [dealType, dealDelay, animated]);
-
-            const animClass = dealType === 'none' ? '' : 
-                animated ? (dealType === 'player' ? 'card-deal-player' : 'card-deal-community') : 'card-hidden';
-
+            
+            const sizeClass = size === 'sm' ? 'card-sm' : size === 'xl' ? 'card-xl' : 'card-lg';
+            const animClass = dealType === 'none' ? '' : animated 
+                ? (dealType === 'player' ? 'card-deal-player' : 'card-deal-community') 
+                : 'card-hidden';
+            
             if (hidden || !card) {
                 return (
-                    <div className={`card design-${design} ${sizeClass} ${animClass}`}>
+                    <div className={`card design-${design} ${sizeClass} ${animClass} no-hover`}>
                         <div className="card-back-design"></div>
                     </div>
                 );
             }
             
-            const red = card.s === '♥' || card.s === '♦';
+            const isRed = card.s === '♥' || card.s === '♦';
+            
             return (
-                <div className={`card design-${design} ${red ? 'red' : 'black'} ${sizeClass} ${animClass}`}>
-                    <div className="corner tl"><span>{card.v}</span><span>{card.s}</span></div>
+                <div className={`card design-${design} ${isRed ? 'red' : 'black'} ${sizeClass} ${animClass}`}>
+                    <div className="corner tl">
+                        <span>{card.v}</span>
+                        <span>{card.s}</span>
+                    </div>
                     <span className="val">{card.v}</span>
                     <span className="sym">{card.s}</span>
-                    <div className="corner br"><span>{card.v}</span><span>{card.s}</span></div>
+                    <div className="corner br">
+                        <span>{card.v}</span>
+                        <span>{card.s}</span>
+                    </div>
                 </div>
             );
         };
-
-        // Preview de carte pour le sélecteur
-        const CardPreview = ({ design }) => (
-            <div className="design-preview flex gap-1">
-                <div className={`card card-sm design-${design} red`}>
-                    <span className="sym" style={{fontSize: '0.8rem'}}>♥</span>
-                </div>
-                <div className={`card card-sm design-${design}`}>
-                    <div className="card-back-design" style={{borderRadius: '4px'}}></div>
-                </div>
-            </div>
-        );
-
-        // Sélecteur de design
+        
+        // Design Selector Component
         const DesignSelector = ({ selected, onSelect }) => (
             <div className="design-selector">
                 {CARD_DESIGNS.map(d => (
                     <div 
-                        key={d.id}
+                        key={d.id} 
                         className={`design-option ${selected === d.id ? 'selected' : ''}`}
                         onClick={() => onSelect(d.id)}
                     >
-                        <CardPreview design={d.id} />
+                        <div className="design-preview">
+                            <div className={`mini-card design-${d.id}`}>♥</div>
+                            <div className={`mini-card design-${d.id} back`}></div>
+                        </div>
                         <span className="design-name">{d.name}</span>
                     </div>
                 ))}
             </div>
         );
-
-        // Deck visuel
+        
+        // Deck Stack Component
         const DeckStack = ({ design }) => (
             <div className="deck-position">
                 <div className="deck-stack">
-                    {[1,2,3,4,5].map(i => (
-                        <div key={i} className={`deck-card design-${design}`}>
-                            <div className="card-back-design" style={{borderRadius: '6px'}}></div>
-                        </div>
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className={`deck-card design-${design}`}></div>
                     ))}
                 </div>
             </div>
         );
-
-        // Toggle son
+        
+        // Sound Toggle Component
         const SoundToggle = ({ muted, onToggle }) => (
             <div className={`sound-toggle ${muted ? 'muted' : ''}`} onClick={onToggle}>
                 <i className={`fa-solid ${muted ? 'fa-volume-xmark' : 'fa-volume-high'}`}></i>
             </div>
         );
-
-        // Joueur
+        
+        // Player Component
         const Player = ({ p, isTurn, isD, isSB, isBB, isMe, showCards, isWinner, design }) => {
             if (!p) {
                 return (
                     <div className="player-box empty">
-                        <div className="text-center text-gray-600 py-4">
+                        <div className="text-center text-gray-600 py-5">
                             <i className="fa-solid fa-user-plus opacity-50"></i>
                             <div className="text-xs mt-1">Libre</div>
                         </div>
                     </div>
                 );
             }
-
+            
             const isBusted = (p.chips || 0) <= 0 && !p.isAllIn;
-
+            const cardSize = isMe ? 'lg' : 'sm';
+            
             return (
                 <div className={`player-box 
+                    ${isMe ? 'is-me' : ''} 
                     ${isTurn && !p.folded && !isBusted ? 'active' : ''} 
                     ${p.folded ? 'folded' : ''} 
-                    ${isWinner ? 'winner' : ''}
-                    ${isBusted && !isWinner ? 'busted' : ''}
-                `}>
+                    ${isWinner ? 'winner' : ''} 
+                    ${isBusted && !isWinner ? 'busted' : ''}`}
+                >
                     <div className="badges">
                         {isD && <div className="badge badge-d">D</div>}
                         {isSB && <div className="badge badge-sb">SB</div>}
@@ -1159,9 +1159,9 @@
                     
                     <div className="player-info">
                         <img 
-                            src={p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=990000&color=fff&size=64`}
-                            className={`player-avatar ${isMe ? 'me' : ''}`}
-                            alt=""
+                            src={p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=990000&color=fff&size=64`} 
+                            className={`player-avatar ${isMe ? 'me' : ''}`} 
+                            alt="" 
                         />
                         <div>
                             <div className="player-name">{p.name}</div>
@@ -1171,188 +1171,227 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <div className="player-cards">
                         {p.cards?.length === 2 ? (
                             <>
                                 <Card 
                                     card={showCards ? p.cards[0] : null} 
                                     hidden={!showCards} 
-                                    size="sm"
-                                    design={design}
-                                    dealType="player"
-                                    dealDelay={0}
+                                    size={cardSize} 
+                                    design={design} 
+                                    dealType="player" 
+                                    dealDelay={0} 
                                 />
                                 <Card 
                                     card={showCards ? p.cards[1] : null} 
                                     hidden={!showCards} 
-                                    size="sm"
-                                    design={design}
-                                    dealType="player"
-                                    dealDelay={150}
+                                    size={cardSize} 
+                                    design={design} 
+                                    dealType="player" 
+                                    dealDelay={180} 
                                 />
                             </>
                         ) : (
-                            <div className="text-gray-600 text-xs py-2">—</div>
+                            <div className="text-gray-600 text-xs py-3">—</div>
                         )}
                     </div>
-
+                    
                     {p.lastAction && (
-                        <div className={`player-action
-                            ${p.lastAction === 'fold' ? 'text-gray-500' : ''}
-                            ${p.lastAction === 'check' ? 'text-green-400' : ''}
-                            ${p.lastAction === 'call' ? 'text-blue-400' : ''}
-                            ${p.lastAction === 'raise' ? 'text-red-400' : ''}
-                            ${p.lastAction === 'all-in' ? 'text-yellow-400' : ''}
-                        `}>
+                        <div className={`player-action 
+                            ${p.lastAction === 'fold' ? 'text-gray-500' : ''} 
+                            ${p.lastAction === 'check' ? 'text-green-400' : ''} 
+                            ${p.lastAction === 'call' ? 'text-blue-400' : ''} 
+                            ${p.lastAction === 'raise' ? 'text-red-400' : ''} 
+                            ${p.lastAction === 'all-in' ? 'text-yellow-400' : ''}`}
+                        >
                             {p.lastAction}
                         </div>
                     )}
                 </div>
             );
         };
-
-        // Confetti
+        
+        // Confetti Component
         const Confetti = ({ on }) => {
             if (!on) return null;
-            const colors = ['#ff3333', '#ffd700', '#33ff33', '#3366ff', '#ff33ff'];
+            const colors = ['#ff3333', '#ffd700', '#33ff33', '#3366ff', '#ff33ff', '#fff'];
             return (
                 <div className="fixed inset-0 pointer-events-none z-[300] overflow-hidden">
-                    {Array.from({ length: 80 }, (_, i) => (
-                        <div key={i} className="confetti" style={{
-                            left: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 2}s`,
-                            backgroundColor: colors[i % colors.length],
-                            width: Math.random() * 8 + 6,
-                            height: Math.random() * 8 + 6,
-                            borderRadius: Math.random() > 0.5 ? '50%' : '0'
-                        }} />
+                    {Array.from({ length: 100 }, (_, i) => (
+                        <div 
+                            key={i} 
+                            className="confetti" 
+                            style={{
+                                left: `${Math.random() * 100}%`,
+                                animationDelay: `${Math.random() * 2.5}s`,
+                                backgroundColor: colors[i % colors.length],
+                                width: Math.random() * 10 + 6,
+                                height: Math.random() * 10 + 6,
+                                borderRadius: Math.random() > 0.5 ? '50%' : '2px'
+                            }} 
+                        />
                     ))}
                 </div>
             );
         };
-
-        // Modal gagnant
+        
+        // Winner Modal Component
         const WinnerModal = ({ winner, hand, pot, onClose }) => (
             <div className="modal-overlay" onClick={onClose}>
                 <div className="modal-content" onClick={e => e.stopPropagation()}>
-                    <div className="text-6xl mb-4">🏆</div>
-                    <img src={winner.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.name)}&size=100`}
-                        className="w-16 h-16 rounded-full border-4 border-yellow-400 mx-auto mb-3" alt="" />
-                    <h2 className="font-display text-2xl text-yellow-400 mb-1">{winner.name}</h2>
-                    <p className="text-gray-400 mb-4">remporte le pot !</p>
-                    <div className="text-4xl font-display text-yellow-400 mb-3">
-                        <i className="fa-solid fa-coins mr-2"></i>+{pot.toLocaleString()}
+                    <div className="text-7xl mb-5">🏆</div>
+                    <img 
+                        src={winner.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.name)}&size=100`} 
+                        className="w-20 h-20 rounded-full border-4 border-yellow-400 mx-auto mb-4" 
+                        alt="" 
+                    />
+                    <h2 className="font-display text-3xl text-yellow-400 mb-2">{winner.name}</h2>
+                    <p className="text-gray-400 mb-5">remporte le pot !</p>
+                    <div className="text-5xl font-display text-yellow-400 mb-4">
+                        <i className="fa-solid fa-coins mr-3"></i>+{pot.toLocaleString()}
                     </div>
                     {hand?.name && (
-                        <div className="text-red-400 font-mono mb-6 bg-red-900/30 py-1 px-4 rounded inline-block">{hand.name}</div>
+                        <div className="text-red-400 mb-8 bg-red-900/30 py-2 px-6 rounded-lg inline-block text-lg">
+                            {hand.name}
+                        </div>
                     )}
-                    <button onClick={onClose} className="btn btn-raise px-8 py-3">CONTINUER</button>
+                    <button onClick={onClose} className="btn btn-raise px-10 py-4 text-lg">
+                        CONTINUER
+                    </button>
                 </div>
             </div>
         );
-
+        
         // ==========================================
-        // LOBBY
+        // LOBBY COMPONENT
         // ==========================================
         const Lobby = ({ user, tables, onCreate, onJoin }) => {
             const [name, setName] = useState('');
             const [buyIn, setBuyIn] = useState(1000);
             const [cardDesign, setCardDesign] = useState('empire');
-
+            
             const active = Object.entries(tables).filter(([_, t]) => Object.keys(t.players || {}).length > 0);
-
+            
             const handleCreate = () => {
                 if (name.trim()) {
                     soundManager.init();
                     onCreate(name.trim(), buyIn, cardDesign);
                 }
             };
-
+            
             return (
                 <div className="lobby">
+                    {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-4 mb-3">
-                            <i className="fa-solid fa-crown text-red-500 text-4xl"></i>
-                            <h1 className="font-display text-4xl font-bold text-white">RED POKER</h1>
+                            <i className="fa-solid fa-crown text-red-500 text-5xl"></i>
+                            <h1 className="font-display text-5xl font-bold text-white">RED POKER</h1>
                         </div>
-                        <p className="text-gray-400 font-mono">Texas Hold'em</p>
+                        <p className="text-gray-400 text-lg">Texas Hold'em</p>
                         
-                        <div className="mt-5 inline-flex items-center gap-3 glass px-6 py-3 rounded-full">
-                            <img src={user.avatar} className="w-10 h-10 rounded-full border-2 border-red-600" alt="" />
+                        <div className="mt-6 inline-flex items-center gap-4 glass px-8 py-4 rounded-full">
+                            <img src={user.avatar} className="w-12 h-12 rounded-full border-2 border-red-600" alt="" />
                             <div className="text-left">
-                                <div className="font-bold text-white">{user.name}</div>
-                                <div className="text-yellow-400 text-sm"><i className="fa-solid fa-coins mr-1"></i>{user.chips?.toLocaleString()}</div>
+                                <div className="font-bold text-white text-lg">{user.name}</div>
+                                <div className="text-yellow-400">
+                                    <i className="fa-solid fa-coins mr-1"></i>
+                                    {user.chips?.toLocaleString()}
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div className="glass p-6 w-full max-w-lg mb-8">
-                        <h2 className="font-display text-xl text-white mb-4">
-                            <i className="fa-solid fa-plus-circle text-red-500 mr-2"></i>Créer une Table
+                    
+                    {/* Create Table */}
+                    <div className="glass p-8 w-full max-w-xl mb-8">
+                        <h2 className="font-display text-2xl text-white mb-5">
+                            <i className="fa-solid fa-plus-circle text-red-500 mr-3"></i>
+                            Créer une Table
                         </h2>
                         
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            placeholder="Nom de la table..."
-                            className="input mb-4"
+                        <input 
+                            type="text" 
+                            value={name} 
+                            onChange={e => setName(e.target.value)} 
+                            placeholder="Nom de la table..." 
+                            className="input mb-5" 
                         />
                         
-                        <div className="mb-4">
+                        <div className="mb-5">
                             <label className="text-gray-400 text-sm mb-2 block">Buy-in</label>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-4 gap-3">
                                 {[500, 1000, 2500, 5000].map(v => (
-                                    <button key={v} onClick={() => setBuyIn(v)}
-                                        className={`py-2 rounded-lg font-bold transition ${buyIn === v ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}>
+                                    <button 
+                                        key={v} 
+                                        onClick={() => setBuyIn(v)} 
+                                        className={`py-3 rounded-lg font-bold transition ${
+                                            buyIn === v 
+                                                ? 'bg-red-600 text-white' 
+                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                        }`}
+                                    >
                                         {v}
                                     </button>
                                 ))}
                             </div>
                         </div>
-
-                        <div className="mb-4">
+                        
+                        <div className="mb-6">
                             <label className="text-gray-400 text-sm mb-2 block">Style des cartes</label>
                             <DesignSelector selected={cardDesign} onSelect={setCardDesign} />
                         </div>
-
-                        <button onClick={handleCreate} disabled={!name.trim()} className="w-full btn btn-raise py-3">
-                            <i className="fa-solid fa-play mr-2"></i>CRÉER
+                        
+                        <button 
+                            onClick={handleCreate} 
+                            disabled={!name.trim()} 
+                            className="w-full btn btn-raise py-4 text-lg"
+                        >
+                            <i className="fa-solid fa-play mr-2"></i>CRÉER LA TABLE
                         </button>
                     </div>
-
-                    <div className="w-full max-w-lg">
-                        <h2 className="font-display text-xl text-white mb-4">
-                            <i className="fa-solid fa-list text-yellow-400 mr-2"></i>Tables ({active.length})
+                    
+                    {/* Tables List */}
+                    <div className="w-full max-w-xl">
+                        <h2 className="font-display text-2xl text-white mb-5">
+                            <i className="fa-solid fa-list text-yellow-400 mr-3"></i>
+                            Tables ({active.length})
                         </h2>
                         
                         {active.length === 0 ? (
-                            <div className="glass p-10 text-center rounded-xl">
-                                <i className="fa-solid fa-ghost text-4xl text-gray-700 mb-3"></i>
-                                <p className="text-gray-500">Aucune table</p>
+                            <div className="glass p-12 text-center rounded-xl">
+                                <i className="fa-solid fa-ghost text-5xl text-gray-700 mb-4"></i>
+                                <p className="text-gray-500 text-lg">Aucune table disponible</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {active.map(([id, t]) => {
                                     const cnt = Object.keys(t.players || {}).length;
                                     return (
-                                        <div key={id} className="glass p-4 rounded-xl flex justify-between items-center">
+                                        <div key={id} className="glass p-5 rounded-xl flex justify-between items-center">
                                             <div>
-                                                <div className="font-bold text-white flex items-center gap-2">
+                                                <div className="font-bold text-white text-lg flex items-center gap-2">
                                                     {t.name}
-                                                    <span className="text-xs text-gray-500 font-normal">({t.cardDesign || 'classic'})</span>
+                                                    <span className="text-xs text-gray-500 font-normal bg-gray-800 px-2 py-0.5 rounded">
+                                                        {t.cardDesign || 'classic'}
+                                                    </span>
                                                 </div>
-                                                <div className="text-sm text-gray-400">
-                                                    <span className="mr-3"><i className="fa-solid fa-users mr-1"></i>{cnt}/{MAX_P}</span>
-                                                    <span className="mr-3"><i className="fa-solid fa-coins text-yellow-500 mr-1"></i>{t.buyIn}</span>
+                                                <div className="text-sm text-gray-400 mt-1">
+                                                    <span className="mr-4">
+                                                        <i className="fa-solid fa-users mr-1"></i>{cnt}/{MAX_P}
+                                                    </span>
+                                                    <span className="mr-4">
+                                                        <i className="fa-solid fa-coins text-yellow-500 mr-1"></i>{t.buyIn}
+                                                    </span>
                                                     <span className={t.status === 'playing' ? 'text-green-400' : 'text-blue-400'}>
                                                         ● {t.status === 'playing' ? 'En jeu' : 'Attente'}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <button onClick={() => { soundManager.init(); onJoin(id); }} 
-                                                disabled={cnt >= MAX_P} className="btn btn-raise px-5 py-2">
+                                            <button 
+                                                onClick={() => { soundManager.init(); onJoin(id); }} 
+                                                disabled={cnt >= MAX_P} 
+                                                className="btn btn-raise px-6 py-3"
+                                            >
                                                 {cnt >= MAX_P ? 'COMPLET' : 'REJOINDRE'}
                                             </button>
                                         </div>
@@ -1361,16 +1400,16 @@
                             </div>
                         )}
                     </div>
-
-                    <a href="games.html" className="mt-8 text-gray-500 hover:text-white transition">
+                    
+                    <a href="games.html" className="mt-10 text-gray-500 hover:text-white transition text-lg">
                         <i className="fa-solid fa-arrow-left mr-2"></i>Retour
                     </a>
                 </div>
             );
         };
-
+        
         // ==========================================
-        // TABLE
+        // TABLE COMPONENT
         // ==========================================
         const Table = ({ tableId, user, onLeave }) => {
             const [game, setGame] = useState(null);
@@ -1379,34 +1418,46 @@
             const [raise, setRaise] = useState(40);
             const [muted, setMuted] = useState(false);
             const prevTurnRef = useRef(null);
-
+            
+            // Subscribe to game updates
             useEffect(() => {
                 if (!tableId) return;
                 
                 const ref = window.FB.ref(window.FB.db, `poker_tables/${tableId}`);
+                
                 const unsub = window.FB.onValue(ref, snap => {
-                    if (!snap.exists()) { onLeave(); return; }
+                    if (!snap.exists()) {
+                        onLeave();
+                        return;
+                    }
                     
                     const d = snap.val();
+                    
+                    // Clean up empty tables
                     if (Object.keys(d.players || {}).length === 0) {
                         window.FB.remove(ref);
                         onLeave();
                         return;
                     }
-
-                    // Son quand c'est notre tour
+                    
+                    // Play turn sound
                     if (d.currentPlayer === user.id && prevTurnRef.current !== user.id && d.status === 'playing') {
                         soundManager.play('turn');
                     }
                     prevTurnRef.current = d.currentPlayer;
-
+                    
                     setGame(d);
-
+                    
+                    // Handle winner
                     if (d.winnerId && d.showWinner && !winner) {
                         const w = d.players[d.winnerId];
                         if (w) {
                             soundManager.play('win');
-                            setWinner({ player: w, pot: d.lastPot || d.pot || 0, hand: d.winnerHand });
+                            setWinner({
+                                player: w,
+                                pot: d.lastPot || d.pot || 0,
+                                hand: d.winnerHand
+                            });
                             if (d.winnerId === user.id) {
                                 setConfetti(true);
                                 setTimeout(() => setConfetti(false), 4000);
@@ -1414,49 +1465,62 @@
                         }
                     }
                 });
-
-                window.FB.onDisconnect(window.FB.ref(window.FB.db, `poker_tables/${tableId}/players/${user.id}`)).remove();
+                
+                // Clean up on disconnect
+                window.FB.onDisconnect(
+                    window.FB.ref(window.FB.db, `poker_tables/${tableId}/players/${user.id}`)
+                ).remove();
+                
                 return () => unsub();
             }, [tableId, user.id]);
-
+            
             const toggleSound = () => {
-                const m = soundManager.toggle();
-                setMuted(m);
+                setMuted(soundManager.toggle());
             };
-
-            // Actions
+            
+            // ==========================================
+            // GAME ACTIONS
+            // ==========================================
             const act = async (action, amt = 0) => {
                 if (!game || game.currentPlayer !== user.id) return;
                 
                 const p = game.players;
                 const me = p[user.id];
+                
                 if (!me || me.folded) return;
                 
+                // Check if player can act
                 if ((me.chips || 0) <= 0 && action !== 'fold' && !me.isAllIn) {
                     if (action === 'check' && (me.currentBet || 0) >= (game.currentBet || 0)) {
-                    } else if (action !== 'fold') return;
+                        // Allow check when already matched
+                    } else if (action !== 'fold') {
+                        return;
+                    }
                 }
-
-                // Jouer le son approprié
+                
+                // Play sound
                 if (action === 'fold') soundManager.play('fold');
                 else if (action === 'check') soundManager.play('check');
                 else if (action === 'call' || action === 'raise') soundManager.play('chip');
                 else if (action === 'all-in') soundManager.play('allin');
-
+                
                 const active = Object.keys(p).filter(id => !p[id].folded);
                 const upd = {};
                 const path = `poker_tables/${tableId}/players/${user.id}`;
                 
                 let pot = game.pot || 0;
                 let currBet = game.currentBet || 0;
-
+                
+                // Process action
                 if (action === 'fold') {
                     upd[`${path}/folded`] = true;
                     upd[`${path}/lastAction`] = 'fold';
-                } else if (action === 'check') {
+                }
+                else if (action === 'check') {
                     upd[`${path}/lastAction`] = 'check';
                     upd[`${path}/hasActed`] = true;
-                } else if (action === 'call') {
+                }
+                else if (action === 'call') {
                     const diff = Math.min(currBet - (me.currentBet || 0), me.chips || 0);
                     if (diff <= 0) return;
                     upd[`${path}/currentBet`] = (me.currentBet || 0) + diff;
@@ -1465,7 +1529,8 @@
                     upd[`${path}/hasActed`] = true;
                     pot += diff;
                     upd[`poker_tables/${tableId}/pot`] = pot;
-                } else if (action === 'raise') {
+                }
+                else if (action === 'raise') {
                     if ((me.chips || 0) <= 0) return;
                     const diff = amt - (me.currentBet || 0);
                     if (diff <= 0 || diff > (me.chips || 0)) return;
@@ -1477,8 +1542,12 @@
                     currBet = amt;
                     upd[`poker_tables/${tableId}/pot`] = pot;
                     upd[`poker_tables/${tableId}/currentBet`] = currBet;
-                    active.forEach(id => { if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false; });
-                } else if (action === 'all-in') {
+                    // Reset hasActed for others
+                    active.forEach(id => {
+                        if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
+                    });
+                }
+                else if (action === 'all-in') {
                     if ((me.chips || 0) <= 0) return;
                     const myChips = me.chips || 0;
                     const total = myChips + (me.currentBet || 0);
@@ -1491,13 +1560,20 @@
                     upd[`poker_tables/${tableId}/pot`] = pot;
                     if (total > currBet) {
                         upd[`poker_tables/${tableId}/currentBet`] = total;
-                        active.forEach(id => { if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false; });
+                        active.forEach(id => {
+                            if (id !== user.id) upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
+                        });
                     }
                 }
-
+                
+                // Check if only one player left
                 const remaining = active.filter(id => action !== 'fold' || id !== user.id);
-                if (remaining.length === 1) { await endHand(remaining[0], upd); return; }
-
+                if (remaining.length === 1) {
+                    await endHand(remaining[0], upd);
+                    return;
+                }
+                
+                // Find next player
                 const myIdx = active.indexOf(user.id);
                 let nextIdx = (myIdx + 1) % active.length;
                 let nextP = active[nextIdx];
@@ -1507,17 +1583,20 @@
                     nextP = active[nextIdx];
                     tries++;
                 }
-
+                
+                // Check if round is complete
                 const newBet = action === 'raise' ? amt : (action === 'all-in' ? ((me.chips || 0) + (me.currentBet || 0)) : currBet);
+                
                 const allActed = remaining.every(id => {
                     const pl = id === user.id ? { ...p[id], hasActed: true } : p[id];
                     return pl.hasActed || pl.isAllIn || pl.folded;
                 });
+                
                 const allMatched = remaining.every(id => {
                     const pl = id === user.id ? { ...p[id], currentBet: upd[`${path}/currentBet`] || p[id].currentBet } : p[id];
                     return (pl.currentBet || 0) >= newBet || pl.isAllIn || (pl.chips || 0) === 0;
                 });
-
+                
                 if (allActed && allMatched && action !== 'raise' && action !== 'all-in') {
                     await nextPhase(upd, remaining);
                 } else {
@@ -1525,40 +1604,49 @@
                     await window.FB.update(window.FB.ref(window.FB.db), upd);
                 }
             };
-
+            
+            // ==========================================
+            // NEXT PHASE
+            // ==========================================
             const nextPhase = async (pending, active) => {
                 const upd = { ...pending };
                 const phase = game.phase;
                 const deck = game.deck || [];
                 const cc = game.communityCards || [];
-
+                
+                // Reset player states
                 Object.keys(game.players).forEach(id => {
                     upd[`poker_tables/${tableId}/players/${id}/currentBet`] = 0;
                     upd[`poker_tables/${tableId}/players/${id}/hasActed`] = false;
                     upd[`poker_tables/${tableId}/players/${id}/lastAction`] = null;
                 });
                 upd[`poker_tables/${tableId}/currentBet`] = 0;
-
-                // Sons de flip pour les nouvelles cartes
+                
+                // Play card sound
                 setTimeout(() => soundManager.play('flip'), 100);
-
+                
+                // Advance phase
                 if (phase === 'preflop') {
                     upd[`poker_tables/${tableId}/communityCards`] = deck.slice(0, 3);
                     upd[`poker_tables/${tableId}/deck`] = deck.slice(3);
                     upd[`poker_tables/${tableId}/phase`] = 'flop';
-                } else if (phase === 'flop') {
+                }
+                else if (phase === 'flop') {
                     upd[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
                     upd[`poker_tables/${tableId}/deck`] = deck.slice(1);
                     upd[`poker_tables/${tableId}/phase`] = 'turn';
-                } else if (phase === 'turn') {
+                }
+                else if (phase === 'turn') {
                     upd[`poker_tables/${tableId}/communityCards`] = [...cc, deck[0]];
                     upd[`poker_tables/${tableId}/deck`] = deck.slice(1);
                     upd[`poker_tables/${tableId}/phase`] = 'river';
-                } else if (phase === 'river') {
+                }
+                else if (phase === 'river') {
                     await showdown(upd, active);
                     return;
                 }
-
+                
+                // Set next player
                 const canAct = active.filter(id => !game.players[id].isAllIn && (game.players[id].chips || 0) > 0);
                 if (canAct.length > 0) {
                     const dIdx = canAct.indexOf(game.dealer);
@@ -1567,36 +1655,49 @@
                     await showdown(upd, active);
                     return;
                 }
-
+                
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
-
+            
+            // ==========================================
+            // SHOWDOWN
+            // ==========================================
             const showdown = async (pending, active) => {
                 const upd = { ...pending };
                 const cc = game.communityCards || [];
                 
+                // Show all cards
                 active.forEach(id => upd[`poker_tables/${tableId}/players/${id}/showCards`] = true);
                 upd[`poker_tables/${tableId}/phase`] = 'showdown';
-
-                let best = null, winnerId = null;
+                
+                // Find winner
+                let best = null;
+                let winnerId = null;
+                
                 active.forEach(id => {
                     const pl = game.players[id];
                     if (pl.cards?.length === 2) {
                         const h = evalHand([...pl.cards, ...cc]);
                         if (!best || h.rank > best.rank || (h.rank === best.rank && cmpHigh(h.high, best.high) > 0)) {
-                            best = h; winnerId = id;
+                            best = h;
+                            winnerId = id;
                         }
                     }
                 });
-
-                if (winnerId) await endHand(winnerId, upd, best);
+                
+                if (winnerId) {
+                    await endHand(winnerId, upd, best);
+                }
             };
-
+            
+            // ==========================================
+            // END HAND
+            // ==========================================
             const endHand = async (winnerId, pending = {}, hand = null) => {
                 const upd = { ...pending };
                 const pot = game.pot || 0;
                 const w = game.players[winnerId];
-
+                
                 upd[`poker_tables/${tableId}/players/${winnerId}/chips`] = (w?.chips || 0) + pot;
                 upd[`poker_tables/${tableId}/players/${winnerId}/showCards`] = true;
                 upd[`poker_tables/${tableId}/winnerId`] = winnerId;
@@ -1604,12 +1705,16 @@
                 upd[`poker_tables/${tableId}/showWinner`] = true;
                 upd[`poker_tables/${tableId}/lastPot`] = pot;
                 upd[`poker_tables/${tableId}/status`] = 'ended';
-
+                
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
-
+            
+            // ==========================================
+            // CLOSE WINNER MODAL
+            // ==========================================
             const closeWinner = async () => {
                 setWinner(null);
+                
                 const upd = {};
                 upd[`poker_tables/${tableId}/showWinner`] = false;
                 upd[`poker_tables/${tableId}/winnerId`] = null;
@@ -1630,21 +1735,24 @@
                     upd[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
                     upd[`poker_tables/${tableId}/players/${id}/showCards`] = false;
                 });
-
+                
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
-
+            
+            // ==========================================
+            // START GAME
+            // ==========================================
             const startGame = async () => {
                 const ids = Object.keys(game.players).filter(id => (game.players[id].chips || 0) > 0);
                 if (ids.length < MIN_P) return;
-
+                
                 const deck = makeDeck();
                 let idx = 0;
                 const upd = {};
                 
-                // Son de distribution
                 soundManager.play('deal');
                 
+                // Deal cards
                 ids.forEach(id => {
                     upd[`poker_tables/${tableId}/players/${id}/cards`] = [deck[idx++], deck[idx++]];
                     upd[`poker_tables/${tableId}/players/${id}/folded`] = false;
@@ -1654,11 +1762,12 @@
                     upd[`poker_tables/${tableId}/players/${id}/isAllIn`] = false;
                     upd[`poker_tables/${tableId}/players/${id}/showCards`] = false;
                 });
-
+                
+                // Set blinds
                 const sbIdx = ids.length > 2 ? 1 : 0;
                 const bbIdx = ids.length > 2 ? 2 : 1;
                 const firstIdx = ids.length > 2 ? 3 : 0;
-
+                
                 const sb = ids[sbIdx % ids.length];
                 const bb = ids[bbIdx % ids.length];
                 const pl = game.players;
@@ -1670,7 +1779,7 @@
                 upd[`poker_tables/${tableId}/players/${sb}/chips`] = (pl[sb].chips || 0) - sbAmt;
                 upd[`poker_tables/${tableId}/players/${bb}/currentBet`] = bbAmt;
                 upd[`poker_tables/${tableId}/players/${bb}/chips`] = (pl[bb].chips || 0) - bbAmt;
-
+                
                 upd[`poker_tables/${tableId}/deck`] = deck.slice(idx);
                 upd[`poker_tables/${tableId}/communityCards`] = [];
                 upd[`poker_tables/${tableId}/pot`] = sbAmt + bbAmt;
@@ -1683,16 +1792,21 @@
                 upd[`poker_tables/${tableId}/phase`] = 'preflop';
                 upd[`poker_tables/${tableId}/showWinner`] = false;
                 upd[`poker_tables/${tableId}/winnerId`] = null;
-
+                
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
-
-            if (!game) return (
-                <div className="h-screen flex items-center justify-center bg-black">
-                    <i className="fa-solid fa-spinner fa-spin text-4xl text-red-500"></i>
-                </div>
-            );
-
+            
+            // ==========================================
+            // RENDER
+            // ==========================================
+            if (!game) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-black">
+                        <i className="fa-solid fa-spinner fa-spin text-5xl text-red-500"></i>
+                    </div>
+                );
+            }
+            
             const players = game.players || {};
             const ids = Object.keys(players);
             const myTurn = game.currentPlayer === user.id && game.status === 'playing';
@@ -1703,52 +1817,74 @@
             const minR = Math.max(BLINDS.bb * 2, (game.currentBet || 0) * 2);
             const maxR = myChips;
             const design = game.cardDesign || 'classic';
-
+            
+            // Reorder players so current user is at position 0
             const myIdx = ids.indexOf(user.id);
             const ordered = myIdx >= 0 ? [...ids.slice(myIdx), ...ids.slice(0, myIdx)] : ids;
-
+            
             return (
                 <div className="game-container">
                     <Confetti on={confetti} />
                     <SoundToggle muted={muted} onToggle={toggleSound} />
-                    {winner && <WinnerModal winner={winner.player} hand={winner.hand} pot={winner.pot} onClose={closeWinner} />}
-
+                    
+                    {winner && (
+                        <WinnerModal 
+                            winner={winner.player} 
+                            hand={winner.hand} 
+                            pot={winner.pot} 
+                            onClose={closeWinner} 
+                        />
+                    )}
+                    
+                    {/* Header */}
                     <div className="header">
                         <button onClick={onLeave} className="text-gray-400 hover:text-white text-sm">
                             <i className="fa-solid fa-arrow-left mr-2"></i>Quitter
                         </button>
-                        <div className="font-display text-white">{game.name}</div>
+                        <div className="font-display text-white text-lg">{game.name}</div>
                         {game.status === 'playing' && (
-                            <div className="bg-yellow-500/20 text-yellow-400 px-4 py-1 rounded-full text-sm font-display uppercase">
+                            <div className="bg-yellow-500/20 text-yellow-400 px-5 py-1.5 rounded-full text-sm font-display uppercase">
                                 {game.phase}
                             </div>
                         )}
-                        {game.status !== 'playing' && <div className="text-gray-500 text-sm">Blinds {BLINDS.sb}/{BLINDS.bb}</div>}
+                        {game.status !== 'playing' && (
+                            <div className="text-gray-500">Blinds {BLINDS.sb}/{BLINDS.bb}</div>
+                        )}
                     </div>
-
+                    
+                    {/* Poker Table */}
                     <div className="poker-table">
                         <div className="felt">
                             <DeckStack design={design} />
                             
+                            {/* Center Area */}
                             <div className="center-area">
                                 <div className="pot-box">
-                                    <div className="text-gray-400 text-xs mb-1">POT</div>
-                                    <div className="text-yellow-400 font-display text-2xl">
+                                    <div className="text-gray-400 text-sm mb-1">POT</div>
+                                    <div className="text-yellow-400 font-display text-3xl">
                                         <i className="fa-solid fa-coins mr-2"></i>
                                         {(game.pot || 0).toLocaleString()}
                                     </div>
                                 </div>
+                                
                                 <div className="community-cards">
                                     {(game.communityCards || []).map((c, i) => (
-                                        <Card key={c.id} card={c} size="lg" design={design} 
-                                            dealType="community" dealDelay={i * 200} />
+                                        <Card 
+                                            key={c.id} 
+                                            card={c} 
+                                            size="xl" 
+                                            design={design} 
+                                            dealType="community" 
+                                            dealDelay={i * 220} 
+                                        />
                                     ))}
                                     {Array.from({ length: 5 - (game.communityCards?.length || 0) }).map((_, i) => (
                                         <div key={i} className="card-empty"></div>
                                     ))}
                                 </div>
                             </div>
-
+                            
+                            {/* Player Positions */}
                             <div className="player-positions">
                                 {ordered.map((id, i) => {
                                     const pl = players[id];
@@ -1757,19 +1893,28 @@
                                     
                                     return (
                                         <div key={id} className={`player-slot pos-${i}`}>
-                                            <Player p={pl} isTurn={game.currentPlayer === id}
-                                                isD={game.dealer === id} isSB={game.smallBlind === id}
-                                                isBB={game.bigBlind === id} isMe={isMe}
-                                                showCards={canSeeCards} isWinner={game.winnerId === id}
-                                                design={design} />
+                                            <Player 
+                                                p={pl} 
+                                                isTurn={game.currentPlayer === id} 
+                                                isD={game.dealer === id} 
+                                                isSB={game.smallBlind === id} 
+                                                isBB={game.bigBlind === id} 
+                                                isMe={isMe} 
+                                                showCards={canSeeCards} 
+                                                isWinner={game.winnerId === id} 
+                                                design={design} 
+                                            />
                                             {pl && (pl.currentBet || 0) > 0 && (
                                                 <div className="player-bet">
-                                                    <i className="fa-solid fa-coins text-xs mr-1"></i>{pl.currentBet}
+                                                    <i className="fa-solid fa-coins text-xs mr-1"></i>
+                                                    {pl.currentBet}
                                                 </div>
                                             )}
                                         </div>
                                     );
                                 })}
+                                
+                                {/* Empty slots */}
                                 {Array.from({ length: MAX_P - ids.length }).map((_, i) => (
                                     <div key={`e${i}`} className={`player-slot pos-${ids.length + i}`}>
                                         <Player p={null} design={design} />
@@ -1778,51 +1923,82 @@
                             </div>
                         </div>
                     </div>
-
+                    
+                    {/* Actions Bar - When it's my turn */}
                     {myTurn && me && !me.folded && (
                         <div className="actions-bar">
-                            <div className="text-center mb-3">
-                                <span className="text-yellow-400 font-display">
+                            <div className="text-center mb-4">
+                                <span className="text-yellow-400 font-display text-lg">
                                     <i className="fa-solid fa-hand-pointer mr-2"></i>VOTRE TOUR
                                 </span>
                             </div>
                             
                             {myChips > 0 && (
-                                <div className="mb-4">
-                                    <div className="flex justify-between text-sm text-gray-400 mb-1">
+                                <div className="mb-5">
+                                    <div className="flex justify-between text-sm text-gray-400 mb-2">
                                         <span>Relance</span>
-                                        <span className="text-yellow-400 font-bold">{Math.min(raise, maxR)}</span>
+                                        <span className="text-yellow-400 font-bold text-lg">
+                                            {Math.min(raise, maxR)}
+                                        </span>
                                     </div>
-                                    <input type="range" min={minR} max={maxR} value={Math.min(raise, maxR)}
-                                        onChange={e => setRaise(+e.target.value)} className="slider w-full" disabled={maxR < minR} />
+                                    <input 
+                                        type="range" 
+                                        min={minR} 
+                                        max={maxR} 
+                                        value={Math.min(raise, maxR)} 
+                                        onChange={e => setRaise(+e.target.value)} 
+                                        className="slider w-full" 
+                                        disabled={maxR < minR} 
+                                    />
                                 </div>
                             )}
                             
-                            <div className="grid grid-cols-4 gap-2">
-                                <button onClick={() => act('fold')} className="btn btn-fold">FOLD</button>
+                            <div className="grid grid-cols-4 gap-3">
+                                <button onClick={() => act('fold')} className="btn btn-fold">
+                                    FOLD
+                                </button>
                                 {canCheck ? (
-                                    <button onClick={() => act('check')} className="btn btn-check">CHECK</button>
+                                    <button onClick={() => act('check')} className="btn btn-check">
+                                        CHECK
+                                    </button>
                                 ) : (
-                                    <button onClick={() => act('call')} disabled={callAmt > myChips || myChips <= 0} className="btn btn-call">
+                                    <button 
+                                        onClick={() => act('call')} 
+                                        disabled={callAmt > myChips || myChips <= 0} 
+                                        className="btn btn-call"
+                                    >
                                         CALL {Math.min(callAmt, myChips)}
                                     </button>
                                 )}
-                                <button onClick={() => act('raise', Math.min(raise, maxR))} disabled={maxR < minR || myChips <= 0} className="btn btn-raise">RAISE</button>
-                                <button onClick={() => act('all-in')} disabled={myChips <= 0} className="btn btn-allin">ALL-IN</button>
+                                <button 
+                                    onClick={() => act('raise', Math.min(raise, maxR))} 
+                                    disabled={maxR < minR || myChips <= 0} 
+                                    className="btn btn-raise"
+                                >
+                                    RAISE
+                                </button>
+                                <button 
+                                    onClick={() => act('all-in')} 
+                                    disabled={myChips <= 0} 
+                                    className="btn btn-allin"
+                                >
+                                    ALL-IN
+                                </button>
                             </div>
                         </div>
                     )}
-
+                    
+                    {/* Actions Bar - Waiting to start */}
                     {game.status !== 'playing' && !winner && (
                         <div className="actions-bar">
                             {ids.filter(id => (players[id]?.chips || 0) > 0).length >= MIN_P ? (
-                                <button onClick={startGame} className="btn btn-raise px-10 py-4 text-lg">
-                                    <i className="fa-solid fa-play mr-2"></i>DÉMARRER
+                                <button onClick={startGame} className="btn btn-raise px-12 py-5 text-xl">
+                                    <i className="fa-solid fa-play mr-3"></i>DÉMARRER
                                 </button>
                             ) : (
-                                <div className="text-gray-400">
+                                <div className="text-gray-400 text-lg">
                                     <i className="fa-solid fa-hourglass-half mr-2"></i>
-                                    Attente ({ids.filter(id => (players[id]?.chips || 0) > 0).length}/{MIN_P})
+                                    En attente ({ids.filter(id => (players[id]?.chips || 0) > 0).length}/{MIN_P})
                                 </div>
                             )}
                         </div>
@@ -1830,18 +2006,19 @@
                 </div>
             );
         };
-
+        
         // ==========================================
-        // APP
+        // APP COMPONENT
         // ==========================================
         const App = () => {
             const [user, setUser] = useState(null);
             const [table, setTable] = useState(null);
             const [tables, setTables] = useState({});
             const [loading, setLoading] = useState(true);
-
+            
             useEffect(() => {
                 const init = () => {
+                    // Auth listener
                     window.FB.onAuth(window.FB.auth, async u => {
                         if (u) {
                             const snap = await window.FB.get(window.FB.ref(window.FB.db, `users/${u.uid}`));
@@ -1852,12 +2029,16 @@
                                 avatar: d.avatar || u.photoURL,
                                 chips: d.pokerChips || START_CHIPS
                             });
-                        } else setUser(null);
+                        } else {
+                            setUser(null);
+                        }
                         setLoading(false);
                     });
-
+                    
+                    // Tables listener
                     window.FB.onValue(window.FB.ref(window.FB.db, 'poker_tables'), snap => {
                         const d = snap.val() || {};
+                        // Clean empty tables
                         Object.entries(d).forEach(([id, t]) => {
                             if (Object.keys(t.players || {}).length === 0) {
                                 window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${id}`));
@@ -1866,162 +2047,108 @@
                         setTables(d);
                     });
                 };
-
+                
                 if (window.FB) init();
                 else window.addEventListener('fb-ready', init);
             }, []);
-
+            
             const create = async (name, buyIn, cardDesign) => {
                 const r = window.FB.push(window.FB.ref(window.FB.db, 'poker_tables'));
                 await window.FB.set(r, {
-                    name, buyIn, cardDesign,
-                    status: 'waiting', pot: 0, currentBet: 0, phase: 'waiting',
-                    players: { [user.id]: { name: user.name, avatar: user.avatar, chips: buyIn, seat: 0 } }
+                    name,
+                    buyIn,
+                    cardDesign,
+                    status: 'waiting',
+                    pot: 0,
+                    currentBet: 0,
+                    phase: 'waiting',
+                    players: {
+                        [user.id]: {
+                            name: user.name,
+                            avatar: user.avatar,
+                            chips: buyIn,
+                            seat: 0
+                        }
+                    }
                 });
                 setTable(r.key);
             };
-
+            
             const join = async id => {
                 const t = tables[id];
                 if (!t) return;
+                
                 const cnt = Object.keys(t.players || {}).length;
                 if (cnt >= MAX_P) return;
-                if (t.players?.[user.id]) { setTable(id); return; }
+                
+                if (t.players?.[user.id]) {
+                    setTable(id);
+                    return;
+                }
+                
                 await window.FB.update(window.FB.ref(window.FB.db), {
-                    [`poker_tables/${id}/players/${user.id}`]: { name: user.name, avatar: user.avatar, chips: t.buyIn, seat: cnt }
+                    [`poker_tables/${id}/players/${user.id}`]: {
+                        name: user.name,
+                        avatar: user.avatar,
+                        chips: t.buyIn,
+                        seat: cnt
+                    }
                 });
                 setTable(id);
             };
-
+            
             const leave = async () => {
-                if (table) await window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`));
+                if (table) {
+                    await window.FB.remove(
+                        window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`)
+                    );
+                }
                 setTable(null);
             };
-
-            if (loading) return <div className="h-screen flex items-center justify-center bg-black"><i className="fa-solid fa-crown text-5xl text-red-500 animate-pulse"></i></div>;
-
-            if (!user) return (
-                <div className="h-screen flex items-center justify-center bg-black p-4">
-                    <div className="glass rounded-2xl p-10 text-center max-w-sm">
-                        <i className="fa-solid fa-crown text-red-500 text-5xl mb-4"></i>
-                        <h1 className="font-display text-3xl text-white mb-1">RED POKER</h1>
-                        <p className="text-gray-400 mb-8">Texas Hold'em</p>
-                        <button onClick={() => { soundManager.init(); window.FB.signIn(); }} className="w-full btn btn-raise py-4 text-lg">
-                            <i className="fa-brands fa-google mr-2"></i>Connexion
-                        </button>
-                        <a href="games.html" className="block mt-6 text-gray-500 hover:text-white text-sm">
-                            <i className="fa-solid fa-arrow-left mr-1"></i>Retour
-                        </a>
+            
+            // Loading
+            if (loading) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-black">
+                        <i className="fa-solid fa-crown text-6xl text-red-500 animate-pulse"></i>
                     </div>
-                </div>
-            );
-
-            if (table) return <Table tableId={table} user={user} onLeave={leave} />;
-            return <Lobby user={user} tables={tables} onCreate={create} onJoin={join} />;
-        };
-
-        ReactDOM.createRoot(document.getElementById('app')).render(<App />);
-    </script>
-</body>
-</html>
- 0).length}/{MIN_P})
-                                </div>
-                            )}
+                );
+            }
+            
+            // Not logged in
+            if (!user) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-black p-4">
+                        <div className="glass rounded-3xl p-12 text-center max-w-md">
+                            <i className="fa-solid fa-crown text-red-500 text-6xl mb-5"></i>
+                            <h1 className="font-display text-4xl text-white mb-2">RED POKER</h1>
+                            <p className="text-gray-400 mb-10 text-lg">Texas Hold'em</p>
+                            <button 
+                                onClick={() => { soundManager.init(); window.FB.signIn(); }} 
+                                className="w-full btn btn-raise py-5 text-xl"
+                            >
+                                <i className="fa-brands fa-google mr-3"></i>Connexion
+                            </button>
+                            <a href="games.html" className="block mt-8 text-gray-500 hover:text-white text-lg">
+                                <i className="fa-solid fa-arrow-left mr-2"></i>Retour
+                            </a>
                         </div>
-                    )}
-                </div>
-            );
-        };
-
-        // ==========================================
-        // APP
-        // ==========================================
-        const App = () => {
-            const [user, setUser] = useState(null);
-            const [table, setTable] = useState(null);
-            const [tables, setTables] = useState({});
-            const [loading, setLoading] = useState(true);
-
-            useEffect(() => {
-                const init = () => {
-                    window.FB.onAuth(window.FB.auth, async u => {
-                        if (u) {
-                            const snap = await window.FB.get(window.FB.ref(window.FB.db, `users/${u.uid}`));
-                            const d = snap.exists() ? snap.val() : {};
-                            setUser({
-                                id: u.uid,
-                                name: d.username || u.displayName || 'Joueur',
-                                avatar: d.avatar || u.photoURL,
-                                chips: d.pokerChips || START_CHIPS
-                            });
-                        } else setUser(null);
-                        setLoading(false);
-                    });
-
-                    window.FB.onValue(window.FB.ref(window.FB.db, 'poker_tables'), snap => {
-                        const d = snap.val() || {};
-                        Object.entries(d).forEach(([id, t]) => {
-                            if (Object.keys(t.players || {}).length === 0) {
-                                window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${id}`));
-                            }
-                        });
-                        setTables(d);
-                    });
-                };
-
-                if (window.FB) init();
-                else window.addEventListener('fb-ready', init);
-            }, []);
-
-            const create = async (name, buyIn, cardDesign) => {
-                const r = window.FB.push(window.FB.ref(window.FB.db, 'poker_tables'));
-                await window.FB.set(r, {
-                    name, buyIn, cardDesign,
-                    status: 'waiting', pot: 0, currentBet: 0, phase: 'waiting',
-                    players: { [user.id]: { name: user.name, avatar: user.avatar, chips: buyIn, seat: 0 } }
-                });
-                setTable(r.key);
-            };
-
-            const join = async id => {
-                const t = tables[id];
-                if (!t) return;
-                const cnt = Object.keys(t.players || {}).length;
-                if (cnt >= MAX_P) return;
-                if (t.players?.[user.id]) { setTable(id); return; }
-                await window.FB.update(window.FB.ref(window.FB.db), {
-                    [`poker_tables/${id}/players/${user.id}`]: { name: user.name, avatar: user.avatar, chips: t.buyIn, seat: cnt }
-                });
-                setTable(id);
-            };
-
-            const leave = async () => {
-                if (table) await window.FB.remove(window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`));
-                setTable(null);
-            };
-
-            if (loading) return <div className="h-screen flex items-center justify-center bg-black"><i className="fa-solid fa-crown text-6xl text-red-500 animate-pulse"></i></div>;
-
-            if (!user) return (
-                <div className="h-screen flex items-center justify-center bg-black p-4">
-                    <div className="glass rounded-3xl p-12 text-center max-w-md">
-                        <i className="fa-solid fa-crown text-red-500 text-6xl mb-5"></i>
-                        <h1 className="font-display text-4xl text-white mb-2">RED POKER</h1>
-                        <p className="text-gray-400 mb-10 text-lg">Texas Hold'em</p>
-                        <button onClick={() => { soundManager.init(); window.FB.signIn(); }} className="w-full btn btn-raise py-5 text-xl">
-                            <i className="fa-brands fa-google mr-3"></i>Connexion
-                        </button>
-                        <a href="games.html" className="block mt-8 text-gray-500 hover:text-white text-lg">
-                            <i className="fa-solid fa-arrow-left mr-2"></i>Retour
-                        </a>
                     </div>
-                </div>
-            );
-
-            if (table) return <Table tableId={table} user={user} onLeave={leave} />;
+                );
+            }
+            
+            // In a table
+            if (table) {
+                return <Table tableId={table} user={user} onLeave={leave} />;
+            }
+            
+            // Lobby
             return <Lobby user={user} tables={tables} onCreate={create} onJoin={join} />;
         };
-
+        
+        // ==========================================
+        // RENDER
+        // ==========================================
         ReactDOM.createRoot(document.getElementById('app')).render(<App />);
     </script>
 </body>
