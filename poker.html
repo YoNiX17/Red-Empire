@@ -480,94 +480,56 @@
         /* ==================== CARD ANIMATIONS ==================== */
         .card-hidden {
             opacity: 0;
-            transform: translateX(250px) translateY(-30px) rotateY(180deg) scale(0.5);
+            transform: translateX(300px) rotateY(180deg);
             pointer-events: none;
         }
 
         @keyframes dealPlayerCard {
             0% {
                 opacity: 0;
-                transform: translateX(200px) translateY(-30px) rotateY(180deg) rotateZ(-10deg) scale(0.4);
-                filter: blur(2px);
+                transform: translateX(300px) rotateY(180deg);
             }
 
-            30% {
+            10% {
                 opacity: 1;
-                transform: translateX(80px) translateY(-15px) rotateY(90deg) rotateZ(-5deg) scale(0.7);
-                filter: blur(1px);
             }
 
-            60% {
-                transform: translateX(20px) translateY(-5px) rotateY(30deg) rotateZ(-2deg) scale(0.9);
-                filter: blur(0);
-            }
-
-            80% {
-                transform: translateX(5px) translateY(-2px) rotateY(10deg) rotateZ(0deg) scale(0.98);
+            50% {
+                transform: translateX(40px) rotateY(90deg);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) translateY(0) rotateY(0deg) rotateZ(0deg) scale(1);
-                filter: blur(0);
+                transform: translateX(0) rotateY(0deg);
             }
         }
 
         @keyframes dealCommunityCard {
             0% {
                 opacity: 0;
-                transform: translateX(200px) translateY(-50px) rotateY(180deg) rotateX(15deg) scale(0.3);
-                filter: blur(2px);
+                transform: translateX(250px) rotateY(180deg);
             }
 
-            25% {
+            15% {
                 opacity: 1;
-                filter: blur(1px);
             }
 
-            50% {
-                transform: translateX(50px) translateY(-15px) rotateY(60deg) rotateX(8deg) scale(0.8);
-                filter: blur(0);
-            }
-
-            75% {
-                transform: translateX(10px) translateY(-3px) rotateY(15deg) rotateX(2deg) scale(0.95);
+            60% {
+                transform: translateX(30px) rotateY(60deg);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) translateY(0) rotateY(0deg) rotateX(0deg) scale(1);
-            }
-        }
-
-        @keyframes cardHover {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-3px);
-            }
-        }
-
-        @keyframes cardShine {
-            0% {
-                background-position: -200% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
+                transform: translateX(0) rotateY(0deg);
             }
         }
 
         .card-deal-player {
-            animation: dealPlayerCard 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: dealPlayerCard 0.45s ease-out forwards;
         }
 
         .card-deal-community {
-            animation: dealCommunityCard 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation: dealCommunityCard 0.5s ease-out forwards;
         }
 
         .card::after {
