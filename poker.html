@@ -2339,7 +2339,7 @@
                 const w = game.players[winnerId];
 
                 upd[`poker_tables/${tableId}/players/${winnerId}/chips`] = (w?.chips || 0) + pot;
-                upd[`poker_tables/${tableId}/players/${winnerId}/showCards`] = true;
+                // Don't auto-show winner cards - they choose to reveal
                 upd[`poker_tables/${tableId}/winnerId`] = winnerId;
                 upd[`poker_tables/${tableId}/winnerHand`] = hand;
                 upd[`poker_tables/${tableId}/showWinner`] = true;
@@ -2544,21 +2544,54 @@
                     <Confetti on={confetti} />
                     <SoundToggle muted={muted} onToggle={toggleSound} />
 
-                    {winner && !game.rankedComplete && (
-                        <WinnerModal
-                            winner={winner.player}
-                            hand={winner.hand}
-                            pot={winner.pot}
-                            cards={winner.cards}
-                            design={design}
-                            isMe={winner.id === user.id}
-                            onClose={closeWinner}
-                            onShowCards={() => {
-                                window.FB.update(window.FB.ref(window.FB.db), {
-                                    [`poker_tables/${tableId}/players/${winner.id}/showCards`]: true
-                                });
-                            }}
-                        />
+                    {/* Winner Banner (replaces intrusive modal) */}
+                    {game.status === 'ended' && game.winnerId && (
+                        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[200]">
+                            <div className="bg-gradient-to-r from-yellow-600/90 via-yellow-500/90 to-yellow-600/90 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-2xl border border-yellow-400/50 text-center">
+                                <div className="flex items-center justify-center gap-4">
+                                    <span className="text-3xl">🏆</span>
+                                    <div>
+                                        <div className="text-white font-bold text-lg flex items-center gap-2">
+                                            <img
+                                                src={players[game.winnerId]?.avatar}
+                                                className="w-8 h-8 rounded-full border-2 border-white"
+                                                alt=""
+                                            />
+                                            {players[game.winnerId]?.name} remporte
+                                        </div>
+                                        <div className="text-yellow-100 font-display text-2xl">
+                                            <i className="fa-solid fa-coins mr-2"></i>
+                                            +{(game.lastPot || 0).toLocaleString()}
+                                        </div>
+                                    </div>
+                                    {game.winnerHand?.name && players[game.winnerId]?.showCards && (
+                                        <div className="bg-black/30 px-3 py-1 rounded-lg text-white text-sm">
+                                            {game.winnerHand.name}
+                                        </div>
+                                    )}
+                                </div>
+                                {/* Show cards button for winner */}
+                                {game.winnerId === user.id && !players[game.winnerId]?.showCards && (
+                                    <button
+                                        onClick={() => {
+                                            window.FB.update(window.FB.ref(window.FB.db), {
+                                                [`poker_tables/${tableId}/players/${user.id}/showCards`]: true
+                                            });
+                                        }}
+                                        className="mt-3 bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-lg text-sm transition"
+                                    >
+                                        <i className="fa-solid fa-eye mr-2"></i>Montrer mes cartes
+                                    </button>
+                                )}
+                                {/* Continue button */}
+                                <button
+                                    onClick={closeWinner}
+                                    className="mt-3 ml-2 bg-green-500 hover:bg-green-400 text-white px-6 py-1.5 rounded-lg text-sm font-bold transition"
+                                >
+                                    MANCHE SUIVANTE
+                                </button>
+                            </div>
+                        </div>
                     )}
 
                     {game.rankedComplete && (
@@ -2630,7 +2663,7 @@
                                 {ordered.map((id, i) => {
                                     const pl = players[id];
                                     const isMe = id === user.id;
-                                    const canSeeCards = isMe || pl?.showCards === true || game.phase === 'showdown';
+                                    const canSeeCards = isMe || pl?.showCards === true || game.phase === 'showdown' || game.status === 'ended';
 
                                     return (
                                         <div key={id} className={`player-slot pos-${i}`}>
