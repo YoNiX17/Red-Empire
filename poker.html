@@ -272,14 +272,19 @@
 
         .card-xl .val {
             font-size: 1.8rem;
+            line-height: 1;
+            height: 1.8rem;
         }
 
         .card-xl .sym {
-            font-size: 3rem;
+            font-size: 2.8rem;
+            line-height: 1;
+            height: 2.8rem;
+            margin-top: 2px;
         }
 
         .card-xl .corner {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .card-lg {
@@ -290,14 +295,19 @@
 
         .card-lg .val {
             font-size: 1.5rem;
+            line-height: 1;
+            height: 1.5rem;
         }
 
         .card-lg .sym {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
+            line-height: 1;
+            height: 2.2rem;
+            margin-top: 2px;
         }
 
         .card-lg .corner {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .card-sm {
@@ -307,15 +317,20 @@
         }
 
         .card-sm .val {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            line-height: 1;
+            height: 0.9rem;
         }
 
         .card-sm .sym {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+            line-height: 1;
+            height: 1.2rem;
+            margin-top: 1px;
         }
 
         .card-sm .corner {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
         }
 
         .card .corner {
@@ -324,17 +339,36 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 0;
+        }
+
+        .card .corner span {
+            display: block;
+            line-height: 1.1;
         }
 
         .card .tl {
-            top: 5px;
-            left: 6px;
+            top: 4px;
+            left: 5px;
         }
 
         .card .br {
-            bottom: 5px;
-            right: 6px;
+            bottom: 4px;
+            right: 5px;
             transform: rotate(180deg);
+        }
+
+        /* Center content alignment */
+        .card .val {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card .sym {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Card design: Classic */
