@@ -2212,7 +2212,7 @@
                 const newBet = action === 'raise' ? amt : (action === 'all-in' ? ((me.chips || 0) + (me.currentBet || 0)) : currBet);
 
                 const allActed = remaining.every(id => {
-                    const pl = id === user.id ? { ...p[id], hasActed: true } : p[id];
+                    const pl = id === user.id ? { ...p[id], hasActed: true, isAllIn: action === 'all-in' || p[id].isAllIn } : p[id];
                     return pl.hasActed || pl.isAllIn || pl.folded;
                 });
 
@@ -2221,7 +2221,18 @@
                     return (pl.currentBet || 0) >= newBet || pl.isAllIn || (pl.chips || 0) === 0;
                 });
 
-                if (allActed && allMatched && action !== 'raise' && action !== 'all-in') {
+                // Check if everyone who can act has acted and bets are matched
+                // This handles all-in calls properly - if opponent calls your all-in, go to next phase
+                const canStillAct = remaining.filter(id => {
+                    const pl = id === user.id ?
+                        { ...p[id], isAllIn: action === 'all-in' || p[id].isAllIn, chips: action === 'all-in' ? 0 : (p[id].chips || 0) } :
+                        p[id];
+                    return !pl.folded && !pl.isAllIn && (pl.chips || 0) > 0;
+                });
+
+                if (allActed && allMatched && canStillAct.length <= 1) {
+                    await nextPhase(upd, remaining);
+                } else if (allActed && allMatched && action !== 'raise' && action !== 'all-in') {
                     await nextPhase(upd, remaining);
                 } else {
                     upd[`poker_tables/${tableId}/currentPlayer`] = nextP;
@@ -2235,8 +2246,8 @@
             const nextPhase = async (pending, active) => {
                 const upd = { ...pending };
                 const phase = game.phase;
-                const deck = game.deck || [];
-                const cc = game.communityCards || [];
+                let deck = [...(game.deck || [])];
+                let cc = [...(game.communityCards || [])];
 
                 // Reset player states
                 Object.keys(game.players).forEach(id => {
@@ -2246,10 +2257,38 @@
                 });
                 upd[`poker_tables/${tableId}/currentBet`] = 0;
 
-                // Play card sound
+                // Check if all players are all-in or only one can act
+                const canAct = active.filter(id => !game.players[id].isAllIn && (game.players[id].chips || 0) > 0);
+                const allAllIn = canAct.length <= 1;
+
+                // If everyone is all-in, deal ALL remaining community cards at once
+                if (allAllIn) {
+                    // Deal remaining cards based on current phase
+                    if (phase === 'preflop' || cc.length === 0) {
+                        // Deal flop + turn + river (5 cards total)
+                        cc = deck.slice(0, 5);
+                        deck = deck.slice(5);
+                    } else if (phase === 'flop' || cc.length === 3) {
+                        // Deal turn + river (2 more cards)
+                        cc = [...cc, deck[0], deck[1]];
+                        deck = deck.slice(2);
+                    } else if (phase === 'turn' || cc.length === 4) {
+                        // Deal river (1 more card)
+                        cc = [...cc, deck[0]];
+                        deck = deck.slice(1);
+                    }
+
+                    upd[`poker_tables/${tableId}/communityCards`] = cc;
+                    upd[`poker_tables/${tableId}/deck`] = deck;
+
+                    setTimeout(() => soundManager.play('flip'), 100);
+                    await showdown(upd, active);
+                    return;
+                }
+
+                // Normal phase progression
                 setTimeout(() => soundManager.play('flip'), 100);
 
-                // Advance phase
                 if (phase === 'preflop') {
                     upd[`poker_tables/${tableId}/communityCards`] = deck.slice(0, 3);
                     upd[`poker_tables/${tableId}/deck`] = deck.slice(3);
@@ -2271,14 +2310,8 @@
                 }
 
                 // Set next player
-                const canAct = active.filter(id => !game.players[id].isAllIn && (game.players[id].chips || 0) > 0);
-                if (canAct.length > 0) {
-                    const dIdx = canAct.indexOf(game.dealer);
-                    upd[`poker_tables/${tableId}/currentPlayer`] = canAct[(dIdx + 1) % canAct.length] || canAct[0];
-                } else if (active.length > 0) {
-                    await showdown(upd, active);
-                    return;
-                }
+                const dIdx = canAct.indexOf(game.dealer);
+                upd[`poker_tables/${tableId}/currentPlayer`] = canAct[(dIdx + 1) % canAct.length] || canAct[0];
 
                 await window.FB.update(window.FB.ref(window.FB.db), upd);
             };
