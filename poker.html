@@ -514,56 +514,40 @@
         /* ==================== CARD ANIMATIONS ==================== */
         .card-hidden {
             opacity: 0;
-            transform: translateX(300px) rotateY(180deg);
+            transform: translateX(100px);
             pointer-events: none;
         }
 
         @keyframes dealPlayerCard {
             0% {
                 opacity: 0;
-                transform: translateX(300px) rotateY(180deg);
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            50% {
-                transform: translateX(40px) rotateY(90deg);
+                transform: translateX(100px) scale(0.9);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) rotateY(0deg);
+                transform: translateX(0) scale(1);
             }
         }
 
         @keyframes dealCommunityCard {
             0% {
                 opacity: 0;
-                transform: translateX(250px) rotateY(180deg);
-            }
-
-            15% {
-                opacity: 1;
-            }
-
-            60% {
-                transform: translateX(30px) rotateY(60deg);
+                transform: translateY(-30px) scale(0.9);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) rotateY(0deg);
+                transform: translateY(0) scale(1);
             }
         }
 
         .card-deal-player {
-            animation: dealPlayerCard 0.45s ease-out forwards;
+            animation: dealPlayerCard 0.25s ease-out forwards;
         }
 
         .card-deal-community {
-            animation: dealCommunityCard 0.5s ease-out forwards;
+            animation: dealCommunityCard 0.3s ease-out forwards;
         }
 
         .card::after {
@@ -2663,7 +2647,8 @@
                                 {ordered.map((id, i) => {
                                     const pl = players[id];
                                     const isMe = id === user.id;
-                                    const canSeeCards = isMe || pl?.showCards === true || game.phase === 'showdown' || game.status === 'ended';
+                                    // Cards visible: self, explicitly shown, or showdown phase (but NOT just because ended)
+                                    const canSeeCards = isMe || pl?.showCards === true || game.phase === 'showdown';
 
                                     return (
                                         <div key={id} className={`player-slot pos-${i}`}>
