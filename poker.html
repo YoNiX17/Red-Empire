@@ -1739,7 +1739,7 @@
         };
 
         // Winner Modal Component
-        const WinnerModal = ({ winner, hand, pot, onClose }) => (
+        const WinnerModal = ({ winner, hand, pot, cards, design, isMe, onClose, onShowCards }) => (
             <div className="modal-overlay" onClick={onClose}>
                 <div className="modal-content" onClick={e => e.stopPropagation()}>
                     <div className="text-7xl mb-5">🏆</div>
@@ -1749,18 +1749,52 @@
                         alt=""
                     />
                     <h2 className="font-display text-3xl text-yellow-400 mb-2">{winner.name}</h2>
-                    <p className="text-gray-400 mb-5">remporte le pot !</p>
-                    <div className="text-5xl font-display text-yellow-400 mb-4">
+                    <p className="text-gray-400 mb-4">remporte le pot !</p>
+                    <div className="text-5xl font-display text-yellow-400 mb-5">
                         <i className="fa-solid fa-coins mr-3"></i>+{pot.toLocaleString()}
                     </div>
-                    {hand?.name && (
-                        <div className="text-red-400 mb-8 bg-red-900/30 py-2 px-6 rounded-lg inline-block text-lg">
+
+                    {/* Winner's cards */}
+                    {cards && cards.length === 2 && winner.showCards && (
+                        <div className="flex justify-center gap-3 mb-4">
+                            {cards.map((c, i) => (
+                                <Card key={i} card={c} size="lg" design={design} />
+                            ))}
+                        </div>
+                    )}
+
+                    {hand?.name && winner.showCards && (
+                        <div className="text-red-400 mb-6 bg-red-900/30 py-2 px-6 rounded-lg inline-block text-lg">
                             {hand.name}
                         </div>
                     )}
-                    <button onClick={onClose} className="btn btn-raise px-10 py-4 text-lg">
-                        CONTINUER
-                    </button>
+
+                    {/* If winner is me and cards not shown, offer choice */}
+                    {isMe && !winner.showCards && cards && (
+                        <div className="mb-6">
+                            <p className="text-gray-500 text-sm mb-3">Voulez-vous montrer vos cartes ?</p>
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={onShowCards}
+                                    className="btn bg-green-600 hover:bg-green-500 px-6 py-2"
+                                >
+                                    <i className="fa-solid fa-eye mr-2"></i>MONTRER
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="btn bg-gray-700 hover:bg-gray-600 px-6 py-2"
+                                >
+                                    <i className="fa-solid fa-eye-slash mr-2"></i>CACHER
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {(!isMe || winner.showCards) && (
+                        <button onClick={onClose} className="btn btn-raise px-10 py-4 text-lg">
+                            CONTINUER
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -2058,9 +2092,11 @@
                         if (w) {
                             soundManager.play('win');
                             setWinner({
+                                id: d.winnerId,
                                 player: w,
                                 pot: d.lastPot || d.pot || 0,
-                                hand: d.winnerHand
+                                hand: d.winnerHand,
+                                cards: w.cards
                             });
                             if (d.winnerId === user.id) {
                                 setConfetti(true);
@@ -2513,7 +2549,15 @@
                             winner={winner.player}
                             hand={winner.hand}
                             pot={winner.pot}
+                            cards={winner.cards}
+                            design={design}
+                            isMe={winner.id === user.id}
                             onClose={closeWinner}
+                            onShowCards={() => {
+                                window.FB.update(window.FB.ref(window.FB.db), {
+                                    [`poker_tables/${tableId}/players/${winner.id}/showCards`]: true
+                                });
+                            }}
                         />
                     )}
 
