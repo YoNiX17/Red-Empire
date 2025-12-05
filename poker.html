@@ -1531,24 +1531,19 @@
         // COMPONENTS
         // ==========================================
 
-        // Sprite sheet positions for classic cards
-        // The sprite has 13 columns (A,2,3,4,5,6,7,8,9,10,J,Q,K) and 4 rows (clubs, diamonds, hearts, spades)
-        const SPRITE_CARD_WIDTH = 79;  // Width of each card in sprite
-        const SPRITE_CARD_HEIGHT = 123; // Height of each card in sprite
-
-        const getCardSpritePosition = (value, suit) => {
-            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-            const suits = ['♣', '♦', '♥', '♠']; // Order in sprite: clubs, diamonds, hearts, spades
-
-            const col = values.indexOf(value);
-            const row = suits.indexOf(suit);
-
-            if (col === -1 || row === -1) return null;
-
-            return {
-                x: col * SPRITE_CARD_WIDTH,
-                y: row * SPRITE_CARD_HEIGHT
+        // Get SVG card ID for classic design
+        const getCardSvgId = (value, suit) => {
+            const valueMap = {
+                'A': 'ace', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+                '7': '7', '8': '8', '9': '9', '10': '10', 'J': 'jack', 'Q': 'queen', 'K': 'king'
             };
+            const suitMap = { '♠': 'spade', '♥': 'heart', '♦': 'diamond', '♣': 'club' };
+
+            const v = valueMap[value];
+            const s = suitMap[suit];
+
+            if (!v || !s) return null;
+            return `${v}_${s}`;
         };
 
         // Card Component
@@ -1580,25 +1575,16 @@
 
             const isRed = card.s === '♥' || card.s === '♦';
 
-            // Use sprite sheet for classic design
+            // Use SVG cards for classic design
             if (design === 'classic') {
-                const pos = getCardSpritePosition(card.v, card.s);
-                if (pos) {
-                    const cardWidth = size === 'sm' ? 48 : size === 'xl' ? 90 : 75;
-                    const cardHeight = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
-                    const scaleX = cardWidth / SPRITE_CARD_WIDTH;
-                    const scaleY = cardHeight / SPRITE_CARD_HEIGHT;
-
+                const cardId = getCardSvgId(card.v, card.s);
+                if (cardId) {
                     return (
-                        <div
-                            className={`card design-classic ${sizeClass} ${animClass}`}
-                            style={{
-                                backgroundImage: 'url(assets/cards_classic.png)',
-                                backgroundPosition: `-${pos.x * scaleX}px -${pos.y * scaleY}px`,
-                                backgroundSize: `${13 * cardWidth}px ${4 * cardHeight}px`,
-                                backgroundColor: 'white'
-                            }}
-                        />
+                        <div className={`card design-classic ${sizeClass} ${animClass}`} style={{ backgroundColor: 'white', padding: 0, overflow: 'hidden' }}>
+                            <svg viewBox="0 0 169.075 244.64" style={{ width: '100%', height: '100%' }}>
+                                <use xlinkHref={`assets/svg-cards.svg#${cardId}`} />
+                            </svg>
+                        </div>
                     );
                 }
             }
