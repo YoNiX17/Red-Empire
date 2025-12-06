@@ -91,6 +91,18 @@
             box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
         }
 
+        /* Felt texture overlay */
+        .felt::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.08;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
         .felt::after {
             content: '';
             position: absolute;
@@ -103,7 +115,13 @@
         /* ==================== TABLE STYLES ==================== */
         /* Empire Style (Red/Black) */
         .table-empire .felt {
-            background: radial-gradient(ellipse at center, #6b1a1a 0%, #4a1212 50%, #2d0a0a 100%);
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(255, 100, 100, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at center, #6b1a1a 0%, #4a1212 50%, #2d0a0a 100%);
+        }
+
+        .table-empire .felt::before {
+            opacity: 0.1;
         }
 
         .table-empire .felt::after {
@@ -119,7 +137,13 @@
 
         /* Classic Style (Green - default) */
         .table-classic .felt {
-            background: radial-gradient(ellipse at center, #1a8048 0%, #116835 50%, #0d4d28 100%);
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(100, 200, 100, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at center, #1a8048 0%, #116835 50%, #0d4d28 100%);
+        }
+
+        .table-classic .felt::before {
+            opacity: 0.08;
         }
 
         .table-classic .felt::after {
@@ -135,7 +159,13 @@
 
         /* Royal Style (Blue/Gold) */
         .table-royal .felt {
-            background: radial-gradient(ellipse at center, #1a3a6b 0%, #122850 50%, #0a1a35 100%);
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(100, 150, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at center, #1a3a6b 0%, #122850 50%, #0a1a35 100%);
+        }
+
+        .table-royal .felt::before {
+            opacity: 0.07;
         }
 
         .table-royal .felt::after {
@@ -152,7 +182,13 @@
 
         /* Neon Style (Purple with glow) */
         .table-neon .felt {
-            background: radial-gradient(ellipse at center, #3d1a6b 0%, #2a1250 50%, #1a0a35 100%);
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(200, 100, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at center, #3d1a6b 0%, #2a1250 50%, #1a0a35 100%);
+        }
+
+        .table-neon .felt::before {
+            opacity: 0.1;
         }
 
         .table-neon .felt::after {
@@ -2664,6 +2700,7 @@
             const maxR = myChips;
             const design = game.cardDesign || 'classic';
             const tableStyleClass = `table-${game.tableStyle || 'classic'}`;
+            const isHost = game.host === user.id;
 
             // Reorder players so current user is at position 0
             const myIdx = ids.indexOf(user.id);
@@ -2714,13 +2751,20 @@
                                         <i className="fa-solid fa-eye mr-2"></i>Montrer mes cartes
                                     </button>
                                 )}
-                                {/* Continue button */}
-                                <button
-                                    onClick={closeWinner}
-                                    className="mt-3 ml-2 bg-green-500 hover:bg-green-400 text-white px-6 py-1.5 rounded-lg text-sm font-bold transition"
-                                >
-                                    MANCHE SUIVANTE
-                                </button>
+                                {/* Continue button - host only */}
+                                {isHost ? (
+                                    <button
+                                        onClick={closeWinner}
+                                        className="mt-3 ml-2 bg-green-500 hover:bg-green-400 text-white px-6 py-1.5 rounded-lg text-sm font-bold transition"
+                                    >
+                                        MANCHE SUIVANTE
+                                    </button>
+                                ) : (
+                                    <div className="mt-3 ml-2 text-gray-400 text-sm">
+                                        <i className="fa-solid fa-clock mr-1"></i>
+                                        En attente de l'hôte...
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -2898,9 +2942,16 @@
                     {game.status !== 'playing' && !winner && (
                         <div className="actions-bar">
                             {ids.filter(id => (players[id]?.chips || 0) > 0).length >= MIN_P ? (
-                                <button onClick={startGame} className="btn btn-raise px-12 py-5 text-xl">
-                                    <i className="fa-solid fa-play mr-3"></i>DÉMARRER
-                                </button>
+                                isHost ? (
+                                    <button onClick={startGame} className="btn btn-raise px-12 py-5 text-xl">
+                                        <i className="fa-solid fa-play mr-3"></i>DÉMARRER
+                                    </button>
+                                ) : (
+                                    <div className="text-gray-400 text-lg">
+                                        <i className="fa-solid fa-clock mr-2"></i>
+                                        En attente de l'hôte pour démarrer...
+                                    </div>
+                                )
                             ) : (
                                 <div className="text-gray-400 text-lg">
                                     <i className="fa-solid fa-hourglass-half mr-2"></i>
@@ -2975,6 +3026,8 @@
                     pot: 0,
                     currentBet: 0,
                     phase: 'waiting',
+                    host: user.id,
+                    playerOrder: [user.id],
                     players: {
                         [user.id]: {
                             name: user.name,
@@ -3000,6 +3053,7 @@
                     return;
                 }
 
+                const newPlayerOrder = [...(t.playerOrder || []), user.id];
                 await window.FB.update(window.FB.ref(window.FB.db), {
                     [`poker_tables/${id}/players/${user.id}`]: {
                         name: user.name,
@@ -3007,16 +3061,35 @@
                         chips: t.buyIn,
                         seat: cnt,
                         pokerElo: user.pokerElo || BASE_ELO
-                    }
+                    },
+                    [`poker_tables/${id}/playerOrder`]: newPlayerOrder
                 });
                 setTable(id);
             };
 
             const leave = async () => {
                 if (table) {
-                    await window.FB.remove(
-                        window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`)
-                    );
+                    const t = tables[table];
+                    if (t) {
+                        const currentPlayerOrder = t.playerOrder || [];
+                        const newPlayerOrder = currentPlayerOrder.filter(id => id !== user.id);
+
+                        // If leaving player is host, assign to next in order
+                        let updates = {
+                            [`poker_tables/${table}/players/${user.id}`]: null,
+                            [`poker_tables/${table}/playerOrder`]: newPlayerOrder
+                        };
+
+                        if (t.host === user.id && newPlayerOrder.length > 0) {
+                            updates[`poker_tables/${table}/host`] = newPlayerOrder[0];
+                        }
+
+                        await window.FB.update(window.FB.ref(window.FB.db), updates);
+                    } else {
+                        await window.FB.remove(
+                            window.FB.ref(window.FB.db, `poker_tables/${table}/players/${user.id}`)
+                        );
+                    }
                 }
                 setTable(null);
             };
