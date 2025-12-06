@@ -1567,24 +1567,30 @@
         loadSvgCards();
 
         // Get SVG card ID from card value and suit
-        // SVG uses format: {suit}_{value} where value is 1 (ace), 2-10, jack, queen, king
+        // SVG uses different formats:
+        // - Number cards (A, 2-10): {suit}_{value} like club_1, diamond_10
+        // - Face cards (J, Q, K): {face}_{suit} like jack_club, queen_heart
         const getSvgCardId = (value, suit) => {
-            // Map value to SVG naming convention (1 for ace, numbers for 2-10, face names for J/Q/K)
-            const valueMap = {
-                'A': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-                '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
-                'J': 'jack', 'Q': 'queen', 'K': 'king'
-            };
             // Map suit symbol to SVG naming convention
             const suitMap = {
                 '♠': 'spade', '♥': 'heart', '♦': 'diamond', '♣': 'club'
             };
-
-            const v = valueMap[value];
             const s = suitMap[suit];
-            if (!v || !s) return null;
+            if (!s) return null;
 
-            // SVG uses suit_value format: club_1, diamond_jack, etc.
+            // Face cards use different format: {face}_{suit}
+            if (value === 'J') return `jack_${s}`;
+            if (value === 'Q') return `queen_${s}`;
+            if (value === 'K') return `king_${s}`;
+
+            // Number cards use format: {suit}_{value}
+            const valueMap = {
+                'A': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+                '6': '6', '7': '7', '8': '8', '9': '9', '10': '10'
+            };
+            const v = valueMap[value];
+            if (!v) return null;
+
             return `${s}_${v}`;
         };
 
@@ -1655,20 +1661,19 @@
                     const cardW = size === 'sm' ? 48 : size === 'xl' ? 90 : 75;
                     const cardH = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
 
-                    // SVG card dimensions in the sprite (each card is 167.575 x 243.137)
+                    // SVG card dimensions in the sprite
+                    // Each card base is 166.575 wide and 235.27 tall (from base path definition)
                     const CARD_WIDTH = 167.575;
                     const CARD_HEIGHT = 243.137;
 
                     // Calculate viewBox position for this specific card
-                    // Row 0 (clubs) starts at y=0, row 1 (diamonds) at y=243.137, etc.
-                    // But the base element uses negative y values, so we need to offset
                     const viewBoxX = gridPos.col * CARD_WIDTH;
                     const viewBoxY = (gridPos.row * CARD_HEIGHT) - 236;
 
                     return (
                         <div
                             className={`card design-classic ${sizeClass} ${animClass}`}
-                            style={{ backgroundColor: 'white', overflow: 'hidden' }}
+                            style={{ overflow: 'hidden' }}
                         >
                             <svg
                                 viewBox={`${viewBoxX} ${viewBoxY} ${CARD_WIDTH} ${CARD_HEIGHT}`}
