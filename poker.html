@@ -1567,10 +1567,11 @@
         loadSvgCards();
 
         // Get SVG card ID from card value and suit
+        // SVG uses format: {suit}_{value} where value is 1 (ace), 2-10, jack, queen, king
         const getSvgCardId = (value, suit) => {
-            // Map value to SVG naming convention
+            // Map value to SVG naming convention (1 for ace, numbers for 2-10, face names for J/Q/K)
             const valueMap = {
-                'A': 'ace', '2': '2', '3': '3', '4': '4', '5': '5',
+                'A': '1', '2': '2', '3': '3', '4': '4', '5': '5',
                 '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
                 'J': 'jack', 'Q': 'queen', 'K': 'king'
             };
@@ -1583,7 +1584,23 @@
             const s = suitMap[suit];
             if (!v || !s) return null;
 
-            return `${v}_${s}`;
+            // SVG uses suit_value format: club_1, diamond_jack, etc.
+            return `${s}_${v}`;
+        };
+
+        // Get SVG card position (column and row in the sprite grid)
+        // The SVG sprite is organized as: 13 columns (A,2-10,J,Q,K) x 4 rows (club,diamond,heart,spade)
+        const getCardGridPosition = (value, suit) => {
+            // Column index (0-12): A=0, 2=1, 3=2, ..., 10=9, J=10, Q=11, K=12
+            const valueOrder = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            // Row index (0-3): club=0, diamond=1, heart=2, spade=3
+            const suitOrder = ['♣', '♦', '♥', '♠'];
+
+            const col = valueOrder.indexOf(value);
+            const row = suitOrder.indexOf(suit);
+
+            if (col === -1 || row === -1) return null;
+            return { col, row };
         };
 
         // Card Component
@@ -1632,10 +1649,21 @@
             // Use SVG sprite sheet for classic design
             if (design === 'classic' && svgReady) {
                 const cardId = getSvgCardId(card.v, card.s);
-                if (cardId) {
+                const gridPos = getCardGridPosition(card.v, card.s);
+                if (cardId && gridPos) {
                     // Card dimensions based on size
                     const cardW = size === 'sm' ? 48 : size === 'xl' ? 90 : 75;
                     const cardH = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
+
+                    // SVG card dimensions in the sprite (each card is 167.575 x 243.137)
+                    const CARD_WIDTH = 167.575;
+                    const CARD_HEIGHT = 243.137;
+
+                    // Calculate viewBox position for this specific card
+                    // Row 0 (clubs) starts at y=0, row 1 (diamonds) at y=243.137, etc.
+                    // But the base element uses negative y values, so we need to offset
+                    const viewBoxX = gridPos.col * CARD_WIDTH;
+                    const viewBoxY = (gridPos.row * CARD_HEIGHT) - 236;
 
                     return (
                         <div
@@ -1643,10 +1671,11 @@
                             style={{ backgroundColor: 'white', overflow: 'hidden' }}
                         >
                             <svg
-                                viewBox="0 -236 166.575 242.14"
+                                viewBox={`${viewBoxX} ${viewBoxY} ${CARD_WIDTH} ${CARD_HEIGHT}`}
                                 width={cardW}
                                 height={cardH}
                                 style={{ display: 'block' }}
+                                preserveAspectRatio="xMidYMid meet"
                             >
                                 <use href={`#${cardId}`} />
                             </svg>
