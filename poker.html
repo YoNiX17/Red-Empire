@@ -1531,26 +1531,65 @@
         // COMPONENTS
         // ==========================================
 
-        // Sprite sheet for classic cards (1024x492, 13 cols x 4 rows)
-        const SPRITE_IMG_WIDTH = 1024;
-        const SPRITE_IMG_HEIGHT = 492;
-        const SPRITE_COLS = 13;
-        const SPRITE_ROWS = 4;
+        // SVG sprite sheet URL for classic cards
+        const SVG_CARDS_URL = 'https://storage.googleapis.com/blind-test-red-empire/poker/card%20style/classic/Svg-cards-2.0.svg';
 
-        const getCardSpritePos = (value, suit) => {
-            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-            const suits = ['♣', '♦', '♥', '♠']; // Order matches sprite rows
+        // Cache for SVG content - will be fetched and injected once
+        let svgCardsLoaded = false;
+        let svgCardsLoading = false;
 
-            const col = values.indexOf(value);
-            const row = suits.indexOf(suit);
+        // Load SVG sprite sheet into DOM (called once at startup)
+        const loadSvgCards = async () => {
+            if (svgCardsLoaded || svgCardsLoading) return;
+            svgCardsLoading = true;
+            try {
+                const response = await fetch(SVG_CARDS_URL);
+                const svgText = await response.text();
+                // Create a hidden container for the SVG
+                const container = document.createElement('div');
+                container.id = 'svg-cards-container';
+                container.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+                container.innerHTML = svgText;
+                // Update the SVG to have the correct ID prefix
+                const svg = container.querySelector('svg');
+                if (svg) {
+                    svg.id = 'svg-cards-sprite';
+                }
+                document.body.insertBefore(container, document.body.firstChild);
+                svgCardsLoaded = true;
+            } catch (e) {
+                console.error('Failed to load SVG cards:', e);
+            }
+            svgCardsLoading = false;
+        };
 
-            if (col === -1 || row === -1) return null;
-            return { col, row };
+        // Start loading SVG cards immediately
+        loadSvgCards();
+
+        // Get SVG card ID from card value and suit
+        const getSvgCardId = (value, suit) => {
+            // Map value to SVG naming convention
+            const valueMap = {
+                'A': 'ace', '2': '2', '3': '3', '4': '4', '5': '5',
+                '6': '6', '7': '7', '8': '8', '9': '9', '10': '10',
+                'J': 'jack', 'Q': 'queen', 'K': 'king'
+            };
+            // Map suit symbol to SVG naming convention
+            const suitMap = {
+                '♠': 'spade', '♥': 'heart', '♦': 'diamond', '♣': 'club'
+            };
+
+            const v = valueMap[value];
+            const s = suitMap[suit];
+            if (!v || !s) return null;
+
+            return `${v}_${s}`;
         };
 
         // Card Component
         const Card = ({ card, hidden, size = 'lg', design = 'classic', dealType = 'none', dealDelay = 0 }) => {
             const [animated, setAnimated] = useState(dealType === 'none');
+            const [svgReady, setSvgReady] = useState(svgCardsLoaded);
 
             useEffect(() => {
                 if (dealType !== 'none' && !animated) {
@@ -1561,6 +1600,19 @@
                     return () => clearTimeout(timer);
                 }
             }, [dealType, dealDelay, animated]);
+
+            // Check if SVG is loaded
+            useEffect(() => {
+                if (!svgReady && design === 'classic') {
+                    const checkInterval = setInterval(() => {
+                        if (svgCardsLoaded) {
+                            setSvgReady(true);
+                            clearInterval(checkInterval);
+                        }
+                    }, 50);
+                    return () => clearInterval(checkInterval);
+                }
+            }, [svgReady, design]);
 
             const sizeClass = size === 'sm' ? 'card-sm' : size === 'xl' ? 'card-xl' : 'card-lg';
             const animClass = dealType === 'none' ? '' : animated
@@ -1577,33 +1629,33 @@
 
             const isRed = card.s === '♥' || card.s === '♦';
 
-            // Use PNG sprite sheet for classic design
-            if (design === 'classic') {
-                const pos = getCardSpritePos(card.v, card.s);
-                if (pos) {
+            // Use SVG sprite sheet for classic design
+            if (design === 'classic' && svgReady) {
+                const cardId = getSvgCardId(card.v, card.s);
+                if (cardId) {
                     // Card dimensions based on size
                     const cardW = size === 'sm' ? 48 : size === 'xl' ? 90 : 75;
                     const cardH = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
 
-                    // Calculate sprite dimensions scaled to card size
-                    const spriteW = cardW * SPRITE_COLS;
-                    const spriteH = cardH * SPRITE_ROWS;
-
                     return (
                         <div
                             className={`card design-classic ${sizeClass} ${animClass}`}
-                            style={{
-                                backgroundImage: 'url(assets/cards_classic.png)',
-                                backgroundSize: `${spriteW}px ${spriteH}px`,
-                                backgroundPosition: `-${pos.col * cardW}px -${pos.row * cardH}px`,
-                                backgroundColor: 'white'
-                            }}
-                        />
+                            style={{ backgroundColor: 'white', overflow: 'hidden' }}
+                        >
+                            <svg
+                                viewBox="0 -236 166.575 242.14"
+                                width={cardW}
+                                height={cardH}
+                                style={{ display: 'block' }}
+                            >
+                                <use href={`#${cardId}`} />
+                            </svg>
+                        </div>
                     );
                 }
             }
 
-            // Default rendering for other designs
+            // Default rendering for other designs (or while SVG is loading)
             return (
                 <div className={`card design-${design} ${isRed ? 'red' : 'black'} ${sizeClass} ${animClass}`}>
                     <div className="corner tl">
