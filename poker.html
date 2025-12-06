@@ -265,26 +265,24 @@
 
         /* Card sizes */
         .card-xl {
-            width: 90px;
-            height: 126px;
+            width: 100px;
+            height: 140px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
         .card-xl .val {
-            font-size: 1.8rem;
+            font-size: 2rem;
             line-height: 1;
-            height: 1.8rem;
         }
 
         .card-xl .sym {
-            font-size: 2.8rem;
+            font-size: 3rem;
             line-height: 1;
-            height: 2.8rem;
-            margin-top: 2px;
+            margin-top: 4px;
         }
 
         .card-xl .corner {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
 
         .card-lg {
@@ -644,14 +642,14 @@
         }
 
         .player-box.is-me {
-            width: 180px;
+            width: 240px;
             padding: 14px;
             border-color: rgba(255, 215, 0, 0.3);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.1);
         }
 
         .player-box.is-me .player-cards {
-            gap: 8px;
+            gap: 10px;
         }
 
         .player-box.active {
@@ -1628,7 +1626,7 @@
             }
 
             const isBusted = (p.chips || 0) <= 0 && !p.isAllIn;
-            const cardSize = isMe ? 'lg' : 'sm';
+            const cardSize = isMe ? 'xl' : 'sm';
 
             return (
                 <div className={`player-box 
