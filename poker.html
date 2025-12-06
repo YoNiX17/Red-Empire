@@ -2710,7 +2710,6 @@
                 <div className="game-container">
                     <Confetti on={confetti} />
                     <SoundToggle muted={muted} onToggle={toggleSound} />
-                    <ChipAnimation chips={flyingChips} onComplete={() => setFlyingChips([])} />
 
                     {/* Winner Banner (replaces intrusive modal) */}
                     {game.status === 'ended' && game.winnerId && (
