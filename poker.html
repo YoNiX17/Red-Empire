@@ -100,6 +100,74 @@
             pointer-events: none;
         }
 
+        /* ==================== TABLE STYLES ==================== */
+        /* Empire Style (Red/Black) */
+        .table-empire .felt {
+            background: radial-gradient(ellipse at center, #6b1a1a 0%, #4a1212 50%, #2d0a0a 100%);
+        }
+
+        .table-empire .felt::after {
+            border-color: rgba(255, 51, 51, 0.3);
+        }
+
+        .table-empire.poker-table {
+            box-shadow:
+                0 0 0 12px #3d0a0a,
+                0 0 0 18px #5c1010,
+                0 0 0 22px rgba(30, 10, 10, 0.9);
+        }
+
+        /* Classic Style (Green - default) */
+        .table-classic .felt {
+            background: radial-gradient(ellipse at center, #1a8048 0%, #116835 50%, #0d4d28 100%);
+        }
+
+        .table-classic .felt::after {
+            border-color: rgba(255, 215, 0, 0.15);
+        }
+
+        .table-classic.poker-table {
+            box-shadow:
+                0 0 0 12px #2a1502,
+                0 0 0 18px #4a2805,
+                0 0 0 22px rgba(30, 20, 10, 0.9);
+        }
+
+        /* Royal Style (Blue/Gold) */
+        .table-royal .felt {
+            background: radial-gradient(ellipse at center, #1a3a6b 0%, #122850 50%, #0a1a35 100%);
+        }
+
+        .table-royal .felt::after {
+            border-color: rgba(255, 215, 0, 0.4);
+            border-width: 3px;
+        }
+
+        .table-royal.poker-table {
+            box-shadow:
+                0 0 0 12px #1a1a00,
+                0 0 0 18px #c9a227,
+                0 0 0 22px rgba(201, 162, 39, 0.4);
+        }
+
+        /* Neon Style (Purple with glow) */
+        .table-neon .felt {
+            background: radial-gradient(ellipse at center, #3d1a6b 0%, #2a1250 50%, #1a0a35 100%);
+        }
+
+        .table-neon .felt::after {
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), inset 0 0 20px rgba(168, 85, 247, 0.1);
+        }
+
+        .table-neon.poker-table {
+            box-shadow:
+                0 0 0 12px #1a0a2a,
+                0 0 0 18px #4c1d95,
+                0 0 0 22px rgba(168, 85, 247, 0.3),
+                0 0 40px rgba(168, 85, 247, 0.2);
+        }
+
         /* ==================== CENTER AREA ==================== */
         .center-area {
             position: absolute;
@@ -1252,6 +1320,13 @@
             { id: 'vintage', name: 'Vintage' }
         ];
 
+        const TABLE_STYLES = [
+            { id: 'empire', name: 'Empire', color: '#cc0000', icon: '👑' },
+            { id: 'classic', name: 'Classic', color: '#16a34a', icon: '🎰' },
+            { id: 'royal', name: 'Royal', color: '#2563eb', icon: '💎' },
+            { id: 'neon', name: 'Neon', color: '#a855f7', icon: '✨' }
+        ];
+
         // ==========================================
         // POKER ELO SYSTEM (Separate from BlindTest)
         // ==========================================
@@ -1850,6 +1925,7 @@
             const [name, setName] = useState('');
             const [buyIn, setBuyIn] = useState(1000);
             const [cardDesign, setCardDesign] = useState('empire');
+            const [tableStyle, setTableStyle] = useState('empire');
             const [isRanked, setIsRanked] = useState(false);
 
             const active = Object.entries(tables).filter(([_, t]) => Object.keys(t.players || {}).length > 0);
@@ -1858,7 +1934,7 @@
             const handleCreate = () => {
                 if (name.trim()) {
                     soundManager.init();
-                    onCreate(name.trim(), buyIn, cardDesign, isRanked);
+                    onCreate(name.trim(), buyIn, cardDesign, isRanked, tableStyle);
                 }
             };
 
@@ -1953,6 +2029,29 @@
                         <div className="mb-6">
                             <label className="text-gray-400 text-sm mb-2 block">Style des cartes</label>
                             <DesignSelector selected={cardDesign} onSelect={setCardDesign} />
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="text-gray-400 text-sm mb-3 block">Style de la table</label>
+                            <div className="grid grid-cols-4 gap-3">
+                                {TABLE_STYLES.map(style => (
+                                    <button
+                                        key={style.id}
+                                        onClick={() => setTableStyle(style.id)}
+                                        className={`p-3 rounded-xl border-2 transition-all ${tableStyle === style.id
+                                            ? 'border-opacity-100 scale-105'
+                                            : 'border-opacity-30 hover:border-opacity-60'
+                                            }`}
+                                        style={{
+                                            borderColor: style.color,
+                                            backgroundColor: tableStyle === style.id ? `${style.color}20` : 'rgba(0,0,0,0.3)'
+                                        }}
+                                    >
+                                        <div className="text-2xl mb-1">{style.icon}</div>
+                                        <div className="text-xs font-bold" style={{ color: style.color }}>{style.name}</div>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <button
@@ -2562,6 +2661,7 @@
             const minR = Math.max(BLINDS.bb * 2, (game.currentBet || 0) * 2);
             const maxR = myChips;
             const design = game.cardDesign || 'classic';
+            const tableStyleClass = `table-${game.tableStyle || 'classic'}`;
 
             // Reorder players so current user is at position 0
             const myIdx = ids.indexOf(user.id);
@@ -2655,7 +2755,7 @@
                     </div>
 
                     {/* Poker Table */}
-                    <div className="poker-table">
+                    <div className={`poker-table ${tableStyleClass}`}>
                         <div className="felt">
                             <DeckStack design={design} />
 
@@ -2857,12 +2957,13 @@
                 else window.addEventListener('fb-ready', init);
             }, []);
 
-            const create = async (name, buyIn, cardDesign, isRanked) => {
+            const create = async (name, buyIn, cardDesign, isRanked, tableStyle) => {
                 const r = window.FB.push(window.FB.ref(window.FB.db, 'poker_tables'));
                 await window.FB.set(r, {
                     name,
                     buyIn,
                     cardDesign,
+                    tableStyle: tableStyle || 'classic',
                     isRanked: isRanked || false,
                     totalRounds: isRanked ? RANKED_ROUNDS : 0,
                     currentRound: isRanked ? 1 : 0,
