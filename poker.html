@@ -616,63 +616,6 @@
             animation: dealCommunityCard 0.3s ease-out forwards;
         }
 
-        /* ==================== CHIP ANIMATIONS ==================== */
-        .chip-animation-container {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 500;
-            overflow: hidden;
-        }
-
-        .flying-chip {
-            position: absolute;
-            font-size: 1.5rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-            z-index: 501;
-        }
-
-        @keyframes chipToPot {
-            0% {
-                opacity: 1;
-                transform: scale(1) rotate(0deg) translate(0, 0);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.3) rotate(180deg) translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5 - 30px));
-            }
-
-            100% {
-                opacity: 0;
-                transform: scale(0.5) rotate(360deg) translate(var(--end-x), var(--end-y));
-            }
-        }
-
-        @keyframes chipFromPot {
-            0% {
-                opacity: 0;
-                transform: scale(0.3) rotate(0deg) translate(0, 0);
-            }
-
-            30% {
-                opacity: 1;
-                transform: scale(1.4) rotate(180deg) translate(calc(var(--end-x) * 0.3), calc(var(--end-y) * 0.3 - 50px));
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1) rotate(720deg) translate(var(--end-x), var(--end-y));
-            }
-        }
-
-        .chip-to-pot {
-            animation: chipToPot 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        .chip-from-pot {
-            animation: chipFromPot 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
 
         .card::after {
             content: '';
@@ -1745,40 +1688,6 @@
             </div>
         );
 
-        // Chip Animation Component
-        const ChipAnimation = ({ chips, onComplete }) => {
-            useEffect(() => {
-                if (chips.length > 0) {
-                    const timer = setTimeout(() => {
-                        if (onComplete) onComplete();
-                    }, 1000);
-                    return () => clearTimeout(timer);
-                }
-            }, [chips, onComplete]);
-
-            if (chips.length === 0) return null;
-
-            return (
-                <div className="chip-animation-container">
-                    {chips.map((chip, i) => (
-                        <div
-                            key={chip.id}
-                            className={`flying-chip ${chip.direction === 'toPot' ? 'chip-to-pot' : 'chip-from-pot'}`}
-                            style={{
-                                left: chip.startX,
-                                top: chip.startY,
-                                '--end-x': `${chip.endX - chip.startX}px`,
-                                '--end-y': `${chip.endY - chip.startY}px`,
-                                animationDelay: `${i * 0.08}s`,
-                                transition: `left ${chip.direction === 'toPot' ? '0.6s' : '0.8s'} cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${chip.direction === 'toPot' ? '0.6s' : '0.8s'} cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
-                            }}
-                        >
-                            🪙
-                        </div>
-                    ))}
-                </div>
-            );
-        };
 
         // Player Component
         const Player = ({ p, isTurn, isD, isSB, isBB, isMe, showCards, isWinner, design }) => {
@@ -2230,10 +2139,7 @@
             const [winner, setWinner] = useState(null);
             const [raise, setRaise] = useState(40);
             const [muted, setMuted] = useState(false);
-            const [flyingChips, setFlyingChips] = useState([]);
             const prevTurnRef = useRef(null);
-            const prevPotRef = useRef(0);
-            const potRef = useRef(null);
 
             // Subscribe to game updates
             useEffect(() => {
@@ -2269,31 +2175,6 @@
                         const w = d.players[d.winnerId];
                         if (w) {
                             soundManager.play('win');
-
-                            // Trigger chip animation from pot to winner
-                            const potElement = potRef.current;
-                            if (potElement) {
-                                const potRect = potElement.getBoundingClientRect();
-                                const centerX = potRect.left + potRect.width / 2;
-                                const centerY = potRect.top + potRect.height / 2;
-
-                                // Create multiple chips flying to winner (approximate bottom of screen for current player)
-                                const isWinnerMe = d.winnerId === user.id;
-                                const targetY = isWinnerMe ? window.innerHeight - 150 : 100;
-                                const targetX = window.innerWidth / 2;
-
-                                const newChips = Array.from({ length: 8 }, (_, i) => ({
-                                    id: `win-${Date.now()}-${i}`,
-                                    direction: 'fromPot',
-                                    startX: centerX + (Math.random() - 0.5) * 40,
-                                    startY: centerY + (Math.random() - 0.5) * 40,
-                                    endX: targetX + (Math.random() - 0.5) * 100,
-                                    endY: targetY + (Math.random() - 0.5) * 50,
-                                }));
-                                setFlyingChips(newChips);
-                                setTimeout(() => setFlyingChips([]), 1200);
-                            }
-
                             setWinner({
                                 id: d.winnerId,
                                 player: w,
