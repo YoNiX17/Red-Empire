@@ -1,1 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Casino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        gold: { 400: '#facc15', 500: '#eab308', 600: '#ca8a04' },
+                        casino: { 500: '#10b981', 600: '#059669', 700: '#047857' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #030303 0%, #0a0a0a 50%, #050808 100%);
+            color: #e5e5e5;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .casino-glow {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+
+        .game-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(16, 185, 129, 0.3);
+            border-color: #10b981 !important;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .locked-card {
+            opacity: 0.5;
+            filter: grayscale(0.9);
+            cursor: not-allowed;
+        }
+
+        .locked-card:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Casino background pattern */
+        .bg-casino-pattern {
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(234, 179, 8, 0.03) 0%, transparent 50%);
+        }
+
+        /* Neon text effect */
+        .text-neon {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+        }
+
+        /* Chip animation */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        .float-chip {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #030303;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-casino-600 selection:text-white">
+
+    <!-- Background Effect -->
+    <div class="fixed inset-0 bg-casino-pattern pointer-events-none z-0"></div>
+    <div
+        class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,black_100%)] pointer-events-none z-0">
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-casino-700/30 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-crown text-empire-600 text-2xl group-hover:animate-pulse"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="games.html"
+                    class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>HUB JEUX
+                </a>
+                <a href="#"
+                    class="text-sm font-mono font-bold text-casino-500 text-glow border-b-2 border-casino-500 pb-1">CASINO</a>
+            </div>
+            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                class="md:hidden text-white">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+        <div id="mobile-menu"
+            class="hidden absolute top-16 left-0 w-full bg-black border-b border-casino-900 p-4 md:hidden">
+            <a href="games.html" class="block py-2 text-gray-400 hover:text-white"><i
+                    class="fa-solid fa-arrow-left mr-2"></i>HUB JEUX</a>
+            <a href="#" class="block py-2 text-casino-500 font-bold">CASINO</a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-12 text-center relative z-10 px-4">
+        <div data-aos="fade-down"
+            class="inline-block mb-4 px-4 py-2 border border-casino-500/30 rounded-full bg-casino-500/10 backdrop-blur-sm">
+            <span class="text-xs font-mono font-bold tracking-[0.2em] text-casino-400 uppercase">
+                <i class="fa-solid fa-diamond mr-2"></i>VIP LOUNGE
+            </span>
+        </div>
+
+        <div class="flex justify-center items-center gap-4 mb-6" data-aos="zoom-in" data-aos-delay="100">
+            <i class="fa-solid fa-dice text-5xl text-casino-500 float-chip"></i>
+            <h1 class="font-display text-5xl md:text-7xl font-black text-white">
+                CASINO <span class="text-casino-500 text-neon">EMPIRE</span>
+            </h1>
+            <i class="fa-solid fa-gem text-5xl text-gold-500 float-chip" style="animation-delay: 0.5s;"></i>
+        </div>
+
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+            Tentez votre chance dans nos jeux de casino exclusifs.
+        </p>
+    </section>
+
+    <!-- FEATURED GAME: POKER -->
+    <section class="max-w-6xl mx-auto px-6 lg:px-8 mb-12 relative z-10">
+        <div class="game-card glass-panel rounded-2xl border border-casino-500/30 overflow-hidden casino-glow"
+            data-aos="fade-up" data-aos-delay="150">
+            <div class="flex flex-col md:flex-row">
+                <!-- Image Side -->
+                <div
+                    class="md:w-1/2 h-64 md:h-auto relative bg-gradient-to-br from-red-900/50 to-black flex items-center justify-center overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-30">
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="flex justify-center gap-3 mb-4">
+                            <div
+                                class="w-16 h-24 bg-white rounded-lg shadow-2xl flex items-center justify-center text-4xl transform -rotate-6 hover:rotate-0 transition-transform">
+                                <span class="text-red-600">♥</span>
+                            </div>
+                            <div
+                                class="w-16 h-24 bg-white rounded-lg shadow-2xl flex items-center justify-center text-4xl transform rotate-6 hover:rotate-0 transition-transform">
+                                <span class="text-black">♠</span>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-display font-bold text-white">TEXAS HOLD'EM</div>
+                    </div>
+                </div>
+
+                <!-- Content Side -->
+                <div class="md:w-1/2 p-8 flex flex-col justify-center">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span
+                            class="px-3 py-1 bg-empire-600/20 border border-empire-600 text-empire-500 text-xs font-bold rounded-full">MULTIJOUEUR</span>
+                        <span
+                            class="px-3 py-1 bg-gold-500/20 border border-gold-500 text-gold-400 text-xs font-bold rounded-full">
+                            <i class="fa-solid fa-trophy mr-1"></i>RANKED
+                        </span>
+                    </div>
+                    <h2 class="font-display text-3xl font-bold text-white mb-4">
+                        <i class="fa-solid fa-crown text-empire-500 mr-3"></i>RED POKER
+                    </h2>
+                    <p class="text-gray-400 mb-6 leading-relaxed">
+                        Affrontez les autres membres dans des parties de Texas Hold'em palpitantes.
+                        Montez dans le classement, gagnez des jetons et devenez le champion du Red Empire !
+                    </p>
+                    <ul class="text-gray-500 text-sm mb-8 space-y-2">
+                        <li><i class="fa-solid fa-check text-casino-500 mr-2"></i>Tables personnalisées</li>
+                        <li><i class="fa-solid fa-check text-casino-500 mr-2"></i>Système ELO & classement</li>
+                        <li><i class="fa-solid fa-check text-casino-500 mr-2"></i>Plusieurs designs de cartes</li>
+                    </ul>
+                    <a href="poker.html"
+                        class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-empire-600 to-empire-700 hover:from-empire-500 hover:to-empire-600 text-white font-display font-bold text-lg rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-empire-600/30">
+                        <i class="fa-solid fa-play"></i>
+                        JOUER AU POKER
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OTHER GAMES GRID -->
+    <section class="max-w-6xl mx-auto px-6 lg:px-8 pb-24 relative z-10">
+        <h2 class="font-display text-2xl text-white mb-8 text-center" data-aos="fade-up">
+            <i class="fa-solid fa-dice text-casino-500 mr-3"></i>
+            AUTRES JEUX
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Blackjack (Coming Soon) -->
+            <div class="locked-card glass-panel rounded-xl border border-white/5 overflow-hidden" data-aos="fade-up"
+                data-aos-delay="100">
+                <div class="h-40 bg-gradient-to-b from-gray-800/50 to-black flex items-center justify-center relative">
+                    <i class="fa-solid fa-lock absolute top-4 right-4 text-gray-600"></i>
+                    <div class="text-center">
+                        <i class="fa-solid fa-clone text-5xl text-gray-600 mb-2"></i>
+                    </div>
+                </div>
+                <div class="p-6 text-center">
+                    <h3 class="font-display text-xl font-bold text-gray-500 mb-2">BLACKJACK</h3>
+                    <p class="text-gray-600 text-xs mb-4">Battez le croupier et approchez-vous de 21.</p>
+                    <div
+                        class="py-2 bg-gray-900/50 rounded border border-white/5 text-gray-600 text-[10px] font-mono uppercase">
+                        BIENTÔT DISPONIBLE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Roulette (Coming Soon) -->
+            <div class="locked-card glass-panel rounded-xl border border-white/5 overflow-hidden" data-aos="fade-up"
+                data-aos-delay="200">
+                <div class="h-40 bg-gradient-to-b from-gray-800/50 to-black flex items-center justify-center relative">
+                    <i class="fa-solid fa-lock absolute top-4 right-4 text-gray-600"></i>
+                    <div class="text-center">
+                        <i class="fa-solid fa-circle-notch text-5xl text-gray-600 mb-2"></i>
+                    </div>
+                </div>
+                <div class="p-6 text-center">
+                    <h3 class="font-display text-xl font-bold text-gray-500 mb-2">ROULETTE</h3>
+                    <p class="text-gray-600 text-xs mb-4">Faites vos jeux sur la roulette classique.</p>
+                    <div
+                        class="py-2 bg-gray-900/50 rounded border border-white/5 text-gray-600 text-[10px] font-mono uppercase">
+                        BIENTÔT DISPONIBLE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slots (Coming Soon) -->
+            <div class="locked-card glass-panel rounded-xl border border-white/5 overflow-hidden" data-aos="fade-up"
+                data-aos-delay="300">
+                <div class="h-40 bg-gradient-to-b from-gray-800/50 to-black flex items-center justify-center relative">
+                    <i class="fa-solid fa-lock absolute top-4 right-4 text-gray-600"></i>
+                    <div class="text-center">
+                        <i class="fa-solid fa-slot-machine text-5xl text-gray-600 mb-2"></i>
+                    </div>
+                </div>
+                <div class="p-6 text-center">
+                    <h3 class="font-display text-xl font-bold text-gray-500 mb-2">MACHINE À SOUS</h3>
+                    <p class="text-gray-600 text-xs mb-4">Tentez votre chance aux slots.</p>
+                    <div
+                        class="py-2 bg-gray-900/50 rounded border border-white/5 text-gray-600 text-[10px] font-mono uppercase">
+                        BIENTÔT DISPONIBLE
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-casino-900/50 bg-black py-8 relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            <i class="fa-solid fa-diamond text-casino-600 mr-2"></i>
+            © 2024 Red Empire Casino. Jouez responsablement.
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+</body>
+
+</html>
