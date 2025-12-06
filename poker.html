@@ -1662,21 +1662,26 @@
                     const cardH = size === 'sm' ? 67 : size === 'xl' ? 126 : 105;
 
                     // SVG card dimensions in the sprite
-                    // Each card base is 166.575 wide and 235.27 tall (from base path definition)
+                    // Each card base is 166.575 wide and 235.27 tall
                     const CARD_WIDTH = 167.575;
                     const CARD_HEIGHT = 243.137;
 
-                    // Calculate viewBox position for this specific card
-                    const viewBoxX = gridPos.col * CARD_WIDTH;
-                    const viewBoxY = (gridPos.row * CARD_HEIGHT) - 236;
+                    // Add padding to crop inside the card and hide border edges
+                    const PADDING = 3;
+
+                    // Calculate viewBox position for this specific card (with padding)
+                    const viewBoxX = (gridPos.col * CARD_WIDTH) + PADDING;
+                    const viewBoxY = ((gridPos.row * CARD_HEIGHT) - 236) + PADDING;
+                    const viewBoxW = CARD_WIDTH - (PADDING * 2);
+                    const viewBoxH = CARD_HEIGHT - (PADDING * 2);
 
                     return (
                         <div
                             className={`card design-classic ${sizeClass} ${animClass}`}
-                            style={{ overflow: 'hidden' }}
+                            style={{ overflow: 'hidden', borderRadius: '10px' }}
                         >
                             <svg
-                                viewBox={`${viewBoxX} ${viewBoxY} ${CARD_WIDTH} ${CARD_HEIGHT}`}
+                                viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`}
                                 width={cardW}
                                 height={cardH}
                                 style={{ display: 'block' }}
