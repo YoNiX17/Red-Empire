@@ -2257,10 +2257,22 @@
                 upd[`poker_tables/${tableId}/currentBet`] = 0;
 
                 // Check if all players are all-in or only one can act
-                const canAct = active.filter(id => !game.players[id].isAllIn && (game.players[id].chips || 0) > 0);
+                // We need to check both current state AND pending updates
+                const canAct = active.filter(id => {
+                    const player = game.players[id];
+                    // Check if player is marked as all-in in pending updates
+                    const isAllInPending = upd[`poker_tables/${tableId}/players/${id}/isAllIn`];
+                    const chipsPending = upd[`poker_tables/${tableId}/players/${id}/chips`];
+
+                    const isAllIn = isAllInPending !== undefined ? isAllInPending : player.isAllIn;
+                    const chips = chipsPending !== undefined ? chipsPending : (player.chips || 0);
+
+                    return !player.folded && !isAllIn && chips > 0;
+                });
+
                 const allAllIn = canAct.length <= 1;
 
-                // If everyone is all-in, deal ALL remaining community cards at once
+                // If everyone is all-in or only one player can act, deal ALL remaining community cards at once
                 if (allAllIn) {
                     // Deal remaining cards based on current phase
                     if (phase === 'preflop' || cc.length === 0) {
