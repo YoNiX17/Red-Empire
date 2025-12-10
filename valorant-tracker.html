@@ -1982,7 +1982,7 @@
                 // Update stats display
                 updateStatsDisplay(stats);
 
-                // Clear and re-render ALL filtered matches (no pagination)
+                // Clear and render matches PROGRESSIVELY to avoid UI blocking
                 const container = document.getElementById('matches-list');
                 container.innerHTML = '';
 
@@ -1995,11 +1995,30 @@
                         </div>
                     `;
                 } else {
-                    // Render ALL matches for the selected season
-                    seasonMatches.forEach(match => {
-                        const matchCard = createMatchCard(match);
-                        container.appendChild(matchCard);
-                    });
+                    // Progressive rendering: render in batches to avoid lag
+                    const BATCH_SIZE = 10;
+                    let currentIndex = 0;
+
+                    function renderBatch() {
+                        const fragment = document.createDocumentFragment();
+                        const endIndex = Math.min(currentIndex + BATCH_SIZE, seasonMatches.length);
+
+                        for (let i = currentIndex; i < endIndex; i++) {
+                            const matchCard = createMatchCard(seasonMatches[i]);
+                            fragment.appendChild(matchCard);
+                        }
+
+                        container.appendChild(fragment);
+                        currentIndex = endIndex;
+
+                        // Continue rendering next batch if there are more matches
+                        if (currentIndex < seasonMatches.length) {
+                            requestAnimationFrame(renderBatch);
+                        }
+                    }
+
+                    // Start progressive rendering
+                    requestAnimationFrame(renderBatch);
                 }
 
                 displayedMatches = seasonMatches.length;
