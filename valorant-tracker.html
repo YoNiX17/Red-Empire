@@ -2704,8 +2704,11 @@
                 </div>
             `;
 
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // Use requestAnimationFrame to prevent UI blocking
+            requestAnimationFrame(() => {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
         }
 
         function createPlayerRow(player, roundsPlayed = 1) {
@@ -2716,62 +2719,40 @@
                 player.tag.toLowerCase() === currentPlayer.tag.toLowerCase();
 
             // Agent - handle multiple API formats
-            const agentName = player.character || player.agent?.name || 'Unknown';
+            const agentName = player.character || player.agent?.name || '?';
             const agentIcon = player.assets?.agent?.small ||
                 (player.agent?.id ? `https://media.valorant-api.com/agents/${player.agent.id}/displayicon.png` : '');
 
-            // ACS calculation (score / rounds)
+            // ACS calculation
             const acs = Math.round((stats.score || 0) / roundsPlayed);
 
-            // Damage dealt
-            const damageDealt = player.damage_made || stats.damage?.dealt || 0;
-
-            // Shot distribution
+            // HS%
             const headshots = stats.headshots || 0;
             const bodyshots = stats.bodyshots || 0;
             const legshots = stats.legshots || 0;
             const totalShots = headshots + bodyshots + legshots;
             const hsPercent = totalShots > 0 ? Math.round((headshots / totalShots) * 100) : 0;
 
-            // Ability casts - API uses: grenade/ability1/ability2/ultimate OR c_cast/q_cast/e_cast/x_cast
-            const abilities = player.ability_casts || {};
-            const cCast = abilities.c_cast || abilities.grenade || 0;
-            const qCast = abilities.q_cast || abilities.ability1 || 0;
-            const eCast = abilities.e_cast || abilities.ability2 || 0;
-            const xCast = abilities.x_cast || abilities.ultimate || 0;
-
-            // Escape player name for onclick
+            // Escape names
             const escapedName = player.name.replace(/'/g, "\\'");
             const escapedTag = player.tag.replace(/'/g, "\\'");
 
+            // Simplified row - less HTML for better performance
             return `
-                <div class="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-white/10 transition-all ${isCurrentPlayer ? 'bg-valorant-500/20 border border-valorant-500/40' : 'bg-white/5'}" 
-                     onclick="searchPlayerFromModal('${escapedName}', '${escapedTag}')" 
-                     title="Voir le profil de ${player.name}#${player.tag}">
-                    <img src="${agentIcon}" alt="${agentName}" class="w-10 h-10 rounded-full" loading="lazy" onerror="this.style.display='none'">
+                <div class="flex items-center gap-2 p-2 rounded ${isCurrentPlayer ? 'bg-valorant-500/20' : 'bg-white/5'} cursor-pointer hover:bg-white/10" 
+                     onclick="searchPlayerFromModal('${escapedName}', '${escapedTag}')">
+                    <img src="${agentIcon}" alt="${agentName}" class="w-8 h-8 rounded-full" loading="lazy" onerror="this.style.display='none'">
                     <div class="flex-1 min-w-0">
-                        <p class="font-mono text-sm text-white truncate hover:text-valorant-400 ${isCurrentPlayer ? 'text-valorant-400 font-bold' : ''}">${player.name}#${player.tag}</p>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-gray-500">${agentName}</span>
-                            ${player.currenttier_patched ? `<span class="text-xs px-2 py-0.5 rounded bg-gray-700/50 text-gray-300">${player.currenttier_patched}</span>` : ''}
-                        </div>
+                        <p class="text-sm text-white truncate ${isCurrentPlayer ? 'text-valorant-400 font-bold' : ''}">${player.name}#${player.tag}</p>
                     </div>
-                    <div class="text-center px-3">
-                        <p class="font-mono text-sm text-white font-bold">${kda}</p>
-                        <p class="text-xs text-gray-500">K/D/A</p>
+                    <div class="text-center w-16">
+                        <p class="text-sm text-white font-bold">${kda}</p>
                     </div>
-                    <div class="text-center px-3">
-                        <p class="font-mono text-sm text-green-400 font-bold">${acs}</p>
-                        <p class="text-xs text-gray-500">ACS</p>
+                    <div class="text-center w-12">
+                        <p class="text-sm text-green-400">${acs}</p>
                     </div>
-                    <div class="text-center px-3 hidden md:block">
-                        <p class="font-mono text-sm text-white">${hsPercent}%</p>
-                        <p class="text-xs text-gray-500">HS%</p>
-                    </div>
-                    <div onclick="event.stopPropagation(); showPlayerDetails('${player.puuid}')">
-                        <button class="w-7 h-7 rounded-full bg-gray-700/50 hover:bg-valorant-500/50 text-gray-400 hover:text-white text-xs flex items-center justify-center transition-all">
-                            <i class="fa-solid fa-chart-bar"></i>
-                        </button>
+                    <div class="text-center w-10 hidden md:block">
+                        <p class="text-sm text-gray-400">${hsPercent}%</p>
                     </div>
                 </div>
             `;
