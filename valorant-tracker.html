@@ -105,13 +105,12 @@
             }
         }
 
-        /* Glass Panel - balanced blur */
+        /* Glass Panel - NO BLUR for performance */
         .glass-panel {
-            background: linear-gradient(135deg, rgba(20, 10, 15, 0.92) 0%, rgba(10, 5, 8, 0.96) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: linear-gradient(135deg, rgba(15, 8, 12, 0.98) 0%, rgba(8, 4, 6, 0.99) 100%);
+            /* backdrop-filter removed for performance */
             border: 1px solid rgba(253, 69, 86, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
 
         .valorant-glow {
@@ -1995,30 +1994,40 @@
                         </div>
                     `;
                 } else {
-                    // Progressive rendering: render in batches to avoid lag
-                    const BATCH_SIZE = 10;
-                    let currentIndex = 0;
+                    // PAGINATION: Show only first 20 matches for performance
+                    const MATCHES_TO_SHOW = 20;
+                    const matchesToRender = seasonMatches.slice(0, MATCHES_TO_SHOW);
 
-                    function renderBatch() {
-                        const fragment = document.createDocumentFragment();
-                        const endIndex = Math.min(currentIndex + BATCH_SIZE, seasonMatches.length);
+                    // Render initial batch
+                    const fragment = document.createDocumentFragment();
+                    matchesToRender.forEach(match => {
+                        fragment.appendChild(createMatchCard(match));
+                    });
+                    container.appendChild(fragment);
 
-                        for (let i = currentIndex; i < endIndex; i++) {
-                            const matchCard = createMatchCard(seasonMatches[i]);
-                            fragment.appendChild(matchCard);
-                        }
+                    // Add "Show more" button if there are more matches
+                    if (seasonMatches.length > MATCHES_TO_SHOW) {
+                        const showMoreBtn = document.createElement('button');
+                        showMoreBtn.id = 'show-more-matches';
+                        showMoreBtn.className = 'w-full mt-6 py-4 bg-valorant-500/20 hover:bg-valorant-500/40 border border-valorant-500/30 rounded-xl text-valorant-400 font-mono transition-all';
+                        showMoreBtn.innerHTML = `<i class="fa-solid fa-chevron-down mr-2"></i>Afficher ${seasonMatches.length - MATCHES_TO_SHOW} matchs de plus`;
 
-                        container.appendChild(fragment);
-                        currentIndex = endIndex;
+                        let currentShown = MATCHES_TO_SHOW;
+                        showMoreBtn.onclick = function () {
+                            const nextBatch = seasonMatches.slice(currentShown, currentShown + MATCHES_TO_SHOW);
+                            const frag = document.createDocumentFragment();
+                            nextBatch.forEach(m => frag.appendChild(createMatchCard(m)));
+                            container.insertBefore(frag, showMoreBtn);
+                            currentShown += nextBatch.length;
 
-                        // Continue rendering next batch if there are more matches
-                        if (currentIndex < seasonMatches.length) {
-                            requestAnimationFrame(renderBatch);
-                        }
+                            if (currentShown >= seasonMatches.length) {
+                                showMoreBtn.remove();
+                            } else {
+                                showMoreBtn.innerHTML = `<i class="fa-solid fa-chevron-down mr-2"></i>Afficher ${seasonMatches.length - currentShown} matchs de plus`;
+                            }
+                        };
+                        container.appendChild(showMoreBtn);
                     }
-
-                    // Start progressive rendering
-                    requestAnimationFrame(renderBatch);
                 }
 
                 displayedMatches = seasonMatches.length;
