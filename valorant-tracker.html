@@ -560,6 +560,41 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
+        /* Skeleton Loading Animation */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(30, 20, 25, 1) 25%, rgba(50, 35, 40, 1) 50%, rgba(30, 20, 25, 1) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-card {
+            height: 80px;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-text {
+            height: 20px;
+            width: 60%;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }
     </style>
 </head>
 
@@ -648,10 +683,27 @@
             </div>
         </section>
 
-        <!-- LOADING STATE -->
-        <section id="loading-section" class="hidden text-center py-20">
-            <div class="spinner mx-auto mb-4"></div>
-            <p class="text-gray-400 font-mono">Chargement des données...</p>
+        <!-- LOADING STATE - Shows skeleton cards for immediate visual feedback -->
+        <section id="loading-section" class="hidden">
+            <div class="glass-panel rounded-2xl p-6 mb-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="flex-1">
+                        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                        <div class="skeleton skeleton-text" style="width: 25%; height: 14px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
+            <p class="text-center text-gray-500 font-mono mt-6 text-sm">
+                <i class="fa-solid fa-spinner fa-spin mr-2"></i>Chargement des données...
+            </p>
         </section>
 
         <!-- ERROR STATE -->
@@ -1509,7 +1561,7 @@
             showLoading();
 
             try {
-                // Fetch account info
+                // PHASE 1: Fetch account info (fast) - shows profile immediately
                 const accountData = await fetchAPI(`/valorant/v2/account/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`);
 
                 if (!accountData || accountData.status !== 200) {
@@ -1522,7 +1574,6 @@
                 // Fetch MMR data (may fail for some players, that's ok)
                 const region = currentPlayer.region || 'eu';
                 let mmrData = null;
-                let mmrHistoryData = null;
 
                 try {
                     mmrData = await fetchAPI(`/valorant/v3/mmr/${region}/pc/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`);
@@ -1540,10 +1591,37 @@
                     console.warn('MMR v2 not available:', v2Error.message);
                 }
 
-                // Small delay before fetching matches to let rate limit reset
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Get peak rank from v2 MMR
+                let peakRankFromHistory = null;
+                const highestRank = mmrV2Data?.data?.highest_rank;
+                if (highestRank) {
+                    peakRankFromHistory = {
+                        name: highestRank.patched_tier || '',
+                        id: highestRank.tier || 0,
+                        season: highestRank.season || '',
+                        rr: 0,
+                        leaderboardRank: null
+                    };
+                }
 
-                // SMART FETCH: Load Firebase FIRST to know what we already have
+                // *** SHOW PROFILE IMMEDIATELY *** (before loading matches)
+                hideLoading();
+                renderProfile(currentPlayer, mmrData?.data, null, null, peakRankFromHistory);
+
+                // Show matches section with loading indicator
+                document.getElementById('matches-section').classList.remove('hidden');
+                document.getElementById('matches-list').innerHTML = `
+                    <div class="space-y-3">
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                    <p class="text-center text-gray-500 font-mono mt-4 text-sm">
+                        <i class="fa-solid fa-spinner fa-spin mr-2"></i>Chargement des matchs...
+                    </p>
+                `;
+
+                // PHASE 2: Load matches in background (slower)
                 const puuid = currentPlayer.puuid;
                 let storedMatches = [];
                 let storedMatchIds = new Set();
@@ -1637,29 +1715,14 @@
                     }
                 }
 
-                // Get peak rank directly from v2 MMR highest_rank (no leaderboard search to save API calls)
-                let peakRankFromHistory = null;
-                const highestRank = mmrV2Data?.data?.highest_rank;
+                // Recalculate and display stats with matches
+                if (allMatches.length > 0) {
+                    const stats = calculateStatsFromMatches(allMatches, name, tag);
+                    updateStatsDisplay(stats);
 
-                if (highestRank) {
-                    peakRankFromHistory = {
-                        name: highestRank.patched_tier || '',
-                        id: highestRank.tier || 0,
-                        season: highestRank.season || '',
-                        rr: 0,
-                        leaderboardRank: null
-                    };
-                    console.log('Peak rank from v2 MMR:', peakRankFromHistory);
-                }
-
-                // Skip current leaderboard lookup to reduce API calls
-
-                hideLoading();
-                renderProfile(currentPlayer, mmrData?.data, rankFromMatch, statsFromMatches, peakRankFromHistory);
-
-                if (competitiveMatches.length > 0) {
+                    // Apply season filter which will render the matches
                     displayedMatches = 0;
-                    renderMatches();
+                    filterBySeason();
                 }
 
                 // Save current profile
