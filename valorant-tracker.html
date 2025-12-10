@@ -81,13 +81,16 @@
             min-height: 100vh;
         }
 
-        /* Animated Valorant-style background - STATIC for performance */
+        /* Animated Valorant-style background - OPTIMIZED */
         .bg-valorant-pattern {
             background-image:
                 radial-gradient(circle at 20% 20%, rgba(253, 69, 86, 0.1) 0%, transparent 40%),
                 radial-gradient(circle at 80% 80%, rgba(255, 51, 51, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 50% 50%, rgba(253, 69, 86, 0.05) 0%, transparent 60%);
-            /* animation disabled for performance */
+            animation: bgPulse 12s ease-in-out infinite;
+            /* Slower = less CPU */
+            will-change: opacity;
+            /* GPU hint */
         }
 
         @keyframes bgPulse {
@@ -98,35 +101,97 @@
             }
 
             50% {
-                opacity: 0.6;
+                opacity: 0.7;
             }
         }
 
-        /* Glass Panel - reduced blur for performance */
+        /* Glass Panel - balanced blur */
         .glass-panel {
-            background: linear-gradient(135deg, rgba(20, 10, 15, 0.95) 0%, rgba(10, 5, 8, 0.98) 100%);
-            backdrop-filter: blur(8px);
+            background: linear-gradient(135deg, rgba(20, 10, 15, 0.92) 0%, rgba(10, 5, 8, 0.96) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(253, 69, 86, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .valorant-glow {
             box-shadow:
-                0 0 40px rgba(253, 69, 86, 0.25),
-                0 0 80px rgba(253, 69, 86, 0.1),
-                inset 0 0 30px rgba(253, 69, 86, 0.03);
+                0 0 30px rgba(253, 69, 86, 0.2),
+                0 0 60px rgba(253, 69, 86, 0.08);
         }
 
-        /* Glitch Effect - disabled for performance */
+        /* Glitch Effect - LIGHTWEIGHT VERSION */
         .glitch {
             position: relative;
-            /* animation disabled for performance */
+            animation: glitch-simple 4s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        @keyframes glitch-simple {
+
+            0%,
+            90%,
+            100% {
+                transform: translate(0);
+            }
+
+            92% {
+                transform: translate(-2px, 0);
+            }
+
+            94% {
+                transform: translate(2px, 0);
+            }
+
+            96% {
+                transform: translate(-1px, 1px);
+            }
+
+            98% {
+                transform: translate(1px, -1px);
+            }
         }
 
         .glitch::before,
         .glitch::after {
-            content: none;
-            /* Disabled for performance */
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            will-change: opacity;
+        }
+
+        .glitch::before {
+            color: #fd4556;
+            animation: glitch-color 4s ease-in-out infinite;
+        }
+
+        .glitch::after {
+            color: #00ffff;
+            animation: glitch-color 4s ease-in-out infinite 0.05s;
+        }
+
+        @keyframes glitch-color {
+
+            0%,
+            89%,
+            100% {
+                opacity: 0;
+                transform: translate(0);
+            }
+
+            90% {
+                opacity: 0.8;
+                transform: translate(-3px, 0);
+            }
+
+            95% {
+                opacity: 0;
+                transform: translate(3px, 0);
+            }
         }
 
         @keyframes glitch-anim {
@@ -507,8 +572,8 @@
         class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,black_100%)] pointer-events-none z-0">
     </div>
 
-    <!-- Particle Canvas - DISABLED for performance -->
-    <!-- <canvas id="particles-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-60"></canvas> -->
+    <!-- Particle Canvas - OPTIMIZED (30 FPS, fewer particles) -->
+    <canvas id="particles-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
 
     <!-- NAVIGATION -->
     <nav class="fixed w-full z-50 border-b border-valorant-500/20 bg-black/90 backdrop-blur-md py-4">
@@ -1270,12 +1335,15 @@
             }
         });
 
-        // ==================== PARTICLES - DISABLED FOR PERFORMANCE ====================
+        // ==================== PARTICLES - OPTIMIZED FOR PERFORMANCE ====================
         function initParticles() {
             const canvas = document.getElementById('particles-canvas');
-            if (!canvas) return; // Disabled for performance
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let particles = [];
+            let lastTime = 0;
+            const fps = 20; // Limit to 20 FPS for performance
+            const interval = 1000 / fps;
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -1286,17 +1354,16 @@
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.size = Math.random() * 2 + 0.5;
-                    this.speedX = (Math.random() - 0.5) * 0.5;
-                    this.speedY = (Math.random() - 0.5) * 0.5;
-                    this.color = Math.random() > 0.8 ? '#fd4556' : '#ff6b6b';
-                    this.alpha = Math.random() * 0.5 + 0.2;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.3;
+                    this.speedY = (Math.random() - 0.5) * 0.3;
+                    this.color = Math.random() > 0.7 ? '#fd4556' : '#ff6b6b';
+                    this.alpha = Math.random() * 0.4 + 0.1;
                 }
 
                 update() {
                     this.x += this.speedX;
                     this.y += this.speedY;
-
                     if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
                     if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
                 }
@@ -1313,25 +1380,31 @@
 
             function init() {
                 particles = [];
-                const count = Math.min((canvas.width * canvas.height) / 40000, 40); // Reduced for better performance
+                // Max 25 particles for smooth performance
+                const count = Math.min((canvas.width * canvas.height) / 80000, 25);
                 for (let i = 0; i < count; i++) {
                     particles.push(new Particle());
                 }
             }
 
-            function animate() {
+            function animate(currentTime) {
+                requestAnimationFrame(animate);
+
+                // Limit frame rate
+                if (currentTime - lastTime < interval) return;
+                lastTime = currentTime;
+
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 particles.forEach(p => {
                     p.update();
                     p.draw();
                 });
-                requestAnimationFrame(animate);
             }
 
             window.addEventListener('resize', () => { resize(); init(); });
             resize();
             init();
-            animate();
+            requestAnimationFrame(animate);
         }
 
         // ==================== PEAK RANK FINDER ====================
