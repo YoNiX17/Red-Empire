@@ -595,7 +595,48 @@
             height: 48px;
             border-radius: 50%;
         }
+
+        /* ========== ULTRA-LITE MODE ========== */
+        /* Activated with ?lite in URL - removes ALL heavy effects */
+        body.lite-mode * {
+            animation: none !important;
+            transition: none !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+        }
+
+        body.lite-mode .bg-valorant-pattern,
+        body.lite-mode #particles-canvas {
+            display: none !important;
+        }
+
+        body.lite-mode .glass-panel {
+            background: #0d0808 !important;
+            border: 1px solid #3d1a1a !important;
+        }
+
+        body.lite-mode .valorant-glow {
+            box-shadow: none !important;
+        }
+
+        body.lite-mode .glitch::before,
+        body.lite-mode .glitch::after {
+            display: none !important;
+        }
+
+        body.lite-mode .gradient-text {
+            background: none !important;
+            -webkit-text-fill-color: #fd4556 !important;
+            color: #fd4556 !important;
+        }
     </style>
+
+    <script>
+        // Check for lite mode
+        if (window.location.search.includes('lite')) {
+            document.body.classList.add('lite-mode');
+        }
+    </script>
 </head>
 
 <body class="antialiased selection:bg-valorant-500 selection:text-white">
@@ -2588,12 +2629,16 @@
 
             // Show modal immediately with loading state
             modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
             content.innerHTML = `
                 <div class="text-center py-12">
                     <div class="inline-block w-12 h-12 border-4 border-valorant-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p class="text-gray-400">Chargement des détails du match...</p>
+                    <p class="text-gray-400">Chargement des détails...</p>
                 </div>
             `;
+
+            // Defer heavy processing to let the loading state render first
+            await new Promise(r => setTimeout(r, 50));
 
             // Get match ID 
             const matchId = match.meta?.id || match.metadata?.id;
