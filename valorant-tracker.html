@@ -2464,7 +2464,7 @@
                 <div class="flex items-center gap-4 flex-wrap">
                     <!-- Agent -->
                     <div class="flex items-center gap-3">
-                        <img src="${agentIcon}" alt="${agentName}" class="agent-icon" onerror="this.style.display='none'">
+                        <img src="${agentIcon}" alt="${agentName}" class="agent-icon" loading="lazy" onerror="this.style.display='none'">
                         <div>
                             <p class="font-display font-bold text-white">${agentName}</p>
                             <p class="text-xs text-gray-500 font-mono">${modeName}</p>
@@ -2685,7 +2685,7 @@
                 <div class="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-white/10 transition-all ${isCurrentPlayer ? 'bg-valorant-500/20 border border-valorant-500/40' : 'bg-white/5'}" 
                      onclick="searchPlayerFromModal('${escapedName}', '${escapedTag}')" 
                      title="Voir le profil de ${player.name}#${player.tag}">
-                    <img src="${agentIcon}" alt="${agentName}" class="w-10 h-10 rounded-full" onerror="this.style.display='none'">
+                    <img src="${agentIcon}" alt="${agentName}" class="w-10 h-10 rounded-full" loading="lazy" onerror="this.style.display='none'">
                     <div class="flex-1 min-w-0">
                         <p class="font-mono text-sm text-white truncate hover:text-valorant-400 ${isCurrentPlayer ? 'text-valorant-400 font-bold' : ''}">${player.name}#${player.tag}</p>
                         <div class="flex items-center gap-2">
