@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Empire | Paris Esports - Valorant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        empire: { 500: '#ff3333', 600: '#e60000', 700: '#cc0000', 800: '#990000', 900: '#4d0000', black: '#030303' },
+                        gold: { 400: '#facc15', 500: '#eab308', 600: '#ca8a04' },
+                        esports: { 400: '#c084fc', 500: '#a855f7', 600: '#9333ea', 700: '#7e22ce' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Rajdhani', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #030303 0%, #0a0a0a 50%, #080508 100%);
+            color: #e5e5e5;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated background */
+        .bg-esports-pattern {
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(234, 179, 8, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.03) 0%, transparent 60%);
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Enhanced Glass Panel */
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(10, 10, 20, 0.95) 100%);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 0 60px rgba(168, 85, 247, 0.05);
+        }
+
+        .esports-glow {
+            box-shadow:
+                0 0 40px rgba(168, 85, 247, 0.2),
+                0 0 80px rgba(168, 85, 247, 0.1),
+                inset 0 0 30px rgba(168, 85, 247, 0.03);
+        }
+
+        /* Premium Match Card with shimmer effect */
+        .match-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(25, 20, 40, 0.95) 0%, rgba(15, 12, 25, 0.98) 100%);
+        }
+
+        .match-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .match-card:hover::before {
+            left: 100%;
+        }
+
+        .match-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow:
+                0 25px 60px rgba(168, 85, 247, 0.25),
+                0 0 40px rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.6) !important;
+        }
+
+        /* Enhanced Bet Buttons */
+        .bet-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.25) 100%) !important;
+            border: 1px solid rgba(168, 85, 247, 0.3) !important;
+        }
+
+        .bet-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .bet-btn:hover:not(:disabled) {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow:
+                0 10px 25px rgba(168, 85, 247, 0.35),
+                0 0 20px rgba(168, 85, 247, 0.2);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(147, 51, 234, 0.5) 100%) !important;
+            border-color: rgba(168, 85, 247, 0.8) !important;
+        }
+
+        .bet-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .bet-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(50%);
+        }
+
+        /* Neon text effect */
+        .text-neon {
+            text-shadow:
+                0 0 5px currentColor,
+                0 0 15px currentColor,
+                0 0 30px currentColor,
+                0 0 60px currentColor;
+        }
+
+        /* Pulsing glow animation */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+                border-color: rgba(168, 85, 247, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(168, 85, 247, 0.7);
+                border-color: rgba(168, 85, 247, 0.8);
+            }
+        }
+
+        .live-indicator {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Floating animation for icons */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Enhanced Modal */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Premium Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 10, 15, 0.8);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #a855f7 0%, #7e22ce 100%);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #c084fc 0%, #9333ea 100%);
+        }
+
+        /* Premium Team Logo */
+        .team-logo {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #c084fc;
+            border: 2px solid rgba(168, 85, 247, 0.4);
+            box-shadow:
+                0 4px 15px rgba(168, 85, 247, 0.2),
+                inset 0 0 20px rgba(168, 85, 247, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .team-logo:hover {
+            border-color: rgba(168, 85, 247, 0.7);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+            transform: scale(1.1);
+        }
+
+        /* Enhanced Odds Badge */
+        .odds-badge {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(126, 34, 206, 0.35) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .odds-badge:hover {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(126, 34, 206, 0.5) 100%);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+            transform: scale(1.1);
+        }
+
+        /* Small Team Logo */
+        .team-logo-small {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #c084fc;
+            border: 2px solid rgba(168, 85, 247, 0.35);
+            box-shadow: 0 2px 10px rgba(168, 85, 247, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .team-logo-small:hover {
+            transform: scale(1.15);
+            border-color: rgba(168, 85, 247, 0.7);
+        }
+
+        /* Event header gradient border */
+        .event-header {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #a855f7, #eab308, #a855f7, transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Balance display glow */
+        .balance-glow {
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+            animation: balancePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes balancePulse {
+
+            0%,
+            100% {
+                text-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+            }
+
+            50% {
+                text-shadow: 0 0 20px rgba(234, 179, 8, 0.8), 0 0 30px rgba(234, 179, 8, 0.4);
+            }
+        }
+
+        /* VS badge special styling */
+        .vs-badge {
+            background: linear-gradient(135deg, rgba(100, 100, 100, 0.3) 0%, rgba(50, 50, 50, 0.5) 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Trophy icon animation */
+        .trophy-icon {
+            animation: trophyGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes trophyGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 5px rgba(234, 179, 8, 0.5));
+                transform: scale(1);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.8));
+                transform: scale(1.1);
+            }
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #eab308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-esports-600 selection:text-white">
+
+    <!-- Background Effect -->
+    <div class="fixed inset-0 bg-esports-pattern pointer-events-none z-0"></div>
+    <div
+        class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,black_100%)] pointer-events-none z-0">
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed w-full z-50 border-b border-esports-700/30 bg-black/90 backdrop-blur-md py-4">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <i class="fa-solid fa-crown text-empire-600 text-2xl group-hover:animate-pulse"></i>
+                <span class="font-display font-bold text-xl tracking-widest text-white">RED EMPIRE</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="games.html"
+                    class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>HUB JEUX
+                </a>
+                <a href="casino.html"
+                    class="text-sm font-mono font-bold text-gray-400 hover:text-white transition-colors">CASINO</a>
+                <a href="#"
+                    class="text-sm font-mono font-bold text-esports-500 text-glow border-b-2 border-esports-500 pb-1">PARIS
+                    ESPORTS</a>
+            </div>
+            <!-- Balance Display -->
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 glass-panel rounded-full">
+                    <i class="fa-solid fa-coins text-gold-400"></i>
+                    <span id="balance-display" class="font-mono font-bold text-gold-400">1000</span>
+                    <span class="text-gray-500 text-xs">RED</span>
+                </div>
+                <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+                    class="md:hidden text-white">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu"
+            class="hidden absolute top-16 left-0 w-full bg-black border-b border-esports-900 p-4 md:hidden">
+            <div class="flex items-center gap-2 mb-4 px-2 py-2 bg-black/50 rounded-lg">
+                <i class="fa-solid fa-coins text-gold-400"></i>
+                <span id="balance-mobile" class="font-mono font-bold text-gold-400">1000</span>
+                <span class="text-gray-500 text-xs">RED Coins</span>
+            </div>
+            <a href="games.html" class="block py-2 text-gray-400 hover:text-white"><i
+                    class="fa-solid fa-arrow-left mr-2"></i>HUB JEUX</a>
+            <a href="casino.html" class="block py-2 text-gray-400 hover:text-white">CASINO</a>
+            <a href="#" class="block py-2 text-esports-500 font-bold">PARIS ESPORTS</a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <section class="pt-32 pb-8 text-center relative z-10 px-4">
+        <div data-aos="fade-down"
+            class="inline-block mb-4 px-4 py-2 border border-esports-500/30 rounded-full bg-esports-500/10 backdrop-blur-sm">
+            <span class="text-xs font-mono font-bold tracking-[0.2em] text-esports-400 uppercase">
+                <i class="fa-solid fa-gamepad mr-2"></i>VALORANT ESPORTS
+            </span>
+        </div>
+
+        <div class="flex justify-center items-center gap-4 mb-6" data-aos="zoom-in" data-aos-delay="100">
+            <h1 class="font-display text-4xl md:text-6xl font-black text-white">
+                PARIS <span class="text-esports-500 text-neon">ESPORTS</span>
+            </h1>
+        </div>
+
+        <p class="text-gray-400 font-mono text-lg max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+            Pariez sur les matchs Valorant professionnels avec vos RED Coins
+        </p>
+
+        <!-- Daily Bonus -->
+        <div class="mt-6" data-aos="fade-up" data-aos-delay="300">
+            <button id="daily-bonus-btn" onclick="claimDailyBonus()"
+                class="px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-black font-display font-bold rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-gold-500/30">
+                <i class="fa-solid fa-gift mr-2"></i>
+                BONUS QUOTIDIEN (+100)
+            </button>
+        </div>
+    </section>
+
+    <!-- TABS -->
+    <section class="max-w-6xl mx-auto px-6 lg:px-8 mb-8 relative z-10">
+        <div class="flex gap-4 justify-center" data-aos="fade-up">
+            <button onclick="switchTab('upcoming')" id="tab-upcoming"
+                class="tab-btn active px-6 py-3 font-mono font-bold rounded-lg transition-all bg-esports-600 text-white">
+                <i class="fa-solid fa-calendar mr-2"></i>À VENIR
+            </button>
+            <button onclick="switchTab('mybets')" id="tab-mybets"
+                class="tab-btn px-6 py-3 font-mono font-bold rounded-lg transition-all bg-gray-800 text-gray-400 hover:bg-gray-700">
+                <i class="fa-solid fa-ticket mr-2"></i>MES PARIS
+            </button>
+        </div>
+    </section>
+
+    <!-- UPCOMING MATCHES -->
+    <section id="section-upcoming" class="max-w-6xl mx-auto px-6 lg:px-8 pb-12 relative z-10">
+        <div id="matches-container" class="space-y-4">
+            <!-- Loading State -->
+            <div id="loading-matches" class="text-center py-12">
+                <i class="fa-solid fa-spinner fa-spin text-4xl text-esports-500 mb-4"></i>
+                <p class="text-gray-400 font-mono">Chargement des matchs...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- MY BETS -->
+    <section id="section-mybets" class="hidden max-w-6xl mx-auto px-6 lg:px-8 pb-12 relative z-10">
+        <div id="bets-container" class="space-y-4">
+            <div id="no-bets" class="text-center py-12 glass-panel rounded-xl">
+                <i class="fa-solid fa-ticket text-4xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 font-mono">Aucun pari en cours</p>
+                <p class="text-gray-600 text-sm mt-2">Placez votre premier pari sur un match !</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- BET MODAL -->
+    <div id="bet-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0" onclick="closeBetModal()"></div>
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full relative z-10 esports-glow" data-aos="zoom-in">
+            <button onclick="closeBetModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+
+            <h3 class="font-display text-2xl font-bold text-white mb-6 text-center">
+                <i class="fa-solid fa-ticket text-esports-500 mr-2"></i>PLACER UN PARI
+            </h3>
+
+            <div id="modal-match-info" class="text-center mb-6">
+                <!-- Filled by JS -->
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-400 font-mono text-sm mb-2">MONTANT</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="bet-amount" min="10" max="1000" value="50"
+                        class="flex-1 bg-black/50 border border-esports-500/30 rounded-lg px-4 py-3 text-white font-mono text-xl focus:outline-none focus:border-esports-500">
+                    <span class="text-gold-400 font-mono">RED</span>
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="setAmount(10)"
+                        class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm font-mono text-gray-300">10</button>
+                    <button onclick="setAmount(50)"
+                        class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm font-mono text-gray-300">50</button>
+                    <button onclick="setAmount(100)"
+                        class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm font-mono text-gray-300">100</button>
+                    <button onclick="setAmount(500)"
+                        class="flex-1 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm font-mono text-gray-300">500</button>
+                </div>
+            </div>
+
+            <div class="mb-6 p-4 bg-black/30 rounded-lg">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-400">Cote</span>
+                    <span id="modal-odds" class="text-esports-400 font-bold">x1.85</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Gain potentiel</span>
+                    <span id="modal-potential" class="text-gold-400 font-bold">92.5 RED</span>
+                </div>
+            </div>
+
+            <button onclick="confirmBet()" id="confirm-bet-btn"
+                class="w-full py-4 bg-gradient-to-r from-esports-600 to-esports-700 hover:from-esports-500 hover:to-esports-600 text-white font-display font-bold text-lg rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-esports-600/30">
+                <i class="fa-solid fa-check mr-2"></i>CONFIRMER LE PARI
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-esports-900/50 bg-black py-8 relative z-10">
+        <div class="text-center text-gray-600 text-xs font-mono uppercase tracking-widest">
+            <i class="fa-solid fa-gamepad text-esports-600 mr-2"></i>
+            © 2024 Red Empire Esports. Pariez responsablement.
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        // ==================== STATE ====================
+        const STORAGE_KEYS = {
+            BALANCE: 'redEmpireBalance',
+            BETS: 'redEmpireBets',
+            LAST_BONUS: 'redEmpireLastBonus'
+        };
+
+        let userBalance = parseInt(localStorage.getItem(STORAGE_KEYS.BALANCE)) || 1000;
+        let activeBets = JSON.parse(localStorage.getItem(STORAGE_KEYS.BETS)) || [];
+        let currentBet = null;
+        let matchesData = [];
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBalanceDisplay();
+            loadMatches();
+            checkDailyBonus();
+            renderBets();
+        });
+
+        // ==================== BALANCE ====================
+        function updateBalanceDisplay() {
+            document.getElementById('balance-display').textContent = userBalance.toLocaleString();
+            document.getElementById('balance-mobile').textContent = userBalance.toLocaleString();
+            localStorage.setItem(STORAGE_KEYS.BALANCE, userBalance);
+        }
+
+        // ==================== DAILY BONUS ====================
+        function checkDailyBonus() {
+            const lastBonus = localStorage.getItem(STORAGE_KEYS.LAST_BONUS);
+            const today = new Date().toDateString();
+            const btn = document.getElementById('daily-bonus-btn');
+
+            if (lastBonus === today) {
+                btn.disabled = true;
+                btn.classList.remove('from-gold-500', 'to-gold-600', 'hover:from-gold-400', 'hover:to-gold-500');
+                btn.classList.add('from-gray-700', 'to-gray-800', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>BONUS RÉCLAMÉ';
+            }
+        }
+
+        function claimDailyBonus() {
+            const lastBonus = localStorage.getItem(STORAGE_KEYS.LAST_BONUS);
+            const today = new Date().toDateString();
+
+            if (lastBonus !== today) {
+                userBalance += 100;
+                updateBalanceDisplay();
+                localStorage.setItem(STORAGE_KEYS.LAST_BONUS, today);
+                checkDailyBonus();
+                showNotification('🎁 +100 RED Coins !', 'success');
+            }
+        }
+
+        // ==================== LOAD MATCHES ====================
+        async function loadMatches() {
+            const container = document.getElementById('matches-container');
+
+            try {
+                // Use CORS proxy for local file access
+                const apiUrl = 'https://vlrggapi.vercel.app/match?q=upcoming';
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+
+                if (data.data && data.data.segments) {
+                    matchesData = data.data.segments.filter(m => m.team1 !== 'TBD' && m.team2 !== 'TBD');
+                    await loadTeamLogos();
+                    renderMatches(matchesData);
+                } else {
+                    container.innerHTML = '<div class="text-center text-gray-400 py-8">Aucun match à venir</div>';
+                }
+            } catch (error) {
+                console.error('Error loading matches:', error);
+                container.innerHTML = `
+                    <div class="text-center py-12 glass-panel rounded-xl">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl text-empire-500 mb-4"></i>
+                        <p class="text-gray-400 font-mono">Erreur de chargement des matchs</p>
+                        <button onclick="loadMatches()" class="mt-4 px-4 py-2 bg-esports-600 rounded-lg text-white font-mono text-sm">
+                            <i class="fa-solid fa-refresh mr-2"></i>Réessayer
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== LOAD TEAM DATA FROM API ====================
+        let teamLogosCache = {};
+        let teamStatsCache = {};  // Store team stats: rank, winRate, record, lastPlayed
+
+        async function loadTeamLogos() {
+            const regions = ['eu', 'na', 'ap', 'cn', 'kr', 'la', 'br'];
+            const proxyBase = 'https://corsproxy.io/?';
+
+            for (const region of regions) {
+                try {
+                    const apiUrl = `https://vlrggapi.vercel.app/rankings?region=${region}`;
+                    const response = await fetch(proxyBase + encodeURIComponent(apiUrl));
+                    const data = await response.json();
+
+                    if (data.data && Array.isArray(data.data)) {
+                        data.data.forEach(team => {
+                            const teamName = team.team;
+
+                            // Store logo
+                            if (teamName && team.logo && team.logo.startsWith('//')) {
+                                teamLogosCache[teamName] = 'https:' + team.logo;
+                            }
+
+                            // Store stats for odds calculation
+                            if (teamName && team.rank) {
+                                // Parse record (e.g., "54–27" -> wins: 54, losses: 27)
+                                let wins = 0, losses = 0, winRate = 0.5;
+                                if (team.record) {
+                                    const recordParts = team.record.split('–');
+                                    if (recordParts.length === 2) {
+                                        wins = parseInt(recordParts[0]) || 0;
+                                        losses = parseInt(recordParts[1]) || 0;
+                                        const total = wins + losses;
+                                        winRate = total > 0 ? wins / total : 0.5;
+                                    }
+                                }
+
+                                // Parse earnings
+                                let earnings = 0;
+                                if (team.earnings) {
+                                    earnings = parseFloat(team.earnings.replace(/[$,]/g, '')) || 0;
+                                }
+
+                                teamStatsCache[teamName] = {
+                                    rank: parseInt(team.rank) || 999,
+                                    region: region,
+                                    wins: wins,
+                                    losses: losses,
+                                    winRate: winRate,
+                                    earnings: earnings,
+                                    lastPlayedTeam: team.last_played_team ? team.last_played_team.replace('vs. ', '') : null
+                                };
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.log(`Could not load data for region ${region}`);
+                }
+            }
+            console.log(`Loaded ${Object.keys(teamLogosCache).length} team logos and ${Object.keys(teamStatsCache).length} team stats from API`);
+        }
+
+        // ==================== RENDER MATCHES ====================
+        function renderMatches(matches) {
+            const container = document.getElementById('matches-container');
+
+            if (matches.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8">Aucun match à venir</div>';
+                return;
+            }
+
+            // Group matches by event
+            const eventGroups = {};
+            matches.forEach(match => {
+                const eventName = match.match_event;
+                if (!eventGroups[eventName]) {
+                    eventGroups[eventName] = {
+                        matches: [],
+                        firstMatchTime: match.unix_timestamp
+                    };
+                }
+                eventGroups[eventName].matches.push(match);
+            });
+
+            // Sort events by first match time
+            const sortedEvents = Object.entries(eventGroups).sort((a, b) => {
+                return new Date(a[1].firstMatchTime) - new Date(b[1].firstMatchTime);
+            });
+
+            // Render grouped matches
+            let html = '';
+            sortedEvents.forEach(([eventName, eventData], eventIndex) => {
+                // Get unique teams for this event
+                const teams = new Set();
+                eventData.matches.forEach(m => {
+                    teams.add(m.team1);
+                    teams.add(m.team2);
+                });
+
+                html += `
+                    <div class="mb-8" data-aos="fade-up" data-aos-delay="${eventIndex * 100}">
+                        <!-- Event Header -->
+                        <div class="glass-panel event-header rounded-xl p-6 mb-4 border border-esports-500/30 esports-glow">
+                            <div class="flex items-center justify-between flex-wrap gap-4">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <i class="fa-solid fa-trophy text-gold-400 text-xl trophy-icon"></i>
+                                        <h2 class="font-display text-xl md:text-2xl font-bold gradient-text">${eventName}</h2>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-sm text-gray-400 font-mono">
+                                        <span><i class="fa-solid fa-gamepad mr-2"></i>${eventData.matches.length} matchs</span>
+                                        <span><i class="fa-solid fa-users mr-2"></i>${teams.size} équipes</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${Array.from(teams).slice(0, 6).map(team => `
+                                        <div class="team-logo-small" title="${team}">
+                                            ${getTeamLogo(team)}
+                                        </div>
+                                    `).join('')}
+                                    ${teams.size > 6 ? `<div class="text-gray-500 text-xs self-center">+${teams.size - 6}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matches Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${eventData.matches.map((match, index) => {
+                    const odds1 = generateOdds(match.team1, match.team2);
+                    const odds2 = generateOdds2(match.team1, match.team2);
+                    const hasBet = activeBets.some(b => b.matchId === match.match_page);
+
+                    return `
+                                    <div class="match-card glass-panel rounded-xl p-5 border border-esports-500/20">
+                                        <!-- Time -->
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="px-2 py-1 bg-esports-500/20 text-esports-400 text-xs font-mono rounded">
+                                                ${match.match_series || 'Match'}
+                                            </span>
+                                            <div class="flex items-center gap-2 text-gray-400 text-xs font-mono">
+                                                <i class="fa-regular fa-clock"></i>
+                                                ${match.time_until_match}
+                                            </div>
+                                        </div>
+
+                                        <!-- Teams -->
+                                        <div class="flex items-center justify-between gap-3 mb-4">
+                                            <div class="flex-1 text-center">
+                                                <div class="team-logo-small mx-auto mb-2">
+                                                    ${getTeamLogo(match.team1)}
+                                                </div>
+                                                <h3 class="font-display font-bold text-white text-sm">${match.team1}</h3>
+                                                <span class="text-xs text-gray-500">${getFlagEmoji(match.flag1)}</span>
+                                            </div>
+
+                                            <div class="flex flex-col items-center gap-2">
+                                                <span class="text-lg font-display font-bold text-gray-600">VS</span>
+                                                <div class="flex gap-1">
+                                                    <span class="odds-badge px-2 py-0.5 rounded text-esports-400 font-mono text-xs font-bold">x${odds1}</span>
+                                                    <span class="odds-badge px-2 py-0.5 rounded text-esports-400 font-mono text-xs font-bold">x${odds2}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex-1 text-center">
+                                                <div class="team-logo-small mx-auto mb-2">
+                                                    ${getTeamLogo(match.team2)}
+                                                </div>
+                                                <h3 class="font-display font-bold text-white text-sm">${match.team2}</h3>
+                                                <span class="text-xs text-gray-500">${getFlagEmoji(match.flag2)}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bet Buttons -->
+                                        <div class="flex gap-2">
+                                            <button onclick="openBetModal('${encodeURIComponent(JSON.stringify({
+                        matchId: match.match_page,
+                        team: match.team1,
+                        opponent: match.team2,
+                        odds: odds1,
+                        event: match.match_event,
+                        time: match.time_until_match
+                    }))}')"
+                                                class="bet-btn flex-1 py-2 bg-gradient-to-r from-esports-600/50 to-esports-700/50 hover:from-esports-600 hover:to-esports-700 border border-esports-500/30 text-white font-mono text-xs font-bold rounded-lg ${hasBet ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                ${hasBet ? 'disabled' : ''}>
+                                                ${match.team1}
+                                            </button>
+                                            <button onclick="openBetModal('${encodeURIComponent(JSON.stringify({
+                        matchId: match.match_page,
+                        team: match.team2,
+                        opponent: match.team1,
+                        odds: odds2,
+                        event: match.match_event,
+                        time: match.time_until_match
+                    }))}')"
+                                                class="bet-btn flex-1 py-2 bg-gradient-to-r from-esports-600/50 to-esports-700/50 hover:from-esports-600 hover:to-esports-700 border border-esports-500/30 text-white font-mono text-xs font-bold rounded-lg ${hasBet ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                ${hasBet ? 'disabled' : ''}>
+                                                ${match.team2}
+                                            </button>
+                                        </div>
+                                        ${hasBet ? '<div class="text-center text-esports-400 text-xs font-mono mt-2"><i class="fa-solid fa-ticket mr-1"></i>Pari placé</div>' : ''}
+                                    </div>
+                                `;
+                }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ==================== SMART ODDS GENERATION ====================
+        function generateOdds(team1, team2) {
+            const stats1 = teamStatsCache[team1];
+            const stats2 = teamStatsCache[team2];
+
+            // If we don't have stats for both teams, use fallback
+            if (!stats1 || !stats2) {
+                // Fallback to hash-based for unknown teams
+                const hash = (team1 + team2).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+                return (1.5 + (Math.abs(hash) % 150) / 100).toFixed(2);
+            }
+
+            // === FACTOR 1: Ranking (40% weight) ===
+            // Lower rank = better team = lower odds
+            const rank1 = stats1.rank;
+            const rank2 = stats2.rank;
+            const avgRank = (rank1 + rank2) / 2;
+
+            // Calculate ranking advantage (-1 to +1, negative = team1 favored)
+            let rankAdvantage = 0;
+            if (rank1 !== rank2) {
+                rankAdvantage = (rank2 - rank1) / Math.max(avgRank, 50);
+                rankAdvantage = Math.max(-1, Math.min(1, rankAdvantage)); // Clamp to -1 to 1
+            }
+
+            // === FACTOR 2: Win Rate (40% weight) ===
+            const winRate1 = stats1.winRate;
+            const winRate2 = stats2.winRate;
+            const winRateAdvantage = (winRate1 - winRate2) * 2; // Scale up the difference
+
+            // === FACTOR 3: Head-to-Head (20% weight) ===
+            let h2hAdvantage = 0;
+            // Check if last played opponent was the other team
+            if (stats1.lastPlayedTeam && stats1.lastPlayedTeam.includes(team2.substring(0, 5))) {
+                h2hAdvantage = 0.1; // Small bonus for team1 if they recently played team2
+            } else if (stats2.lastPlayedTeam && stats2.lastPlayedTeam.includes(team1.substring(0, 5))) {
+                h2hAdvantage = -0.1; // Small bonus for team2
+            }
+
+            // === FACTOR 4: Earnings/Experience bonus ===
+            let earningsAdvantage = 0;
+            if (stats1.earnings > 0 && stats2.earnings > 0) {
+                const earningsRatio = stats1.earnings / (stats1.earnings + stats2.earnings);
+                earningsAdvantage = (earningsRatio - 0.5) * 0.3;
+            }
+
+            // Combine factors (weighted)
+            const totalAdvantage = (rankAdvantage * 0.4) + (winRateAdvantage * 0.4) + (h2hAdvantage * 0.15) + (earningsAdvantage * 0.05);
+
+            // Convert advantage to odds
+            // Base odds = 1.85 (fair for 50/50)
+            // Advantage shifts odds: positive = team1 favored (lower odds)
+            const baseOdds = 1.85;
+            const oddsShift = totalAdvantage * 1.2; // Scale the effect
+
+            // Team1 odds: favored = lower odds (1.2-1.8), underdog = higher odds (2.0-3.5)
+            let team1Odds = baseOdds - oddsShift;
+            team1Odds = Math.max(1.15, Math.min(4.50, team1Odds)); // Clamp to realistic odds
+
+            return team1Odds.toFixed(2);
+        }
+
+        // Generate odds for team2 (inverse of team1)
+        function generateOdds2(team1, team2) {
+            const team1Odds = parseFloat(generateOdds(team1, team2));
+
+            // Calculate implied probabilities and derive team2 odds
+            // If team1Odds is low (favorite), team2Odds should be high (underdog)
+            const impliedProb1 = 1 / team1Odds;
+            const impliedProb2 = 1 - impliedProb1 + 0.05; // Add small margin
+            let team2Odds = 1 / impliedProb2;
+
+            team2Odds = Math.max(1.15, Math.min(4.50, team2Odds)); // Clamp to realistic odds
+            return team2Odds.toFixed(2);
+        }
+
+        function getTeamInitials(teamName) {
+            return teamName.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
+        }
+
+        function getTeamLogo(teamName) {
+            // First check API cache
+            const logoUrl = teamLogosCache[teamName];
+            if (logoUrl) {
+                return `<img src="${logoUrl}" alt="${teamName}" class="w-full h-full object-contain" onerror="this.parentElement.innerHTML='${getTeamInitials(teamName)}'">`;
+            }
+            return getTeamInitials(teamName);
+        }
+
+        function getFlagEmoji(flagClass) {
+            const flags = {
+                'flag_eu': '🇪🇺', 'flag_us': '🇺🇸', 'flag_kr': '🇰🇷', 'flag_cn': '🇨🇳',
+                'flag_jp': '🇯🇵', 'flag_br': '🇧🇷', 'flag_ru': '🇷🇺', 'flag_tr': '🇹🇷',
+                'flag_sg': '🇸🇬', 'flag_gb': '🇬🇧', 'flag_un': '🌍'
+            };
+            return flags[flagClass] || '🌍';
+        }
+
+        // ==================== BET MODAL ====================
+        function openBetModal(encodedData) {
+            currentBet = JSON.parse(decodeURIComponent(encodedData));
+
+            document.getElementById('modal-match-info').innerHTML = `
+                <div class="text-esports-400 text-sm font-mono mb-2">${currentBet.event}</div>
+                <div class="text-2xl font-display font-bold text-white mb-1">${currentBet.team}</div>
+                <div class="text-gray-500">vs ${currentBet.opponent}</div>
+            `;
+
+            document.getElementById('modal-odds').textContent = `x${currentBet.odds}`;
+            updatePotentialWin();
+
+            document.getElementById('bet-modal').classList.remove('hidden');
+        }
+
+        function closeBetModal() {
+            document.getElementById('bet-modal').classList.add('hidden');
+            currentBet = null;
+        }
+
+        function setAmount(amount) {
+            document.getElementById('bet-amount').value = amount;
+            updatePotentialWin();
+        }
+
+        function updatePotentialWin() {
+            const amount = parseInt(document.getElementById('bet-amount').value) || 0;
+            const potential = (amount * parseFloat(currentBet.odds)).toFixed(1);
+            document.getElementById('modal-potential').textContent = `${potential} RED`;
+        }
+
+        document.getElementById('bet-amount').addEventListener('input', updatePotentialWin);
+
+        // ==================== CONFIRM BET ====================
+        function confirmBet() {
+            const amount = parseInt(document.getElementById('bet-amount').value);
+
+            if (amount < 10) {
+                showNotification('Mise minimum : 10 RED', 'error');
+                return;
+            }
+
+            if (amount > userBalance) {
+                showNotification('Solde insuffisant !', 'error');
+                return;
+            }
+
+            // Deduct balance
+            userBalance -= amount;
+            updateBalanceDisplay();
+
+            // Save bet
+            const bet = {
+                id: Date.now(),
+                matchId: currentBet.matchId,
+                team: currentBet.team,
+                opponent: currentBet.opponent,
+                event: currentBet.event,
+                odds: parseFloat(currentBet.odds),
+                amount: amount,
+                potential: (amount * parseFloat(currentBet.odds)).toFixed(1),
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            activeBets.push(bet);
+            localStorage.setItem(STORAGE_KEYS.BETS, JSON.stringify(activeBets));
+
+            closeBetModal();
+            showNotification(`Pari placé : ${amount} RED sur ${currentBet.team}`, 'success');
+            renderMatches(matchesData);
+            renderBets();
+        }
+
+        // ==================== TABS ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-esports-600', 'text-white');
+                btn.classList.add('bg-gray-800', 'text-gray-400');
+            });
+
+            document.getElementById(`tab-${tab}`).classList.remove('bg-gray-800', 'text-gray-400');
+            document.getElementById(`tab-${tab}`).classList.add('bg-esports-600', 'text-white');
+
+            document.getElementById('section-upcoming').classList.toggle('hidden', tab !== 'upcoming');
+            document.getElementById('section-mybets').classList.toggle('hidden', tab !== 'mybets');
+        }
+
+        // ==================== RENDER BETS ====================
+        function renderBets() {
+            const container = document.getElementById('bets-container');
+
+            if (activeBets.length === 0) {
+                container.innerHTML = `
+                    <div id="no-bets" class="text-center py-12 glass-panel rounded-xl">
+                        <i class="fa-solid fa-ticket text-4xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-400 font-mono">Aucun pari en cours</p>
+                        <p class="text-gray-600 text-sm mt-2">Placez votre premier pari sur un match !</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = activeBets.map(bet => `
+                <div class="glass-panel rounded-xl p-6 border border-esports-500/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs font-mono rounded-full">
+                            <i class="fa-solid fa-clock mr-1"></i>EN ATTENTE
+                        </span>
+                        <span class="text-gray-500 text-xs font-mono">
+                            ${new Date(bet.timestamp).toLocaleDateString('fr-FR')}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-esports-400 text-xs font-mono mb-1">${bet.event}</div>
+                            <div class="font-display font-bold text-white text-lg">${bet.team}</div>
+                            <div class="text-gray-500 text-sm">vs ${bet.opponent}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-gray-400 text-sm">Mise: <span class="text-white font-bold">${bet.amount} RED</span></div>
+                            <div class="text-gray-400 text-sm">Cote: <span class="text-esports-400 font-bold">x${bet.odds}</span></div>
+                            <div class="text-gold-400 font-bold mt-1">→ ${bet.potential} RED</div>
+                        </div>
+                    </div>
+                    <button onclick="cancelBet(${bet.id})" class="mt-4 w-full py-2 bg-empire-600/20 hover:bg-empire-600/40 border border-empire-600/30 text-empire-500 font-mono text-sm rounded-lg transition-all">
+                        <i class="fa-solid fa-times mr-2"></i>Annuler le pari
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function cancelBet(betId) {
+            const bet = activeBets.find(b => b.id === betId);
+            if (bet) {
+                userBalance += bet.amount;
+                updateBalanceDisplay();
+                activeBets = activeBets.filter(b => b.id !== betId);
+                localStorage.setItem(STORAGE_KEYS.BETS, JSON.stringify(activeBets));
+                renderBets();
+                renderMatches(matchesData);
+                showNotification(`Pari annulé, ${bet.amount} RED remboursés`, 'success');
+            }
+        }
+
+        // ==================== NOTIFICATIONS ====================
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-empire-600',
+                info: 'bg-esports-600'
+            };
+
+            const notif = document.createElement('div');
+            notif.className = `fixed top-24 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg font-mono shadow-lg z-[200] animate-pulse`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+
+            setTimeout(() => notif.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>
